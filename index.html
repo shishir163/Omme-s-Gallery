@@ -211,6 +211,7 @@
 
   /* ---------- mobile ---------- */
   .mtopbar{display:none}
+  .mbottom{display:none}
   @media (max-width:900px){
     .shell{grid-template-columns:1fr}
     .side{display:none}
@@ -234,7 +235,6 @@
     .grid2{grid-template-columns:1fr}
     .table-wrap{overflow-x:auto}
   }
-  .mbottom{display:none}
 
   @media print{
     body{background:#fff}
@@ -280,7 +280,7 @@
 <div id="app">
   <div class="mtopbar">
     <span class="name">OMME'S GALLERY</span>
-    <button data-act="disconnect">Settings</button>
+    <button data-nav="settings">Settings</button>
   </div>
   <div class="shell">
     <aside class="side">
