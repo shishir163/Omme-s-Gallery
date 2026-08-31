@@ -294,10 +294,13 @@
         <button data-nav="inventory"><span class="ic">▤</span> Inventory</button>
         <button data-nav="customers"><span class="ic">☺</span> Customers</button>
         <button data-nav="reports"><span class="ic">∑</span> Reports</button>
+        <button data-nav="purchases"><span class="ic">⇩</span> Purchases</button>
+        <button data-nav="expenses"><span class="ic">৳</span> Expenses</button>
+        <button data-nav="returns"><span class="ic">↩</span> Returns</button>
       </nav>
       <div class="foot">
         <button class="install-btn" data-act="install" style="display:none">⤓ Install app</button>
-        <button data-act="disconnect">Settings / disconnect</button>
+        <button data-nav="settings">⚙ Settings</button>
         <span id="side-meta"></span>
       </div>
     </aside>
@@ -308,7 +311,7 @@
     <button data-nav="sales"><span class="ic">＋</span>Sell</button>
     <button data-nav="inventory"><span class="ic">▤</span>Stock</button>
     <button data-nav="customers"><span class="ic">☺</span>Buyers</button>
-    <button data-nav="reports"><span class="ic">∑</span>Reports</button>
+    <button id="moreBtn" data-act="more-menu"><span class="ic">⋯</span>More</button>
   </nav>
 </div>
 
@@ -317,6 +320,7 @@
 <div id="printroot"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 /* ===================== config & state ===================== */
 const CFG_KEY = 'omme_cfg_v1';
@@ -357,7 +361,7 @@ async function api(action, payload){
 
 /* ===================== modal ===================== */
 function openModal(html){ $('#modal').innerHTML=html; $('#backdrop').classList.add('on'); }
-function closeModal(){ $('#backdrop').classList.remove('on'); $('#modal').innerHTML=''; }
+function closeModal(){ stopScanner(); $('#backdrop').classList.remove('on'); $('#modal').innerHTML=''; }
 $('#backdrop').addEventListener('click', e=>{ if(e.target.id==='backdrop') closeModal(); });
 
 /* ===================== navigation ===================== */
@@ -369,6 +373,12 @@ function setNav(v){
   if(v==='inventory') viewInventory();
   if(v==='customers') viewCustomers();
   if(v==='reports') viewReports();
+  if(v==='purchases') viewPurchases();
+  if(v==='expenses') viewExpenses();
+  if(v==='returns') viewReturns();
+  if(v==='settings') viewSettings();
+  const mb=document.getElementById('moreBtn');
+  if(mb) mb.classList.toggle('on', ['reports','purchases','expenses','returns','settings'].indexOf(v)>-1);
 }
 
 /* ===================== data loaders ===================== */
@@ -406,9 +416,9 @@ async function viewDashboard(){
     <div class="view-head"><div><div class="eyebrow">Overview</div><h2>Today at the shop</h2></div>
       <button class="btn btn-gold btn-sm" data-nav="sales">＋ New sale</button></div>
     <div class="stat-grid">
-      <div class="card stat"><div class="k">Today's sales</div><div class="v tnum">${tk(d.today.sales)}</div><div class="m">${d.today.orders} order(s)</div></div>
+      <div class="card stat"><div class="k">Today's sales</div><div class="v tnum">${tk(d.today.sales)}</div><div class="m">${d.today.orders} order(s)${d.today.returns?' · ↩ '+tk(d.today.returns):''}</div></div>
       <div class="card stat green"><div class="k">Today's profit</div><div class="v tnum">${tk(d.today.profit)}</div><div class="m">net after cost</div></div>
-      <div class="card stat"><div class="k">All-time sales</div><div class="v tnum">${tk(d.allTime.sales)}</div><div class="m">${d.allTime.orders} orders total</div></div>
+      <div class="card stat"><div class="k">To collect (dues)</div><div class="v tnum" style="${d.outstandingDue?'color:var(--neg)':''}">${tk(d.outstandingDue||0)}</div><div class="m">customer credit</div></div>
       <div class="card stat green"><div class="k">All-time profit</div><div class="v tnum">${tk(d.allTime.profit)}</div><div class="m">since day one</div></div>
     </div>
     <div class="row2">
@@ -454,7 +464,9 @@ function renderInventory(q){
   const rows=list.map(p=>{
     const low=Number(p.Stock)<=3;
     return `<tr class="${low?'lowstock':''}">
-      <td><strong>${esc(p.Name)}</strong>${p.Size?' <span class="stock-tag">('+esc(p.Size)+')</span>':''}</td>
+      <td><div style="display:flex;align-items:center;gap:10px">
+        ${p.ImageURL?'<img src="'+esc(p.ImageURL)+'" loading="lazy" style="width:34px;height:34px;object-fit:cover;border-radius:6px;border:1px solid var(--line-2)">':''}
+        <span><strong>${esc(p.Name)}</strong>${p.Size?' <span class="stock-tag">('+esc(p.Size)+')</span>':''}</span></div></td>
       <td>${p.Brand?'<span class="pill brand">'+esc(p.Brand)+'</span>':''}</td>
       <td>${esc(p.SKU||'')}</td>
       <td class="num tnum">${tk(p.BuyPrice)}</td>
@@ -470,11 +482,12 @@ function renderInventory(q){
       <button class="btn btn-gold" data-act="product-new">＋ Add product</button></div>
     <div class="toolbar"><div class="search"><span class="mag">⌕</span>
       <input id="inv-search" placeholder="Search name, brand, SKU…" value="${esc(q)}"></div>
+      <button class="btn-icon" data-act="inv-scan" title="Scan barcode/QR" style="padding:9px 12px;font-size:16px">⌾</button>
       <span style="color:var(--muted); font-size:13px">${list.length} item(s)</span></div>
     <div class="card"><div class="table-wrap"><table>
       <thead><tr><th>Name</th><th>Brand</th><th>SKU</th><th class="num">Buy</th><th class="num">Sale</th><th class="num">Stock</th><th class="num">Actions</th></tr></thead>
       <tbody>${rows}</tbody></table></div></div>`;
-  const s=$('#inv-search'); if(s) s.oninput=()=>renderInventory(s.value);
+  const s=$('#inv-search'); if(s) s.oninput=()=>{ const v=s.value; renderInventory(v); const n=$('#inv-search'); if(n){n.focus(); n.value=v;} };
 }
 function productForm(p){
   p=p||{};
@@ -496,14 +509,44 @@ function productForm(p){
         <div class="field"><label>Sale price (৳)</label><input id="f-sale" type="number" value="${p.SalePrice||''}"></div>
       </div>
       <div class="field"><label>Stock quantity</label><input id="f-stock" type="number" value="${p.Stock!==undefined?p.Stock:''}"></div>
+      <div class="field"><label>Photo</label>
+        <div id="img-wrap" style="margin-bottom:8px">${p.ImageURL?'<img src="'+esc(p.ImageURL)+'" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line-2)">':''}</div>
+        <input id="f-img" type="file" accept="image/*" capture="environment">
+        <div class="hint" id="img-status">Optional. Uploaded to your Google Drive.</div></div>
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
       <button class="btn btn-gold" data-act="product-save" data-id="${esc(p.ID||'')}">Save product</button></div>`);
+  state.formImageURL = p.ImageURL || '';
+  const fi=$('#f-img'); if(fi) fi.onchange=()=>handleImageFile(fi);
+}
+function downscaleImage(file, maxW, quality){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file); const img=new Image();
+    img.onload=()=>{ URL.revokeObjectURL(url);
+      let w=img.width, h=img.height; if(w>maxW){ h=Math.round(h*maxW/w); w=maxW; }
+      const c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      const d=c.toDataURL('image/jpeg', quality); res({b64:d.split(',')[1], mime:'image/jpeg'});
+    };
+    img.onerror=rej; img.src=url;
+  });
+}
+async function handleImageFile(input){
+  const file=input.files&&input.files[0]; if(!file) return;
+  const st=$('#img-status'); if(st) st.textContent='Uploading…';
+  try{
+    const {b64,mime}=await downscaleImage(file, 800, 0.8);
+    const r=await api('uploadImage',{fileName:file.name, mimeType:mime, data:b64});
+    state.formImageURL=r.url;
+    const w=$('#img-wrap'); if(w) w.innerHTML='<img src="'+esc(r.url)+'" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line-2)">';
+    if(st) st.textContent='Uploaded ✓';
+  }catch(e){ if(st) st.textContent='Upload failed'; toast(e.message,'err'); }
 }
 async function saveProduct(id){
   const item={ ID:id||'', Name:$('#f-name').value.trim(), Brand:$('#f-brand').value.trim(),
     Category:$('#f-cat').value.trim(), Size:$('#f-size').value.trim(), SKU:$('#f-sku').value.trim(),
-    BuyPrice:$('#f-buy').value, SalePrice:$('#f-sale').value, Stock:$('#f-stock').value };
+    BuyPrice:$('#f-buy').value, SalePrice:$('#f-sale').value, Stock:$('#f-stock').value,
+    ImageURL: state.formImageURL||'' };
   if(!item.Name){ toast('Name is required','err'); return; }
   try{ await api('saveProduct',{item}); closeModal(); toast('Product saved','ok'); viewInventory(); }
   catch(e){ toast(e.message,'err'); }
@@ -513,9 +556,22 @@ async function saveProduct(id){
 async function viewCustomers(){
   loadingView('Loading customers…');
   try{ state.customers=await api('listCustomers'); }catch(e){ if(e.message==='AUTH')return; }
+  if(!state.custTab) state.custTab='list';
   renderCustomers('');
 }
+function custTabBar(){
+  const t=state.custTab||'list';
+  const b=(k,l)=>`<button class="btn btn-sm ${t===k?'btn-gold':'btn-ghost'}" data-act="cus-tab" data-tab="${k}">${l}</button>`;
+  return `<div class="toolbar">${b('list','Customers')}${b('dues','Dues / credit')}<span style="flex:1"></span>
+    ${t==='list'?'<button class="btn btn-gold btn-sm" data-act="customer-new">＋ Add customer</button>':''}</div>`;
+}
 function renderCustomers(q){
+  const t=state.custTab||'list';
+  if(t==='dues'){
+    $('#view').innerHTML=`<div class="view-head"><div><div class="eyebrow">Customers</div><h2>Buyer directory</h2></div></div>
+      ${custTabBar()}<div id="cus-body" class="loading" style="padding:30px"><div class="spin"></div>Loading dues…</div>`;
+    loadDues(); return;
+  }
   const list=state.customers.filter(c=>!q || (String(c.Name)+c.Phone+c.Address).toLowerCase().includes(q.toLowerCase()));
   const rows=list.map(c=>`<tr>
       <td><strong>${esc(c.Name)}</strong></td>
@@ -527,15 +583,42 @@ function renderCustomers(q){
     </tr>`).join('') ||
     `<tr><td colspan="4" class="empty"><div class="big">No customers yet</div>They'll appear here as you add them.</td></tr>`;
   $('#view').innerHTML=`
-    <div class="view-head"><div><div class="eyebrow">Customers</div><h2>Buyer directory</h2></div>
-      <button class="btn btn-gold" data-act="customer-new">＋ Add customer</button></div>
+    <div class="view-head"><div><div class="eyebrow">Customers</div><h2>Buyer directory</h2></div></div>
+    ${custTabBar()}
     <div class="toolbar"><div class="search"><span class="mag">⌕</span>
       <input id="cus-search" placeholder="Search name, phone, address…" value="${esc(q)}"></div>
       <span style="color:var(--muted); font-size:13px">${list.length} buyer(s)</span></div>
     <div class="card"><div class="table-wrap"><table>
       <thead><tr><th>Name</th><th>Phone</th><th>Address</th><th class="num">Actions</th></tr></thead>
       <tbody>${rows}</tbody></table></div></div>`;
-  const s=$('#cus-search'); if(s) s.oninput=()=>renderCustomers(s.value);
+  const s=$('#cus-search'); if(s) s.oninput=()=>{ const v=s.value; renderCustomers(v); const n=$('#cus-search'); if(n){n.focus(); n.value=v;} };
+}
+async function loadDues(){
+  try{
+    const dues=await api('listDues'); const box=$('#cus-body'); if(!box)return;
+    let total=0; dues.forEach(d=>total+=Number(d.Balance)||0);
+    box.className='';
+    box.innerHTML=`
+      <div class="stat-grid" style="grid-template-columns:1fr"><div class="card stat"><div class="k">Total to collect</div><div class="v tnum" style="color:var(--neg)">${tk(total)}</div></div></div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Customer</th><th>Invoice</th><th>Date</th><th class="num">Balance</th><th class="num"></th></tr></thead>
+        <tbody>${dues.map(d=>`<tr><td><strong>${esc(d.CustomerName||'—')}</strong></td><td>${esc(d.InvoiceNo||'')}</td><td>${fdate(d.Date)}</td>
+          <td class="num tnum money" style="color:var(--neg);font-weight:600">${tk(d.Balance)}</td>
+          <td class="num"><button class="btn-icon" data-act="due-pay" data-id="${esc(d.ID)}" data-bal="${Number(d.Balance)||0}" data-name="${esc(d.CustomerName||'')}">Receive</button></td></tr>`).join('')
+          ||'<tr><td colspan="5" class="empty">No dues. All collected ✦</td></tr>'}</tbody></table></div></div>`;
+  }catch(e){ const box=$('#cus-body'); if(box){ box.className=''; box.textContent=e.message; } }
+}
+function duePayForm(id,bal,name){
+  openModal(`<div class="modal-head"><h3>Receive payment</h3><button class="x" data-act="modal-close">×</button></div>
+    <div class="modal-body"><p style="margin:0 0 12px">${esc(name)} · balance <strong>${tk(bal)}</strong></p>
+      <div class="field"><label>Amount received (৳)</label><input id="due-amt" type="number" value="${bal}"></div></div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
+      <button class="btn btn-gold" data-act="due-pay-save" data-id="${esc(id)}">Save</button></div>`);
+}
+async function savePayDue(id){
+  const amt=Number($('#due-amt').value)||0; if(amt<=0){ toast('Enter amount','err'); return; }
+  try{ await api('payDue',{id, amount:amt}); closeModal(); toast('Payment received','ok'); loadDues(); }
+  catch(e){ toast(e.message,'err'); }
 }
 function customerForm(c){
   c=c||{};
@@ -603,6 +686,7 @@ function renderProductList(q){
   box.innerHTML=prods.map(p=>{
     const low=Number(p.Stock)<=3;
     return `<div class="pitem" data-act="cart-add" data-id="${esc(p.ID)}">
+      ${p.ImageURL?'<img src="'+esc(p.ImageURL)+'" loading="lazy" style="width:38px;height:38px;object-fit:cover;border-radius:7px;border:1px solid var(--line-2)">':''}
       <div><div class="pn">${esc(p.Name)}</div>
         <div class="pd">${esc(p.Brand||'')} ${p.Size?'· '+esc(p.Size):''} · <span class="stock-tag ${low?'low':''}">${Number(p.Stock)} in stock</span></div></div>
       <div class="pr"><div class="tnum" style="font-weight:600">${tk(p.SalePrice)}</div></div>
@@ -616,7 +700,10 @@ function renderSales(){
     <div class="view-head"><div><div class="eyebrow">Point of sale</div><h2>New sale</h2></div></div>
     <div class="pos">
       <div class="card pos-products">
-        <div class="search"><span class="mag">⌕</span><input id="pos-search" placeholder="Search product to add…"></div>
+        <div style="display:flex; gap:8px; align-items:center">
+          <div class="search" style="flex:1"><span class="mag">⌕</span><input id="pos-search" placeholder="Search product to add…"></div>
+          <button class="btn-icon" data-act="pos-scan" title="Scan barcode/QR" style="padding:9px 12px; font-size:16px">⌾</button>
+        </div>
         <div class="plist" id="plist"></div>
       </div>
       <div class="card cart">
@@ -637,6 +724,7 @@ function renderSales(){
           <label class="mini-l">Payment</label>
           <select class="fullsel" id="s-pay"><option>Cash</option><option>bKash</option><option>Nagad</option><option>Bank</option></select>
         </div>
+        <div style="margin-top:8px"><label class="mini-l">Received now ৳ (blank = full paid)</label><input class="fullsel" id="s-received" type="number" placeholder="full"></div>
         <div id="cart-tot" style="margin-top:12px"></div>
         <div style="display:flex; gap:8px; margin-top:14px">
           <button class="btn btn-ghost btn-sm" data-act="cart-clear">Clear</button>
@@ -647,7 +735,7 @@ function renderSales(){
   renderProductList('');
   const s=$('#pos-search'); if(s){ s.oninput=()=>renderProductList(s.value); }
   const cs=$('#s-cust'); if(cs) cs.onchange=()=>{ state.customerId=cs.value; };
-  ['s-disc','s-deliv'].forEach(id=>{ const el=$('#'+id); if(el) el.oninput=renderCart; });
+  ['s-disc','s-deliv','s-received'].forEach(id=>{ const el=$('#'+id); if(el) el.oninput=renderCart; });
   renderCart();
 }
 function renderCart(){
@@ -667,11 +755,15 @@ function renderCart(){
       </div>`).join('');
   }
   const t=cartTotals(); const tbox=$('#cart-tot');
+  const recv=$('#s-received')?$('#s-received').value:'';
+  const received = recv===''? t.total : (Number(recv)||0);
+  const due = t.total - received;
   if(tbox) tbox.innerHTML=`
     <div class="totline"><span>Subtotal</span><span class="tnum">${tk(t.subtotal)}</span></div>
     <div class="totline"><span>Discount</span><span class="tnum">− ${tk(t.discount)}</span></div>
     <div class="totline"><span>Delivery</span><span class="tnum">+ ${tk(t.delivery)}</span></div>
-    <div class="totline grand"><span>Total</span><span class="v tnum">${tk(t.total)}</span></div>`;
+    <div class="totline grand"><span>Total</span><span class="v tnum">${tk(t.total)}</span></div>
+    ${(recv!==''&&due>0)?`<div class="totline"><span>Due (credit)</span><span class="tnum" style="color:var(--neg);font-weight:600">${tk(due)}</span></div>`:''}`;
 }
 function addToCart(id){
   const p=state.products.find(x=>String(x.ID)===String(id)); if(!p) return;
@@ -690,18 +782,24 @@ async function saveSale(){
   const sel=$('#s-cust'); const cid=sel?sel.value:'';
   const cust=state.customers.find(c=>String(c.ID)===String(cid));
   const t=cartTotals();
+  const recVal=$('#s-received')?$('#s-received').value:'';
   const sale={ CustomerID:cid, CustomerName:cust?cust.Name:'', Discount:t.discount, Delivery:t.delivery,
-    Payment:$('#s-pay')?$('#s-pay').value:'Cash', Status:'Delivered', Note:'' };
+    Payment:$('#s-pay')?$('#s-pay').value:'Cash', Status:'Delivered', Note:'',
+    Paid: recVal===''? '' : (Number(recVal)||0) };
   const items=state.cart.map(i=>({ ProductID:i.id, ProductName:i.name, Qty:i.qty, SalePrice:i.sale, BuyPrice:i.buy }));
   const btn=document.querySelector('[data-act="sale-save"]'); if(btn){ btn.textContent='Saving…'; btn.disabled=true; }
   try{
     const r=await api('createSale',{sale, items});
-    toast('Invoice '+r.invoiceNo+' saved','ok');
+    toast('Invoice '+r.invoiceNo+' saved'+(r.due>0?' · due '+tk(r.due):''),'ok');
     showInvoice({ InvoiceNo:r.invoiceNo, Date:new Date().toISOString(), CustomerName:sale.CustomerName,
-      Subtotal:r.subtotal, Discount:r.discount, Delivery:r.delivery, Total:r.total, Payment:sale.Payment },
+      Subtotal:r.subtotal, Discount:r.discount, Delivery:r.delivery, Total:r.total, Payment:sale.Payment,
+      Received:r.received, Due:r.due },
       state.cart.map(i=>({ProductName:i.name, Qty:i.qty, SalePrice:i.sale, LineTotal:i.qty*i.sale})));
     state.cart=[]; state.customerId='';
     state.products=await api('listProducts'); // refresh stock
+    ['s-received','s-disc','s-deliv'].forEach(function(id){ const el=$('#'+id); if(el) el.value = id==='s-received'?'':'0'; });
+    const cs2=$('#s-cust'); if(cs2) cs2.value='';
+    renderProductList($('#pos-search')?$('#pos-search').value:''); renderCart();
   }catch(e){ toast(e.message,'err'); if(btn){ btn.textContent='Save & invoice'; btn.disabled=false; } }
 }
 async function reprint(inv){
@@ -728,8 +826,10 @@ function showInvoice(sale, items){
         <div class="totline"><span>Discount</span><span class="tnum">− ${tk(sale.Discount)}</span></div>
         <div class="totline"><span>Delivery</span><span class="tnum">+ ${tk(sale.Delivery)}</span></div>
         <div class="totline grand"><span>Total</span><span class="v tnum">${tk(sale.Total)}</span></div>
+        ${(Number(sale.Due)>0)?`<div class="totline"><span>Paid</span><span class="tnum">${tk(sale.Received)}</span></div>
+        <div class="totline"><span>Due</span><span class="tnum" style="color:var(--neg);font-weight:600">${tk(sale.Due)}</span></div>`:''}
       </div>
-      <div class="note">Thank you for shopping with us. ✦ Buy your happiness.</div>
+      <div class="note">${esc(cfg.invoiceNote||'Thank you for shopping with us. ✦ Buy your happiness.')}</div>
     </div>`;
   openModal(`
     <div class="modal-head"><h3>Invoice</h3><button class="x" data-act="modal-close">×</button></div>
@@ -840,8 +940,10 @@ function renderReports(d){
           <tr><td>Less: Cost of goods</td><td class="num tnum">− ${tk(s.cogs)}</td></tr>
           <tr><td><strong>Gross profit</strong></td><td class="num tnum"><strong>${tk(gross)}</strong></td></tr>
           <tr><td>Less: Discounts given</td><td class="num tnum">− ${tk(s.totalDiscount)}</td></tr>
+          ${(s.retProfit>0)?`<tr><td>Less: Returns (profit reversed)</td><td class="num tnum">− ${tk(s.retProfit)}</td></tr>`:''}
           <tr><td><strong>Net profit</strong></td><td class="num tnum money pos"><strong>${tk(s.totalProfit)}</strong></td></tr>
           <tr><td style="color:var(--muted)">Delivery collected (pass-through)</td><td class="num tnum" style="color:var(--muted)">${tk(s.totalDelivery)}</td></tr>
+          ${(s.returns>0)?`<tr><td style="color:var(--muted)">Refunds paid out (returns)</td><td class="num tnum" style="color:var(--muted)">${tk(s.returns)}</td></tr>`:''}
         </table>
         <h3 style="margin-top:18px">Payment methods</h3>
         <div>${pays}</div>
@@ -902,9 +1004,409 @@ async function exportSales(){
   }catch(e){ toast(e.message,'err'); }
 }
 
+/* ===================== EXPENSES ===================== */
+const EXP_CATS=['Packaging','Facebook Marketing','Website','Delivery','Rent','Salary','Utilities','Other'];
+async function viewExpenses(){
+  loadingView('Loading expenses…');
+  try{ state.expData=await api('listExpenses'); }catch(e){ if(e.message==='AUTH')return; }
+  renderExpenses('', '');
+}
+function thisMonthKey(){ const d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2); }
+function renderExpenses(q, cat){
+  const list=(state.expData||[]).filter(e=>
+    (!q || (String(e.Category)+e.Note).toLowerCase().includes(q.toLowerCase())) &&
+    (!cat || e.Category===cat))
+    .sort((a,b)=>new Date(b.Date)-new Date(a.Date));
+  let totalAll=0, totalMonth=0; const byCat={}; const mk=thisMonthKey();
+  (state.expData||[]).forEach(e=>{ const a=Number(e.Amount)||0; totalAll+=a;
+    byCat[e.Category]=(byCat[e.Category]||0)+a;
+    if(String(e.Date).slice(0,7)===mk) totalMonth+=a; });
+  const catPills=Object.keys(byCat).sort((a,b)=>byCat[b]-byCat[a])
+    .map(k=>`<span class="pill brand" style="margin:0 6px 6px 0; display:inline-block">${esc(k)}: ${tk(byCat[k])}</span>`).join('')||'—';
+  const opts=EXP_CATS.map(c=>`<option value="${c}" ${cat===c?'selected':''}>${c}</option>`).join('');
+  const rows=list.map(e=>`<tr>
+      <td class="tnum">${fdate(e.Date)}</td>
+      <td><span class="pill brand">${esc(e.Category)}</span></td>
+      <td>${esc(e.Note||'')}</td>
+      <td class="num tnum">${tk(e.Amount)}</td>
+      <td class="num"><button class="btn-icon" data-act="exp-edit" data-id="${esc(e.ID)}">Edit</button>
+        <button class="btn-icon" data-act="exp-del" data-id="${esc(e.ID)}">✕</button></td>
+    </tr>`).join('')||`<tr><td colspan="5" class="empty"><div class="big">No expenses yet</div>Log packaging, ad spend, rent etc.</td></tr>`;
+  $('#view').innerHTML=`
+    <div class="view-head"><div><div class="eyebrow">Expenses</div><h2>Expense ledger</h2></div>
+      <button class="btn btn-gold" data-act="exp-new">＋ Add expense</button></div>
+    <div class="stat-grid" style="grid-template-columns:1fr 1fr">
+      <div class="card stat"><div class="k">This month</div><div class="v tnum">${tk(totalMonth)}</div></div>
+      <div class="card stat"><div class="k">All time</div><div class="v tnum">${tk(totalAll)}</div></div>
+    </div>
+    <div class="card panel" style="margin-bottom:16px"><h3>By category</h3><div>${catPills}</div>
+      <p style="font-size:12px;color:var(--muted);margin:10px 0 0">These are tracked separately. Since your Buy price already includes packaging/delivery/ad cost, they are <strong>not</strong> subtracted again from sales profit.</p></div>
+    <div class="toolbar">
+      <div class="search"><span class="mag">⌕</span><input id="exp-search" placeholder="Search note/category…" value="${esc(q)}"></div>
+      <select id="exp-cat" style="padding:10px 12px;border:1px solid var(--line-2);border-radius:9px;background:var(--card)">
+        <option value="">All categories</option>${opts}</select>
+    </div>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Date</th><th>Category</th><th>Note</th><th class="num">Amount</th><th class="num">Actions</th></tr></thead>
+      <tbody>${rows}</tbody></table></div></div>`;
+  const s=$('#exp-search'); if(s){ s.oninput=()=>{ const v=s.value; renderExpenses(v, $('#exp-cat').value); const n=$('#exp-search'); if(n){n.focus(); n.value=v;} }; }
+  const c=$('#exp-cat'); if(c) c.onchange=()=>renderExpenses($('#exp-search').value, c.value);
+}
+function expenseForm(x){
+  x=x||{}; const today=new Date().toISOString().slice(0,10);
+  openModal(`
+    <div class="modal-head"><h3>${x.ID?'Edit expense':'Add expense'}</h3><button class="x" data-act="modal-close">×</button></div>
+    <div class="modal-body">
+      <div class="grid2">
+        <div class="field"><label>Date</label><input id="x-date" type="date" value="${esc(x.Date?String(x.Date).slice(0,10):today)}"></div>
+        <div class="field"><label>Amount (৳) *</label><input id="x-amt" type="number" value="${x.Amount||''}"></div>
+      </div>
+      <div class="field"><label>Category</label><input id="x-cat" list="expcats" value="${esc(x.Category||'')}" placeholder="Packaging / Facebook Marketing…">
+        <datalist id="expcats">${EXP_CATS.map(c=>'<option>'+c+'</option>').join('')}</datalist></div>
+      <div class="field"><label>Note</label><input id="x-note" value="${esc(x.Note||'')}"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
+      <button class="btn btn-gold" data-act="exp-save" data-id="${esc(x.ID||'')}">Save</button></div>`);
+}
+async function saveExpense(id){
+  const item={ ID:id||'', Date:$('#x-date').value, Amount:$('#x-amt').value,
+    Category:$('#x-cat').value.trim()||'Other', Note:$('#x-note').value.trim() };
+  if(!item.Amount || Number(item.Amount)<=0){ toast('Enter an amount','err'); return; }
+  try{ await api('saveExpense',{item}); closeModal(); toast('Expense saved','ok'); viewExpenses(); }
+  catch(e){ toast(e.message,'err'); }
+}
+
+/* ===================== PURCHASES + SUPPLIERS ===================== */
+async function viewPurchases(){
+  if(!state.purTab) state.purTab='list';
+  state.purCart=state.purCart||[];
+  loadingView('Loading purchases…');
+  try{
+    const [pu,su,pr]=await Promise.all([api('listPurchases'),api('listSuppliers'),api('listProducts')]);
+    state.purchases=pu||[]; state.suppliers=su||[]; state.products=pr||[];
+  }catch(e){ if(e.message==='AUTH')return; }
+  renderPurchases();
+}
+function purTabBar(){
+  const t=state.purTab;
+  const b=(k,l)=>`<button class="btn btn-sm ${t===k?'btn-gold':'btn-ghost'}" data-act="pur-tab" data-tab="${k}">${l}</button>`;
+  return `<div class="toolbar">${b('list','Purchases')}${b('due','Due list')}${b('suppliers','Suppliers')}
+    <span style="flex:1"></span>
+    <button class="btn btn-gold btn-sm" data-act="pur-tab" data-tab="new">＋ New purchase</button></div>`;
+}
+function renderPurchases(){
+  const t=state.purTab;
+  if(t==='new') return renderNewPurchase();
+  let body='';
+  if(t==='suppliers'){
+    const rows=(state.suppliers||[]).map(s=>`<tr>
+        <td><strong>${esc(s.Name)}</strong></td><td>${esc(s.Company||'')}</td>
+        <td class="tnum">${esc(s.Phone||'')}</td>
+        <td class="num"><button class="btn-icon" data-act="sup-edit" data-id="${esc(s.ID)}">Edit</button>
+          <button class="btn-icon" data-act="sup-del" data-id="${esc(s.ID)}">✕</button></td></tr>`).join('')
+      ||`<tr><td colspan="4" class="empty"><div class="big">No suppliers yet</div>Add the shops/brands you buy from.</td></tr>`;
+    body=`<div class="toolbar" style="margin-top:-6px"><span style="flex:1"></span>
+        <button class="btn btn-gold btn-sm" data-act="sup-new">＋ Add supplier</button></div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Name</th><th>Company</th><th>Phone</th><th class="num">Actions</th></tr></thead>
+        <tbody>${rows}</tbody></table></div></div>`;
+  } else if(t==='due'){
+    const due=(state.purchases||[]).filter(p=>Number(p.Due)>0);
+    let totalDue=0; due.forEach(p=>totalDue+=Number(p.Due)||0);
+    const bySup={}; due.forEach(p=>{ const k=p.SupplierName||'—'; bySup[k]=(bySup[k]||0)+(Number(p.Due)||0); });
+    const supPills=Object.keys(bySup).map(k=>`<span class="pill warn" style="margin:0 6px 6px 0;display:inline-block">${esc(k)}: ${tk(bySup[k])}</span>`).join('')||'—';
+    const rows=due.map(p=>`<tr>
+        <td>${esc(p.PurchaseNo)}</td><td>${fdate(p.Date)}</td><td>${esc(p.SupplierName||'—')}</td>
+        <td class="num tnum">${tk(p.Total)}</td><td class="num tnum">${tk(p.Paid)}</td>
+        <td class="num tnum money" style="color:var(--neg);font-weight:600">${tk(p.Due)}</td>
+        <td class="num"><button class="btn-icon" data-act="pur-view" data-no="${esc(p.PurchaseNo)}">Pay</button></td></tr>`).join('')
+      ||`<tr><td colspan="7" class="empty">No dues. All suppliers paid ✦</td></tr>`;
+    body=`<div class="stat-grid" style="grid-template-columns:1fr"><div class="card stat"><div class="k">Total due to suppliers</div><div class="v tnum" style="color:var(--neg)">${tk(totalDue)}</div></div></div>
+      <div class="card panel" style="margin-bottom:16px"><h3>By supplier</h3><div>${supPills}</div></div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>PO</th><th>Date</th><th>Supplier</th><th class="num">Total</th><th class="num">Paid</th><th class="num">Due</th><th class="num"></th></tr></thead>
+        <tbody>${rows}</tbody></table></div></div>`;
+  } else {
+    const rows=(state.purchases||[]).map(p=>`<tr>
+        <td>${esc(p.PurchaseNo)}</td><td>${fdate(p.Date)}</td><td>${esc(p.SupplierName||'—')}</td>
+        <td class="num tnum">${tk(p.Total)}</td><td class="num tnum">${tk(p.Paid)}</td>
+        <td class="num tnum">${Number(p.Due)>0?'<span class="pill warn">'+tk(p.Due)+'</span>':'<span class="pill pos">Paid</span>'}</td>
+        <td class="num"><button class="btn-icon" data-act="pur-view" data-no="${esc(p.PurchaseNo)}">View</button></td></tr>`).join('')
+      ||`<tr><td colspan="7" class="empty"><div class="big">No purchases yet</div>Record stock you buy — it adds to inventory automatically.</td></tr>`;
+    body=`<div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>PO</th><th>Date</th><th>Supplier</th><th class="num">Total</th><th class="num">Paid</th><th class="num">Due</th><th class="num"></th></tr></thead>
+        <tbody>${rows}</tbody></table></div></div>`;
+  }
+  $('#view').innerHTML=`
+    <div class="view-head"><div><div class="eyebrow">Stock inward</div><h2>Purchases &amp; suppliers</h2></div></div>
+    ${purTabBar()}${body}`;
+}
+function purCartTotal(){ let t=0; state.purCart.forEach(i=>t+=i.qty*i.buy); return t; }
+function renderNewPurchase(){
+  const supOpts=(state.suppliers||[]).map(s=>`<option value="${esc(s.ID)}">${esc(s.Name)}${s.Company?' — '+esc(s.Company):''}</option>`).join('');
+  $('#view').innerHTML=`
+    <div class="view-head"><div><div class="eyebrow">Stock inward</div><h2>New purchase</h2></div>
+      <button class="btn btn-ghost btn-sm" data-act="pur-tab" data-tab="list">← Back</button></div>
+    <div class="pos">
+      <div class="card pos-products">
+        <div class="search"><span class="mag">⌕</span><input id="pur-search" placeholder="Search product to add…"></div>
+        <div class="plist" id="pur-plist"></div>
+      </div>
+      <div class="card cart">
+        <h3>Purchase</h3>
+        <div><label class="mini-l">Supplier</label>
+          <select class="fullsel" id="pur-sup"><option value="">— none —</option>${supOpts}</select>
+          <button class="btn btn-ghost btn-sm" style="margin-top:8px" data-act="sup-new-inline">＋ New supplier</button></div>
+        <div class="cart-lines" id="pur-lines" style="margin-top:12px"></div>
+        <div style="margin-top:8px"><label class="mini-l">Amount paid now (৳)</label><input class="fullsel" id="pur-paid" type="number" value="0"></div>
+        <div id="pur-tot" style="margin-top:12px"></div>
+        <div style="display:flex; gap:8px; margin-top:14px">
+          <button class="btn btn-ghost btn-sm" data-act="pur-clear">Clear</button>
+          <button class="btn btn-gold btn-block" data-act="pur-save">Save purchase</button></div>
+      </div>
+    </div>`;
+  renderPurProducts('');
+  const s=$('#pur-search'); if(s) s.oninput=()=>renderPurProducts(s.value);
+  const pd=$('#pur-paid'); if(pd) pd.oninput=renderPurLines;
+  renderPurLines();
+}
+function renderPurProducts(q){
+  const box=$('#pur-plist'); if(!box) return;
+  const list=(state.products||[]).filter(p=>!q||(String(p.Name)+p.Brand+p.SKU).toLowerCase().includes(q.toLowerCase()));
+  box.innerHTML=list.map(p=>`<div class="pitem" data-act="pur-add" data-id="${esc(p.ID)}">
+      <div><div class="pn">${esc(p.Name)}</div><div class="pd">${esc(p.Brand||'')} · stock ${Number(p.Stock)}</div></div>
+      <div class="pr"><div class="tnum" style="font-weight:600">buy ${tk(p.BuyPrice)}</div></div>
+      <div class="add">＋</div></div>`).join('')||`<div class="empty">No products. Add in Inventory first.</div>`;
+}
+function renderPurLines(){
+  const box=$('#pur-lines'); if(!box) return;
+  if(!state.purCart.length){ box.innerHTML='<div class="empty" style="padding:20px 0">Tap a product to receive stock.</div>'; }
+  else box.innerHTML=state.purCart.map(i=>`
+    <div class="cl">
+      <div class="nm">${esc(i.name)}</div>
+      <div class="lt tnum">${tk(i.qty*i.buy)}</div>
+      <div class="qty">
+        <button data-act="pur-dec" data-id="${esc(i.id)}">−</button><span>${i.qty}</span>
+        <button data-act="pur-inc" data-id="${esc(i.id)}">+</button></div>
+      <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+        <span style="font-size:11px;color:var(--muted)">buy ৳</span>
+        <input type="number" value="${i.buy}" data-buy="${esc(i.id)}" style="width:74px;padding:5px 7px;border:1px solid var(--line-2);border-radius:7px">
+        <button class="rm" data-act="pur-del" data-id="${esc(i.id)}">✕</button></div>
+    </div>`).join('');
+  // bind buy-price inputs
+  box.querySelectorAll('[data-buy]').forEach(inp=>{ inp.oninput=()=>{ const it=state.purCart.find(x=>x.id===inp.dataset.buy); if(it){ it.buy=Number(inp.value)||0; updatePurTot(); } }; });
+  updatePurTot();
+}
+function updatePurTot(){
+  const box=$('#pur-lines'); if(box) box.querySelectorAll('.cl .lt').forEach((el,idx)=>{ const it=state.purCart[idx]; if(it) el.textContent=tk(it.qty*it.buy); });
+  const total=purCartTotal(); const paid=Number($('#pur-paid')?$('#pur-paid').value:0)||0; const due=total-paid;
+  const t=$('#pur-tot'); if(t) t.innerHTML=`
+    <div class="totline grand"><span>Total</span><span class="v tnum">${tk(total)}</span></div>
+    <div class="totline"><span>Due after payment</span><span class="tnum" style="${due>0?'color:var(--neg);font-weight:600':''}">${tk(due)}</span></div>`;
+}
+function purAdd(id){
+  const p=(state.products||[]).find(x=>String(x.ID)===String(id)); if(!p) return;
+  const ex=state.purCart.find(i=>i.id===p.ID);
+  if(ex) ex.qty++; else state.purCart.push({id:p.ID, name:p.Name, buy:Number(p.BuyPrice)||0, qty:1});
+  renderPurLines();
+}
+function purQty(id,d){ const it=state.purCart.find(i=>i.id===id); if(!it)return; it.qty+=d; if(it.qty<=0) state.purCart=state.purCart.filter(i=>i.id!==id); renderPurLines(); }
+async function savePurchase(){
+  if(!state.purCart.length){ toast('Add at least one product','err'); return; }
+  const sel=$('#pur-sup'); const sid=sel?sel.value:''; const sup=(state.suppliers||[]).find(s=>String(s.ID)===String(sid));
+  const purchase={ SupplierID:sid, SupplierName:sup?sup.Name:'', Paid:Number($('#pur-paid').value)||0, Note:'' };
+  const items=state.purCart.map(i=>({ProductID:i.id, ProductName:i.name, Qty:i.qty, BuyPrice:i.buy}));
+  const btn=document.querySelector('[data-act="pur-save"]'); if(btn){ btn.textContent='Saving…'; btn.disabled=true; }
+  try{
+    const r=await api('createPurchase',{purchase, items});
+    toast('Purchase '+r.purchaseNo+' saved · stock updated','ok');
+    state.purCart=[]; state.purTab='list';
+    viewPurchases();
+  }catch(e){ toast(e.message,'err'); if(btn){ btn.textContent='Save purchase'; btn.disabled=false; } }
+}
+function supplierForm(s){
+  s=s||{};
+  openModal(`
+    <div class="modal-head"><h3>${s.ID?'Edit supplier':'Add supplier'}</h3><button class="x" data-act="modal-close">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Name *</label><input id="sp-name" value="${esc(s.Name)}"></div>
+      <div class="grid2">
+        <div class="field"><label>Company</label><input id="sp-comp" value="${esc(s.Company)}"></div>
+        <div class="field"><label>Phone</label><input id="sp-phone" value="${esc(s.Phone)}"></div></div>
+      <div class="field"><label>Address</label><input id="sp-addr" value="${esc(s.Address)}"></div>
+      <div class="field"><label>Note</label><input id="sp-note" value="${esc(s.Note)}"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
+      <button class="btn btn-gold" data-act="sup-save" data-id="${esc(s.ID||'')}">Save supplier</button></div>`);
+}
+async function saveSupplier(id, thenBack){
+  const item={ ID:id||'', Name:$('#sp-name').value.trim(), Company:$('#sp-comp').value.trim(),
+    Phone:$('#sp-phone').value.trim(), Address:$('#sp-addr').value.trim(), Note:$('#sp-note').value.trim() };
+  if(!item.Name){ toast('Name is required','err'); return; }
+  try{
+    await api('saveSupplier',{item}); closeModal(); toast('Supplier saved','ok');
+    state.suppliers=await api('listSuppliers');
+    renderPurchases();
+  }catch(e){ toast(e.message,'err'); }
+}
+async function viewPurchase(no){
+  const p=(state.purchases||[]).find(x=>String(x.PurchaseNo)===String(no));
+  openModal('<div class="modal-body loading"><div class="spin"></div>Loading…</div>');
+  try{
+    const r=await api('getPurchase',{purchaseNo:no}); const pu=r.purchase||p||{};
+    const items=(r.items||[]).map(i=>`<tr><td>${esc(i.ProductName)}</td><td class="num tnum">${i.Qty}</td>
+      <td class="num tnum">${tk(i.BuyPrice)}</td><td class="num tnum">${tk(i.LineTotal)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">—</td></tr>';
+    openModal(`
+      <div class="modal-head"><h3>${esc(pu.PurchaseNo||'Purchase')}</h3><button class="x" data-act="modal-close">×</button></div>
+      <div class="modal-body">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px">${esc(pu.SupplierName||'—')} · ${fdate(pu.Date)}</div>
+        <div class="table-wrap"><table><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Buy</th><th class="num">Total</th></tr></thead><tbody>${items}</tbody></table></div>
+        <div style="margin-top:14px" class="totline grand"><span>Total</span><span class="v tnum">${tk(pu.Total)}</span></div>
+        <div class="field" style="margin-top:14px"><label>Amount paid (৳) — update to settle due</label>
+          <input id="pay-amt" type="number" value="${Number(pu.Paid)||0}"></div>
+        <div class="totline"><span>Due</span><span class="tnum" id="pay-due" style="${Number(pu.Due)>0?'color:var(--neg);font-weight:600':''}">${tk(pu.Due)}</span></div>
+      </div>
+      <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Close</button>
+        <button class="btn btn-gold" data-act="pur-pay-save" data-no="${esc(pu.PurchaseNo)}" data-total="${Number(pu.Total)||0}">Save payment</button></div>`);
+    const pa=$('#pay-amt'); if(pa) pa.oninput=()=>{ const due=(Number(pu.Total)||0)-(Number(pa.value)||0); const d=$('#pay-due'); if(d){ d.textContent=tk(due); d.style.color=due>0?'var(--neg)':''; } };
+  }catch(e){ closeModal(); toast(e.message,'err'); }
+}
+async function savePurPayment(no){
+  const paid=Number($('#pay-amt').value)||0;
+  try{ await api('updatePurchasePayment',{purchaseNo:no, paid}); closeModal(); toast('Payment updated','ok');
+    state.purchases=await api('listPurchases'); renderPurchases(); }
+  catch(e){ toast(e.message,'err'); }
+}
+function moreMenu(){
+  openModal(`<div class="modal-head"><h3>More</h3><button class="x" data-act="modal-close">×</button></div>
+    <div class="modal-body">
+      <button class="btn btn-ghost btn-block" data-nav="reports" style="margin-bottom:10px">∑&nbsp; Reports</button>
+      <button class="btn btn-ghost btn-block" data-nav="purchases" style="margin-bottom:10px">⇩&nbsp; Purchases</button>
+      <button class="btn btn-ghost btn-block" data-nav="expenses" style="margin-bottom:10px">৳&nbsp; Expenses</button>
+      <button class="btn btn-ghost btn-block" data-nav="returns" style="margin-bottom:10px">↩&nbsp; Returns</button>
+      <button class="btn btn-ghost btn-block" data-nav="settings">⚙&nbsp; Settings</button>
+    </div>`);
+}
+
+/* ===================== BARCODE / QR SCANNER ===================== */
+let qrScanner=null;
+function stopScanner(){ if(qrScanner){ const q=qrScanner; qrScanner=null; try{ q.stop().catch(function(){}); }catch(e){} } }
+function openScanner(onScan){
+  openModal(`<div class="modal-head"><h3>Scan code</h3><button class="x" data-act="modal-close">×</button></div>
+    <div class="modal-body"><div id="qr-reader" style="width:100%"></div>
+    <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px">Point the camera at a barcode / QR code.</p></div>`);
+  if(!window.Html5Qrcode){ toast('Scanner not loaded — check internet','err'); return; }
+  qrScanner=new Html5Qrcode('qr-reader');
+  const conf={fps:10, qrbox:{width:250,height:170}};
+  const ok=function(txt){ stopScanner(); closeModal(); onScan(String(txt).trim()); };
+  Html5Qrcode.getCameras().then(function(cams){
+    let id=null;
+    if(cams&&cams.length){ const back=cams.find(function(c){return /back|rear|environment/i.test(c.label);}); id=(back||cams[cams.length-1]).id; }
+    qrScanner.start(id||{facingMode:'environment'}, conf, ok, function(){}).catch(function(){
+      qrScanner.start({facingMode:'environment'}, conf, ok, function(){}).catch(function(e){ toast('Camera error','err'); });
+    });
+  }).catch(function(){
+    qrScanner.start({facingMode:'environment'}, conf, ok, function(){}).catch(function(e){ toast('Camera error','err'); });
+  });
+}
+function posScan(){ openScanner(function(code){
+  const s=$('#pos-search'); if(s) s.value=code; renderProductList(code);
+  const hit=(state.products||[]).find(function(p){ return String(p.SKU)===code || String(p.ID)===code; });
+  if(hit){ addToCart(hit.ID); toast('Added: '+hit.Name,'ok'); }
+}); }
+function invScan(){ openScanner(function(code){ const s=$('#inv-search'); if(s) s.value=code; renderInventory(code); }); }
+
+/* ===================== RETURNS / REFUND ===================== */
+async function viewReturns(){ state.retInv=null; state.retSaleItems=[]; renderReturns(); }
+function renderReturns(){
+  $('#view').innerHTML=`
+    <div class="view-head"><div><div class="eyebrow">Return / Refund</div><h2>Returns</h2></div></div>
+    <div class="card panel" style="margin-bottom:16px"><h3>Find the sale</h3>
+      <div class="toolbar" style="margin-bottom:0">
+        <div class="search"><span class="mag">⌕</span><input id="ret-inv" placeholder="Invoice no e.g. OG260830-001"></div>
+        <button class="btn-icon" data-act="ret-scan" title="Scan" style="padding:9px 12px;font-size:16px">⌾</button>
+        <button class="btn btn-primary btn-sm" data-act="ret-load">Load</button>
+      </div></div>
+    <div id="ret-body"></div>
+    <div class="card panel" style="margin-top:16px"><h3>Recent returns</h3><div id="ret-recent" class="loading" style="padding:20px">…</div></div>`;
+  loadRecentReturns();
+}
+async function retLoad(){
+  const inv=($('#ret-inv')?$('#ret-inv').value:'').trim();
+  if(!inv){ toast('Enter invoice no','err'); return; }
+  try{
+    const r=await api('getSale',{invoiceNo:inv});
+    if(!r.sale){ toast('Invoice not found','err'); $('#ret-body').innerHTML=''; return; }
+    state.retInv=r.sale; state.retSaleItems=r.items;
+    const rows=r.items.map((it,i)=>`<tr>
+        <td>${esc(it.ProductName)}</td><td class="num tnum">${it.Qty}</td><td class="num tnum">${tk(it.SalePrice)}</td>
+        <td class="num"><input type="number" min="0" max="${it.Qty}" value="0" data-ret="${i}" style="width:66px;padding:5px 7px;border:1px solid var(--line-2);border-radius:7px"></td></tr>`).join('');
+    $('#ret-body').innerHTML=`<div class="card panel">
+      <h3>${esc(r.sale.InvoiceNo)} <span class="count">${esc(r.sale.CustomerName||'Walk-in')} · ${fdate(r.sale.Date)}</span></h3>
+      <div class="table-wrap"><table><thead><tr><th>Item</th><th class="num">Sold</th><th class="num">Price</th><th class="num">Return qty</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <p style="font-size:12px;color:var(--muted);margin:10px 0">Returned items go back into stock and are subtracted from sales &amp; profit.</p>
+      <button class="btn btn-gold" data-act="ret-process">Process return</button></div>`;
+  }catch(e){ toast(e.message,'err'); }
+}
+async function retProcess(){
+  const items=[];
+  document.querySelectorAll('[data-ret]').forEach(function(inp){
+    const q=Number(inp.value)||0; if(q>0){ const it=state.retSaleItems[Number(inp.dataset.ret)];
+      items.push({ProductID:it.ProductID, ProductName:it.ProductName, Qty:q, SalePrice:Number(it.SalePrice)||0, BuyPrice:Number(it.BuyPrice)||0}); }
+  });
+  if(!items.length){ toast('Set at least one return qty','err'); return; }
+  try{
+    const r=await api('createReturn',{ret:{InvoiceNo:state.retInv.InvoiceNo, CustomerName:state.retInv.CustomerName}, items});
+    toast('Return '+r.returnNo+' done · stock restored','ok');
+    state.retInv=null; renderReturns();
+  }catch(e){ toast(e.message,'err'); }
+}
+async function loadRecentReturns(){
+  try{
+    const rs=await api('listReturns'); const box=$('#ret-recent'); if(!box)return; box.className='';
+    box.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Return</th><th>Date</th><th>Invoice</th><th class="num">Amount</th></tr></thead><tbody>${
+      rs.slice(0,10).map(r=>`<tr><td>${esc(r.ReturnNo)}</td><td>${fdate(r.Date)}</td><td>${esc(r.InvoiceNo||'')}</td><td class="num tnum">${tk(r.Amount)}</td></tr>`).join('')
+      ||'<tr><td colspan="4" class="empty">No returns yet.</td></tr>'}</tbody></table></div>`;
+  }catch(e){ const box=$('#ret-recent'); if(box){ box.className=''; box.textContent=''; } }
+}
+
+/* ===================== SETTINGS ===================== */
+function viewSettings(){
+  const cfg=getCfg()||{};
+  $('#view').innerHTML=`
+    <div class="view-head"><div><div class="eyebrow">Settings</div><h2>Shop settings</h2></div></div>
+    <div class="card panel" style="margin-bottom:16px"><h3>Shop info (shown on invoice)</h3>
+      <div class="grid2">
+        <div class="field"><label>Shop name</label><input id="set-name" value="${esc(cfg.shopName||"OMME'S GALLERY")}"></div>
+        <div class="field"><label>Phone</label><input id="set-phone" value="${esc(cfg.shopPhone||'')}"></div></div>
+      <div class="field"><label>Address</label><input id="set-addr" value="${esc(cfg.shopAddress||'')}"></div>
+      <div class="field"><label>Invoice footer note</label><input id="set-note" value="${esc(cfg.invoiceNote||'Thank you for shopping with us. ✦ Buy your happiness.')}"></div>
+      <button class="btn btn-gold" data-act="set-save">Save shop info</button></div>
+    <div class="card panel" style="margin-bottom:16px"><h3>Connection</h3>
+      <div class="field"><label>Web app URL</label><input id="set-url" value="${esc(cfg.url||'')}"></div>
+      <div class="field"><label>Password</label><input id="set-pass" type="password" value="${esc(cfg.pass||'')}"></div>
+      <button class="btn btn-ghost" data-act="set-conn">Save &amp; reconnect</button></div>
+    <div class="card panel"><h3>App</h3>
+      <button class="btn btn-ghost install-btn" data-act="install" style="display:none;margin-bottom:10px">⤓ Install to home screen</button>
+      <p style="font-size:12px;color:var(--muted);margin:0 0 12px">Your data lives in your Google Sheet. Product photos are stored in your Google Drive.</p>
+      <button class="btn btn-danger" data-act="disconnect">Disconnect this device</button></div>`;
+  if(deferredPrompt) showInstall(true);
+}
+function saveShopInfo(){
+  const cfg=getCfg()||{};
+  cfg.shopName=$('#set-name').value.trim(); cfg.shopPhone=$('#set-phone').value.trim();
+  cfg.shopAddress=$('#set-addr').value.trim(); cfg.invoiceNote=$('#set-note').value.trim();
+  setCfg(cfg); toast('Saved','ok');
+}
+async function saveConn(){
+  const cfg=getCfg()||{};
+  cfg.url=$('#set-url').value.trim(); cfg.pass=$('#set-pass').value.trim(); setCfg(cfg);
+  try{ await api('dashboard'); toast('Connected ✓','ok'); }catch(e){ toast('Failed: '+e.message,'err'); }
+}
+
 /* ===================== global click handling ===================== */
 document.addEventListener('click', function(e){
-  const nav=e.target.closest('[data-nav]'); if(nav){ setNav(nav.dataset.nav); return; }
+  const nav=e.target.closest('[data-nav]'); if(nav){ closeModal(); setNav(nav.dataset.nav); return; }
   const el=e.target.closest('[data-act]'); if(!el) return;
   const act=el.dataset.act, id=el.dataset.id;
   switch(act){
@@ -934,6 +1436,35 @@ document.addEventListener('click', function(e){
     case 'rep-export-sales': exportSales(); break;
     case 'rep-export-products': exportProducts(); break;
     case 'rep-export-brands': exportBrands(); break;
+    case 'more-menu': moreMenu(); break;
+    case 'exp-new': expenseForm(); break;
+    case 'exp-edit': expenseForm((state.expData||[]).find(x=>String(x.ID)===String(id))); break;
+    case 'exp-save': saveExpense(id); break;
+    case 'exp-del': confirmDel('Delete this expense?', ()=>api('deleteExpense',{id}).then(()=>{ toast('Deleted','ok'); viewExpenses(); })); break;
+    case 'sup-new': supplierForm(); break;
+    case 'sup-new-inline': supplierForm(); break;
+    case 'sup-edit': supplierForm((state.suppliers||[]).find(x=>String(x.ID)===String(id))); break;
+    case 'sup-save': saveSupplier(id); break;
+    case 'sup-del': confirmDel('Delete this supplier?', ()=>api('deleteSupplier',{id}).then(()=>{ toast('Deleted','ok'); state.suppliers=null; viewPurchases(); })); break;
+    case 'pur-tab': state.purTab=el.dataset.tab; renderPurchases(); break;
+    case 'pur-add': purAdd(id); break;
+    case 'pur-inc': purQty(id,1); break;
+    case 'pur-dec': purQty(id,-1); break;
+    case 'pur-del': purQty(id,-9999); break;
+    case 'pur-clear': state.purCart=[]; renderPurLines(); break;
+    case 'pur-save': savePurchase(); break;
+    case 'pur-view': viewPurchase(el.dataset.no); break;
+    case 'pur-pay-save': savePurPayment(el.dataset.no); break;
+    case 'pos-scan': posScan(); break;
+    case 'inv-scan': invScan(); break;
+    case 'ret-scan': openScanner(function(code){ const i=$('#ret-inv'); if(i){ i.value=code; } retLoad(); }); break;
+    case 'ret-load': retLoad(); break;
+    case 'ret-process': retProcess(); break;
+    case 'cus-tab': state.custTab=el.dataset.tab; renderCustomers(''); break;
+    case 'due-pay': duePayForm(id, Number(el.dataset.bal)||0, el.dataset.name||''); break;
+    case 'due-pay-save': savePayDue(id); break;
+    case 'set-save': saveShopInfo(); break;
+    case 'set-conn': saveConn(); break;
   }
 });
 function confirmDel(msg, fn){

@@ -16,7 +16,14 @@ const SHEETS = {
   Products:  ['ID','SKU','Name','Brand','Category','Size','BuyPrice','SalePrice','Stock','ImageURL','CreatedAt'],
   Customers: ['ID','Name','Phone','Address','Email','CreatedAt'],
   Sales:     ['InvoiceNo','Date','CustomerID','CustomerName','Subtotal','Discount','Delivery','Total','Profit','Payment','Status','Note'],
-  SaleItems: ['InvoiceNo','ProductID','ProductName','Qty','SalePrice','BuyPrice','LineTotal','LineProfit']
+  SaleItems: ['InvoiceNo','ProductID','ProductName','Qty','SalePrice','BuyPrice','LineTotal','LineProfit'],
+  Suppliers: ['ID','Name','Company','Phone','Address','Note','CreatedAt'],
+  Expenses:  ['ID','Date','Category','Amount','Note','CreatedAt'],
+  Purchases: ['PurchaseNo','Date','SupplierID','SupplierName','Total','Paid','Due','Status','Note'],
+  PurchaseItems: ['PurchaseNo','ProductID','ProductName','Qty','BuyPrice','LineTotal'],
+  Returns:   ['ReturnNo','Date','InvoiceNo','CustomerName','Amount','ProfitReversed','Note'],
+  ReturnItems: ['ReturnNo','ProductID','ProductName','Qty','SalePrice','BuyPrice','LineTotal','LineProfit'],
+  Dues:      ['ID','Date','InvoiceNo','CustomerID','CustomerName','Amount','Paid','Balance','Status','Note']
 };
 
 /** Run this ONCE from the Apps Script editor to build the sheet tabs. */
@@ -62,6 +69,21 @@ function route(action, req){
     case 'getSale':         return getSale(req.invoiceNo);
     case 'createSale':      return createSale(req.sale, req.items);
     case 'report':          return report(req.from, req.to);
+    case 'listSuppliers':   return readAll('Suppliers');
+    case 'saveSupplier':    return saveRow('Suppliers', req.item, 'S');
+    case 'deleteSupplier':  return deleteRow('Suppliers', req.id);
+    case 'listExpenses':    return readAll('Expenses');
+    case 'saveExpense':     return saveRow('Expenses', req.item, 'E');
+    case 'deleteExpense':   return deleteRow('Expenses', req.id);
+    case 'listPurchases':   return listPurchases();
+    case 'getPurchase':     return getPurchase(req.purchaseNo);
+    case 'createPurchase':  return createPurchase(req.purchase, req.items);
+    case 'updatePurchasePayment': return updatePurchasePayment(req.purchaseNo, req.paid);
+    case 'uploadImage':     return uploadImage(req.fileName, req.mimeType, req.data);
+    case 'createReturn':    return createReturn(req.ret, req.items);
+    case 'listReturns':     return listReturns();
+    case 'listDues':        return listDues();
+    case 'payDue':          return payDue(req.id, req.amount);
     default: throw 'Unknown action: ' + action;
   }
 }
@@ -71,7 +93,17 @@ function json(obj){
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
-function sh(name){ return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name); }
+function sh(name){
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let s = ss.getSheetByName(name);
+  if (!s && SHEETS[name]){
+    s = ss.insertSheet(name);
+    s.getRange(1, 1, 1, SHEETS[name].length).setValues([SHEETS[name]]);
+    s.setFrozenRows(1);
+    s.getRange(1, 1, 1, SHEETS[name].length).setFontWeight('bold');
+  }
+  return s;
+}
 function num(v){ return Number(v) || 0; }
 
 function readAll(name){
@@ -95,7 +127,7 @@ function findRow(name, id){
   return -1;
 }
 
-const NUM_FIELDS = ['BuyPrice','SalePrice','Stock'];
+const NUM_FIELDS = ['BuyPrice','SalePrice','Stock','Amount'];
 function coerce(item){
   NUM_FIELDS.forEach(function(f){ if (item[f] !== undefined && item[f] !== '') item[f] = Number(item[f]) || 0; });
   return item;
@@ -192,7 +224,18 @@ function createSale(sale, items){
       const si = sh('SaleItems');
       si.getRange(si.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
     }
-    return { invoiceNo: invNo, subtotal: subtotal, discount: discount, delivery: delivery, total: total, profit: netProfit };
+
+    // customer due (credit): if amount received is less than total
+    const received = (sale.Paid === '' || sale.Paid == null) ? total : num(sale.Paid);
+    let due = 0;
+    if (received < total){
+      due = total - received;
+      sh('Dues').appendRow([
+        'D' + Date.now().toString(36).toUpperCase(), now.toISOString(), invNo,
+        sale.CustomerID || '', sale.CustomerName || '', due, 0, due, 'Due', ''
+      ]);
+    }
+    return { invoiceNo: invNo, subtotal: subtotal, discount: discount, delivery: delivery, total: total, profit: netProfit, received: received, due: due };
   } finally { lock.releaseLock(); }
 }
 
@@ -212,23 +255,28 @@ function customerHistory(id){
     .sort(function(a,b){ return new Date(b.Date) - new Date(a.Date); });
   let spent = 0, prof = 0;
   sales.forEach(function(s){ spent += Number(s.Total) || 0; prof += Number(s.Profit) || 0; });
-  return { sales: sales, orders: sales.length, totalSpent: spent, totalProfit: prof };
+  let due = 0;
+  readAll('Dues').forEach(function(d){
+    if (String(d.CustomerID) === String(id)) due += num(d.Balance);
+  });
+  return { sales: sales, orders: sales.length, totalSpent: spent, totalProfit: prof, due: due };
 }
 
 function dashboard(){
   const tz = Session.getScriptTimeZone();
   const sales = readAll('Sales');
   const products = readAll('Products');
+  const returns = readAll('Returns');
+  const dues = readAll('Dues');
   const todayStr = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
   const yr = Utilities.formatDate(new Date(), tz, 'yyyy');
 
   let tSales = 0, tProfit = 0, tOrders = 0, allSales = 0, allProfit = 0;
   const monthly = {};
-
   sales.forEach(function(s){
     const d = new Date(s.Date);
     const dStr = Utilities.formatDate(d, tz, 'yyyy-MM-dd');
-    const total = Number(s.Total) || 0, pf = Number(s.Profit) || 0;
+    const total = num(s.Total), pf = num(s.Profit);
     allSales += total; allProfit += pf;
     if (dStr === todayStr){ tSales += total; tProfit += pf; tOrders++; }
     if (Utilities.formatDate(d, tz, 'yyyy') === yr){
@@ -237,14 +285,32 @@ function dashboard(){
     }
   });
 
+  // subtract returns (refunds)
+  let tRet = 0, tRetProfit = 0, allRet = 0, allRetProfit = 0;
+  returns.forEach(function(r){
+    const d = new Date(r.Date);
+    const dStr = Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+    const amt = num(r.Amount), rp = num(r.ProfitReversed);
+    allRet += amt; allRetProfit += rp;
+    if (dStr === todayStr){ tRet += amt; tRetProfit += rp; }
+    if (Utilities.formatDate(d, tz, 'yyyy') === yr){
+      const m = Utilities.formatDate(d, tz, 'yyyy-MM');
+      monthly[m] = (monthly[m] || 0) - amt;
+    }
+  });
+
+  let outstandingDue = 0;
+  dues.forEach(function(x){ outstandingDue += num(x.Balance); });
+
   const recent = sales.slice()
     .sort(function(a,b){ return new Date(b.Date) - new Date(a.Date); })
     .slice(0, 8);
-  const low = products.filter(function(p){ return Number(p.Stock) <= LOW_STOCK; });
+  const low = products.filter(function(p){ return num(p.Stock) <= LOW_STOCK; });
 
   return {
-    today:   { sales: tSales, profit: tProfit, orders: tOrders },
-    allTime: { sales: allSales, profit: allProfit, orders: sales.length },
+    today:   { sales: tSales - tRet, profit: tProfit - tRetProfit, orders: tOrders, returns: tRet },
+    allTime: { sales: allSales - allRet, profit: allProfit - allRetProfit, orders: sales.length, returns: allRet },
+    outstandingDue: outstandingDue,
     year: yr, monthly: monthly, recent: recent,
     lowStock: low, productCount: products.length, customerCount: readAll('Customers').length
   };
@@ -283,6 +349,13 @@ function report(from, to){
   let itemsSold=0, cogs=0;
   I.forEach(function(it){ itemsSold += num(it.Qty); cogs += num(it.Qty) * num(it.BuyPrice); });
   const orders = S.length;
+
+  // returns (refunds) in range
+  const retRows = readAll('Returns').filter(function(r){ return r.Date && inRange(r.Date); });
+  let retAmount = 0, retProfit = 0;
+  retRows.forEach(function(r){ retAmount += num(r.Amount); retProfit += num(r.ProfitReversed); });
+  const netSales = totalSales - retAmount;
+  const netProfit = totalProfit - retProfit;
 
   // best sellers by product
   const pAgg = {};
@@ -330,17 +403,210 @@ function report(from, to){
     if (y === thisYear){ cur[m] += num(s.Total); prof[m] += num(s.Profit); }
     else if (y === thisYear - 1){ prev[m] += num(s.Total); }
   });
+  readAll('Returns').forEach(function(r){
+    if (!r.Date) return;
+    const d = new Date(r.Date);
+    const y = Number(Utilities.formatDate(d, tz, 'yyyy'));
+    const m = Number(Utilities.formatDate(d, tz, 'MM')) - 1;
+    if (y === thisYear){ cur[m] -= num(r.Amount); prof[m] -= num(r.ProfitReversed); }
+    else if (y === thisYear - 1){ prev[m] -= num(r.Amount); }
+  });
 
   return {
     range: { from: from || null, to: to || null },
     summary: {
-      totalSales: totalSales, totalProfit: totalProfit, orders: orders, itemsSold: itemsSold,
+      totalSales: netSales, totalProfit: netProfit, grossSales: totalSales,
+      returns: retAmount, retProfit: retProfit,
+      orders: orders, itemsSold: itemsSold,
       totalDiscount: totalDiscount, totalDelivery: totalDelivery, cogs: cogs, subtotal: subtotal,
-      avgOrder: orders ? totalSales / orders : 0,
-      avgProfit: orders ? totalProfit / orders : 0,
-      margin: totalSales ? (totalProfit / totalSales * 100) : 0
+      avgOrder: orders ? netSales / orders : 0,
+      avgProfit: orders ? netProfit / orders : 0,
+      margin: netSales ? (netProfit / netSales * 100) : 0
     },
     bestSellers: bestSellers, byBrand: byBrand, byCustomer: byCustomer, byPayment: pay,
     yoy: { year: thisYear, cur: cur, prev: prev, profit: prof }
   };
+}
+
+/* ---------- Purchases (stock inward) ---------- */
+function nextPurchase(){
+  const s = sh('Purchases');
+  const seq = Math.max(s.getLastRow() - 1, 0) + 1;
+  const d = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyMMdd');
+  return 'PO' + d + '-' + ('000' + seq).slice(-3);
+}
+
+/** Create a purchase: writes Purchases + PurchaseItems, INCREASES stock,
+    updates each product's BuyPrice to the latest purchase price. */
+function createPurchase(pur, items){
+  const lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try{
+    items = items || [];
+    const no = nextPurchase();
+    const now = new Date();
+    const prod = sh('Products');
+    const stockCol = SHEETS.Products.indexOf('Stock') + 1;
+    const buyCol   = SHEETS.Products.indexOf('BuyPrice') + 1;
+    let total = 0;
+
+    items.forEach(function(it){
+      const qty = num(it.Qty), bp = num(it.BuyPrice);
+      it.LineTotal = qty * bp; total += it.LineTotal;
+      if (it.ProductID){
+        const idx = findRow('Products', it.ProductID);
+        if (idx > 0){
+          const cur = num(prod.getRange(idx, stockCol).getValue());
+          prod.getRange(idx, stockCol).setValue(cur + qty);       // stock IN
+          if (bp > 0) prod.getRange(idx, buyCol).setValue(bp);    // latest cost
+        }
+      }
+    });
+
+    const paid = num(pur.Paid);
+    const due = total - paid;
+    sh('Purchases').appendRow([
+      no, now.toISOString(), pur.SupplierID || '', pur.SupplierName || '',
+      total, paid, due, (due <= 0 ? 'Paid' : 'Due'), pur.Note || ''
+    ]);
+
+    if (items.length){
+      const rows = items.map(function(it){
+        return [no, it.ProductID || '', it.ProductName || '', num(it.Qty), num(it.BuyPrice), it.LineTotal];
+      });
+      const pi = sh('PurchaseItems');
+      pi.getRange(pi.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
+    }
+    return { purchaseNo: no, total: total, paid: paid, due: due };
+  } finally { lock.releaseLock(); }
+}
+
+function listPurchases(){
+  return readAll('Purchases').sort(function(a,b){ return new Date(b.Date) - new Date(a.Date); });
+}
+
+function getPurchase(no){
+  const p = readAll('Purchases').filter(function(x){ return String(x.PurchaseNo) === String(no); })[0];
+  const items = readAll('PurchaseItems').filter(function(i){ return String(i.PurchaseNo) === String(no); });
+  return { purchase: p || null, items: items };
+}
+
+/** Set the paid amount on a purchase and recompute due/status. */
+function updatePurchasePayment(no, paid){
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try{
+    const idx = findRow('Purchases', no);
+    if (idx < 0) return { error: 'not found' };
+    const head = SHEETS.Purchases;
+    const s = sh('Purchases');
+    const total = num(s.getRange(idx, head.indexOf('Total') + 1).getValue());
+    const p = num(paid);
+    const due = total - p;
+    s.getRange(idx, head.indexOf('Paid') + 1).setValue(p);
+    s.getRange(idx, head.indexOf('Due') + 1).setValue(due);
+    s.getRange(idx, head.indexOf('Status') + 1).setValue(due <= 0 ? 'Paid' : 'Due');
+    return { paid: p, due: due };
+  } finally { lock.releaseLock(); }
+}
+
+/* ---------- Vol 5: image upload, returns, dues ---------- */
+
+/** Run once from the editor for Vol 5 to grant Sheets + Drive access. */
+function authorize(){
+  setup();
+  imageFolder();               // touches DriveApp -> requests Drive permission
+  return 'Authorized (Sheets + Drive). Now Deploy a new version.';
+}
+
+function imageFolder(){
+  const name = 'OMME Gallery Product Images';
+  const it = DriveApp.getFoldersByName(name);
+  return it.hasNext() ? it.next() : DriveApp.createFolder(name);
+}
+
+/** Save a base64 image to Drive, return a public thumbnail URL. */
+function uploadImage(fileName, mimeType, dataB64){
+  const folder = imageFolder();
+  const bytes = Utilities.base64Decode(dataB64);
+  const blob = Utilities.newBlob(bytes, mimeType || 'image/jpeg', fileName || ('img_' + Date.now()));
+  const f = folder.createFile(blob);
+  try { f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(e){}
+  const id = f.getId();
+  return { id: id, url: 'https://drive.google.com/thumbnail?id=' + id + '&sz=w600' };
+}
+
+function nextReturn(){
+  const s = sh('Returns');
+  const seq = Math.max(s.getLastRow() - 1, 0) + 1;
+  const d = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyMMdd');
+  return 'RT' + d + '-' + ('000' + seq).slice(-3);
+}
+
+/** Process a return/refund: puts stock BACK, records Returns + ReturnItems. */
+function createReturn(ret, items){
+  const lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try{
+    items = items || [];
+    const no = nextReturn();
+    const now = new Date();
+    const prod = sh('Products');
+    const stockCol = SHEETS.Products.indexOf('Stock') + 1;
+    let amount = 0, profitRev = 0;
+
+    items.forEach(function(it){
+      const qty = num(it.Qty), sp = num(it.SalePrice), bp = num(it.BuyPrice);
+      it.LineTotal = qty * sp;
+      it.LineProfit = qty * (sp - bp);
+      amount += it.LineTotal;
+      profitRev += it.LineProfit;
+      if (it.ProductID){
+        const idx = findRow('Products', it.ProductID);
+        if (idx > 0){
+          const cur = num(prod.getRange(idx, stockCol).getValue());
+          prod.getRange(idx, stockCol).setValue(cur + qty);     // stock back IN
+        }
+      }
+    });
+
+    sh('Returns').appendRow([
+      no, now.toISOString(), ret.InvoiceNo || '', ret.CustomerName || '',
+      amount, profitRev, ret.Note || ''
+    ]);
+    if (items.length){
+      const rows = items.map(function(it){
+        return [no, it.ProductID || '', it.ProductName || '', num(it.Qty),
+                num(it.SalePrice), num(it.BuyPrice), it.LineTotal, it.LineProfit];
+      });
+      const ri = sh('ReturnItems');
+      ri.getRange(ri.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
+    }
+    return { returnNo: no, amount: amount, profitReversed: profitRev };
+  } finally { lock.releaseLock(); }
+}
+
+function listReturns(){
+  return readAll('Returns').sort(function(a,b){ return new Date(b.Date) - new Date(a.Date); });
+}
+
+function listDues(){
+  return readAll('Dues')
+    .filter(function(d){ return num(d.Balance) > 0; })
+    .sort(function(a,b){ return new Date(b.Date) - new Date(a.Date); });
+}
+
+/** Record a payment against a customer due; reduces balance. */
+function payDue(id, amount){
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try{
+    const idx = findRow('Dues', id);
+    if (idx < 0) return { error: 'not found' };
+    const head = SHEETS.Dues;
+    const s = sh('Dues');
+    const amt = num(s.getRange(idx, head.indexOf('Amount') + 1).getValue());
+    const paidNow = num(s.getRange(idx, head.indexOf('Paid') + 1).getValue()) + num(amount);
+    const bal = amt - paidNow;
+    s.getRange(idx, head.indexOf('Paid') + 1).setValue(paidNow);
+    s.getRange(idx, head.indexOf('Balance') + 1).setValue(bal);
+    s.getRange(idx, head.indexOf('Status') + 1).setValue(bal <= 0 ? 'Paid' : 'Due');
+    return { paid: paidNow, balance: bal };
+  } finally { lock.releaseLock(); }
 }
