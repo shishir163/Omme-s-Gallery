@@ -1,7 +1,7 @@
 /* OMME'S GALLERY — service worker (Vol 6, local)
    Caches the app shell so it opens offline. API calls (POST to Apps Script)
    always go to the network and are never cached. */
-const CACHE = 'omme-shell-v6';
+const CACHE = 'omme-shell-v7';
 const SHELL = [
   './',
   './index.html',
@@ -40,6 +40,21 @@ self.addEventListener('fetch', function(e){
   }
 
   var url = new URL(req.url);
+
+  // Always fetch the app shell fresh (network-first) so new versions show up.
+  if (url.origin === self.location.origin &&
+      (url.pathname.endsWith('/') || url.pathname.endsWith('index.html') ||
+       url.pathname.endsWith('sw.js') || url.pathname.endsWith('manifest.json'))){
+    e.respondWith(
+      fetch(req).then(function(res){
+        var copy = res.clone();
+        caches.open(CACHE).then(function(c){ c.put(req, copy); });
+        return res;
+      }).catch(function(){ return caches.match(req).then(function(c){ return c || caches.match('./index.html'); }); })
+    );
+    return;
+  }
+
   e.respondWith(
     caches.match(req).then(function(cached){
       var net = fetch(req).then(function(res){

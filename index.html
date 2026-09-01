@@ -1889,7 +1889,24 @@ window.addEventListener('appinstalled', function(){ showInstall(false); toast('A
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js').catch(function(){ /* offline mode just won't be available */ });
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      reg.update();  // always check for a newer service worker
+      reg.addEventListener('updatefound', function(){
+        var nw = reg.installing;
+        if(!nw) return;
+        nw.addEventListener('statechange', function(){
+          // a new version has taken over — reload once to show it
+          if(nw.state === 'activated' && navigator.serviceWorker.controller){
+            if(!window.__reloadedForSW){ window.__reloadedForSW = true; location.reload(); }
+          }
+        });
+      });
+    }).catch(function(){ /* offline mode just won't be available */ });
+    // if the controlling worker changes (new version), reload once
+    var refreshed = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if(refreshed) return; refreshed = true; location.reload();
+    });
   });
 }
 
