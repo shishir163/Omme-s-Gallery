@@ -106,7 +106,7 @@
 
   .main{padding:30px 34px 60px; overflow-x:hidden}
   .view-head{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:22px; flex-wrap:wrap}
-  .view-head h2{font-family:var(--serif); font-weight:600; font-size:29px; margin:0; letter-spacing:.01em}
+  .view-head h2{font-family:var(--sans); font-weight:900; font-size:27px; margin:0; letter-spacing:-.01em}
   .view-head .eyebrow{font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--gold); font-weight:600; margin-bottom:3px}
 
   /* ---------- cards / grid ---------- */
@@ -173,7 +173,7 @@
 
   .row2{display:grid; grid-template-columns:1.5fr 1fr; gap:16px; align-items:start}
   .panel{padding:18px 20px}
-  .panel h3{font-family:var(--serif); font-weight:600; font-size:19px; margin:0 0 14px; display:flex; align-items:center; justify-content:space-between}
+  .panel h3{font-family:var(--sans); font-weight:900; font-size:17px; margin:0 0 14px; display:flex; align-items:center; justify-content:space-between}
   .panel h3 .count{font-family:var(--sans); font-size:11px; color:var(--muted); font-weight:600}
 
   /* ---------- table ---------- */
@@ -807,11 +807,12 @@ async function viewInventory(){
 function renderInventory(q){
   const list=state.products.filter(p=>!q || (String(p.Name)+p.Brand+p.SKU+p.Category).toLowerCase().includes(q.toLowerCase()));
   const rows=list.map(p=>{
-    const low=Number(p.Stock)<=3;
+    const low=Number(p.Stock)<=1;
     return `<tr class="${low?'lowstock':''}">
       <td><div style="display:flex;align-items:center;gap:10px">
-        <span><strong>${esc(p.Name)}</strong>${p.Size?' <span class="stock-tag">('+esc(p.Size)+')</span>':''}</span></div></td>
+        <span><strong>${esc(p.Name)}</strong>${p.Type?' <span class="stock-tag">('+esc(p.Type)+')</span>':''}</span></div></td>
       <td>${p.Brand?'<span class="pill brand">'+esc(p.Brand)+'</span>':''}</td>
+      <td>${esc(p.Dupatta||'')}</td>
       <td>${esc(p.SKU||'')}</td>
       <td class="num tnum">${tk(p.BuyPrice)}</td>
       <td class="num tnum">${tk(p.SalePrice)}</td>
@@ -820,7 +821,7 @@ function renderInventory(q){
         <button class="btn-icon" data-act="product-edit" data-id="${esc(p.ID)}">Edit</button>
         <button class="btn-icon" data-act="product-del" data-id="${esc(p.ID)}">✕</button></td>
     </tr>`;}).join('') ||
-    `<tr><td colspan="7" class="empty"><div class="big">No products yet</div>Add your first item to start selling.</td></tr>`;
+    `<tr><td colspan="8" class="empty"><div class="big">No products yet</div>Add your first item to start selling.</td></tr>`;
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Inventory</div><h2>Products &amp; stock</h2></div>
       <button class="btn btn-gold" data-act="product-new">＋ Add product</button></div>
@@ -830,7 +831,7 @@ function renderInventory(q){
       <input id="inv-csv-file" type="file" accept=".csv,text/csv" style="display:none">
       <span style="color:var(--muted); font-size:13px">${list.length} item(s)</span></div>
     <div class="card"><div class="table-wrap"><table>
-      <thead><tr><th>Name</th><th>Brand</th><th>SKU</th><th class="num">Buy</th><th class="num">Sale</th><th class="num">Stock</th><th class="num">Actions</th></tr></thead>
+      <thead><tr><th>Name</th><th>Brand</th><th>Dupatta</th><th>SKU</th><th class="num">Buy</th><th class="num">Sale</th><th class="num">Stock</th><th class="num">Actions</th></tr></thead>
       <tbody>${rows}</tbody></table></div></div>`;
   const s=$('#inv-search'); if(s) s.oninput=()=>{ const v=s.value; renderInventory(v); const n=$('#inv-search'); if(n){n.focus(); n.value=v;} };
 }
@@ -847,34 +848,26 @@ function productForm(p){
       <datalist id="brands"><option>Cross Stitch</option><option>So Kamal</option><option>Sapphire</option><option>Gul Ahmed</option><option>Khaadi</option><option>Beechtree</option><option>Zellbury</option><option>Nishat</option><option>Limelight</option><option>Asim Jofa</option></datalist>
       <div class="grid2">
         <div class="field"><label>Type</label><input id="f-type" value="${esc(p.Type||'')}" placeholder="Lawn / Chiffon / Embroidered…"></div>
-        <div class="field"><label>Dupatta</label>
-          <select id="f-dupatta" class="fullsel">
-            <option value="" ${!p.Dupatta?'selected':''}>—</option>
-            <option value="আছে" ${p.Dupatta==='আছে'?'selected':''}>আছে (Included)</option>
-            <option value="নেই" ${p.Dupatta==='নেই'?'selected':''}>নেই (Not included)</option>
-          </select></div>
+        <div class="field"><label>Dupatta</label><input id="f-dupatta" value="${esc(p.Dupatta||'')}" placeholder="আছে / নেই / যা লিখবে"></div>
       </div>
       <div class="grid2">
-        <div class="field"><label>Size</label><input id="f-size" value="${esc(p.Size)}"></div>
         <div class="field"><label>SKU</label><input id="f-sku" value="${esc(p.SKU)}"></div>
+        <div class="field"><label>Shipping cost (৳) <span style="font-weight:400;color:var(--muted);font-size:11px">— শুধু তোমার জন্য</span></label>
+          <input id="f-shipping" type="number" value="${p.ShippingCost||''}" placeholder="0"></div>
       </div>
       <div class="grid2">
         <div class="field"><label>Buy price (৳)</label><input id="f-buy" type="number" value="${p.BuyPrice||''}"></div>
         <div class="field"><label>Sale price (৳)</label><input id="f-sale" type="number" value="${p.SalePrice||''}"></div>
       </div>
-      <div class="grid2">
-        <div class="field"><label>Stock quantity</label><input id="f-stock" type="number" value="${p.Stock!==undefined?p.Stock:''}"></div>
-        <div class="field"><label>Shipping cost (৳) <span style="font-weight:400;color:var(--muted);font-size:11px">— শুধু তোমার জন্য</span></label>
-          <input id="f-shipping" type="number" value="${p.ShippingCost||''}" placeholder="0"></div>
-      </div>
+      <div class="field"><label>Stock quantity</label><input id="f-stock" type="number" value="${p.Stock!==undefined?p.Stock:''}"></div>
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
       <button class="btn btn-gold" data-act="product-save" data-id="${esc(p.ID||'')}">Save product</button></div>`);
 }
 async function saveProduct(id){
   const item={ ID:id||'', Name:$('#f-name').value.trim(), Brand:$('#f-brand').value.trim(),
-    Category:$('#f-cat').value.trim(), Size:$('#f-size').value.trim(), SKU:$('#f-sku').value.trim(),
-    Type:$('#f-type').value.trim(), Dupatta:$('#f-dupatta').value,
+    Category:$('#f-cat').value.trim(), Size:'', SKU:$('#f-sku').value.trim(),
+    Type:$('#f-type').value.trim(), Dupatta:$('#f-dupatta').value.trim(),
     ShippingCost:$('#f-shipping').value||'0',
     BuyPrice:$('#f-buy').value, SalePrice:$('#f-sale').value, Stock:$('#f-stock').value };
   if(!item.Name){ toast('Name is required','err'); return; }
