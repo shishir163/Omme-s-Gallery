@@ -106,7 +106,7 @@
 
   .main{padding:30px 34px 60px; overflow-x:hidden}
   .view-head{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:22px; flex-wrap:wrap}
-  .view-head h2{font-family:var(--sans); font-weight:900; font-size:27px; margin:0; letter-spacing:-.01em}
+  .view-head h2{font-family:var(--sans); font-weight:900; font-size:26px; margin:0; letter-spacing:.01em; text-transform:uppercase}
   .view-head .eyebrow{font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--gold); font-weight:600; margin-bottom:3px}
 
   /* ---------- cards / grid ---------- */
@@ -155,7 +155,7 @@
 
   .dash .d-row{display:grid; grid-template-columns:1.6fr 1fr; gap:16px; align-items:start; position:relative; z-index:1}
   .d-card{background:rgba(255,255,255,.045); border:1px solid var(--d-line); border-radius:16px; padding:18px 20px}
-  .d-card h3{font-family:var(--sans); font-weight:900; font-size:15px; letter-spacing:.01em; margin:0 0 14px;
+  .d-card h3{font-family:var(--sans); font-weight:900; font-size:14px; letter-spacing:.03em; margin:0 0 14px; text-transform:uppercase;
     display:flex; align-items:center; justify-content:space-between; color:var(--d-ink)}
   .d-card h3 .yr{font-weight:700; font-size:12px; color:var(--d-muted)}
   .dash .low-chip{display:inline-block; margin:0 6px 6px 0; padding:5px 11px; border-radius:999px; font-size:12px;
@@ -173,7 +173,7 @@
 
   .row2{display:grid; grid-template-columns:1.5fr 1fr; gap:16px; align-items:start}
   .panel{padding:18px 20px}
-  .panel h3{font-family:var(--sans); font-weight:900; font-size:17px; margin:0 0 14px; display:flex; align-items:center; justify-content:space-between}
+  .panel h3{font-family:var(--sans); font-weight:900; font-size:16px; margin:0 0 14px; display:flex; align-items:center; justify-content:space-between; text-transform:uppercase; letter-spacing:.02em}
   .panel h3 .count{font-family:var(--sans); font-size:11px; color:var(--muted); font-weight:600}
 
   /* ---------- table ---------- */
@@ -809,9 +809,10 @@ function renderInventory(q){
   const rows=list.map(p=>{
     const low=Number(p.Stock)<=1;
     return `<tr class="${low?'lowstock':''}">
-      <td><div style="display:flex;align-items:center;gap:10px">
-        <span><strong>${esc(p.Name)}</strong>${p.Type?' <span class="stock-tag">('+esc(p.Type)+')</span>':''}</span></div></td>
+      <td><strong>${esc(p.Name)}</strong></td>
       <td>${p.Brand?'<span class="pill brand">'+esc(p.Brand)+'</span>':''}</td>
+      <td>${esc(p.Category||'')}</td>
+      <td>${esc(p.Type||'')}</td>
       <td>${esc(p.Dupatta||'')}</td>
       <td>${esc(p.SKU||'')}</td>
       <td class="num tnum">${tk(p.BuyPrice)}</td>
@@ -821,7 +822,7 @@ function renderInventory(q){
         <button class="btn-icon" data-act="product-edit" data-id="${esc(p.ID)}">Edit</button>
         <button class="btn-icon" data-act="product-del" data-id="${esc(p.ID)}">✕</button></td>
     </tr>`;}).join('') ||
-    `<tr><td colspan="8" class="empty"><div class="big">No products yet</div>Add your first item to start selling.</td></tr>`;
+    `<tr><td colspan="10" class="empty"><div class="big">No products yet</div>Add your first item to start selling.</td></tr>`;
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Inventory</div><h2>Products &amp; stock</h2></div>
       <button class="btn btn-gold" data-act="product-new">＋ Add product</button></div>
@@ -831,7 +832,7 @@ function renderInventory(q){
       <input id="inv-csv-file" type="file" accept=".csv,text/csv" style="display:none">
       <span style="color:var(--muted); font-size:13px">${list.length} item(s)</span></div>
     <div class="card"><div class="table-wrap"><table>
-      <thead><tr><th>Name</th><th>Brand</th><th>Dupatta</th><th>SKU</th><th class="num">Buy</th><th class="num">Sale</th><th class="num">Stock</th><th class="num">Actions</th></tr></thead>
+      <thead><tr><th>Name</th><th>Brand</th><th>Category</th><th>Type</th><th>Dupatta</th><th>SKU</th><th class="num">Buy</th><th class="num">Sale</th><th class="num">Stock</th><th class="num">Actions</th></tr></thead>
       <tbody>${rows}</tbody></table></div></div>`;
   const s=$('#inv-search'); if(s) s.oninput=()=>{ const v=s.value; renderInventory(v); const n=$('#inv-search'); if(n){n.focus(); n.value=v;} };
 }
