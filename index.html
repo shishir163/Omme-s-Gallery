@@ -40,8 +40,8 @@
     -webkit-font-smoothing:antialiased; font-size:15px; line-height:1.5;
   }
   .tnum{font-variant-numeric:tabular-nums}
-  button{font-family:inherit; cursor:pointer}
-  input,select,textarea{font-family:inherit; font-size:15px}
+  button{font-family:inherit; font-weight:700; cursor:pointer}
+  input,select,textarea{font-family:inherit; font-size:15px; font-weight:700}
   a{color:var(--gold)}
 
   /* ---------- wordmark ---------- */
@@ -824,6 +824,8 @@ function renderInventory(q){
       <button class="btn btn-gold" data-act="product-new">＋ Add product</button></div>
     <div class="toolbar"><div class="search"><span class="mag">⌕</span>
       <input id="inv-search" placeholder="Search name, brand, SKU…" value="${esc(q)}"></div>
+      <button class="btn btn-ghost btn-sm" data-act="inv-csv-import" title="Import products from CSV">⭱ CSV Import</button>
+      <input id="inv-csv-file" type="file" accept=".csv,text/csv" style="display:none">
       <span style="color:var(--muted); font-size:13px">${list.length} item(s)</span></div>
     <div class="card"><div class="table-wrap"><table>
       <thead><tr><th>Name</th><th>Brand</th><th>SKU</th><th class="num">Buy</th><th class="num">Sale</th><th class="num">Stock</th><th class="num">Actions</th></tr></thead>
@@ -1674,6 +1676,47 @@ async function loadRecentReturns(){
   }catch(e){ const box=$('#ret-recent'); if(box){ box.className=''; box.textContent=''; } }
 }
 
+/* ===================== CSV IMPORT (Products) ===================== */
+function parseCSV(text){
+  const lines=text.split(/\r?\n/);
+  return lines.map(function(line){
+    const cells=[]; let cur='', inQ=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){ if(inQ && line[i+1]==='"'){ cur+='"'; i++; } else inQ=!inQ; }
+      else if(c===','&&!inQ){ cells.push(cur); cur=''; }
+      else cur+=c;
+    }
+    cells.push(cur); return cells;
+  });
+}
+async function importProductsCSV(input){
+  const file=input.files&&input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async function(){
+    try{
+      const rows=parseCSV(String(reader.result)).filter(function(r){ return r.some(function(c){ return c.trim(); }); });
+      if(rows.length<2){ toast('CSV ফাঁকা বা শুধু header আছে','err'); return; }
+      // normalize headers: remove trailing * and trim
+      const hdrs=rows[0].map(function(h){ return h.trim().replace(/\s*\*$/,''); });
+      let count=0;
+      for(let i=1;i<rows.length;i++){
+        const row=rows[i];
+        const item={};
+        hdrs.forEach(function(h,j){ item[h]=(row[j]||'').trim(); });
+        if(!item.Name) continue; // skip rows without name
+        // keep ID if provided (preserves link from template), otherwise blank → auto-generated
+        await api('saveProduct',{item});
+        count++;
+      }
+      input.value='';
+      toast(count+' টা product import হয়েছে ✦','ok');
+      viewInventory();
+    }catch(e){ toast('Import failed: '+e.message,'err'); input.value=''; }
+  };
+  reader.readAsText(file,'UTF-8');
+}
+
 /* ===================== SETTINGS ===================== */
 function viewSettings(){
   const cfg=getCfg()||{};
@@ -1741,6 +1784,7 @@ document.addEventListener('click', function(e){
     case 'install': doInstall(); break;
     case 'modal-close': closeModal(); break;
     case 'product-new': productForm(); break;
+    case 'inv-csv-import': { const f=$('#inv-csv-file'); if(f){ f.onchange=()=>importProductsCSV(f); f.click(); } break; }
     case 'product-edit': productForm(state.products.find(p=>String(p.ID)===String(id))); break;
     case 'product-save': saveProduct(id); break;
     case 'product-del': confirmDel('Delete this product?', ()=>api('deleteProduct',{id}).then(()=>{ toast('Deleted','ok'); viewInventory(); })); break;
