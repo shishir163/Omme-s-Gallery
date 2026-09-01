@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en" translate="no">
 <head>
 <meta charset="UTF-8" />
+<meta name="google" content="notranslate" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#1b1610" />
 <title>OMME'S GALLERY — Manager</title>
@@ -805,9 +806,12 @@ async function viewInventory(){
   renderInventory('');
 }
 function renderInventory(q){
-  const list=state.products.filter(p=>!q || (String(p.Name)+p.Brand+p.SKU+p.Category).toLowerCase().includes(q.toLowerCase()));
+  let list=state.products.filter(p=>!q || (String(p.Name)+p.Brand+p.SKU+p.Category).toLowerCase().includes(q.toLowerCase()));
+  if(state.hideSoldOut) list=list.filter(p=>Number(p.Stock)>0);
+  const soldOutCount=state.products.filter(p=>Number(p.Stock)<=0).length;
   const rows=list.map(p=>{
     const low=Number(p.Stock)<=1;
+    const out=Number(p.Stock)<=0;
     return `<tr class="${low?'lowstock':''}">
       <td><strong>${esc(p.Name)}</strong></td>
       <td>${p.Brand?'<span class="pill brand">'+esc(p.Brand)+'</span>':''}</td>
@@ -817,17 +821,18 @@ function renderInventory(q){
       <td>${esc(p.SKU||'')}</td>
       <td class="num tnum">${tk(p.BuyPrice)}</td>
       <td class="num tnum">${tk(p.SalePrice)}</td>
-      <td class="num tnum">${Number(p.Stock)} ${low?'<span class="pill warn">low</span>':''}</td>
+      <td class="num tnum">${Number(p.Stock)} ${out?'<span class="pill warn">sold out</span>':(low?'<span class="pill warn">low</span>':'')}</td>
       <td class="num">
         <button class="btn-icon" data-act="product-edit" data-id="${esc(p.ID)}">Edit</button>
         <button class="btn-icon" data-act="product-del" data-id="${esc(p.ID)}">✕</button></td>
     </tr>`;}).join('') ||
-    `<tr><td colspan="10" class="empty"><div class="big">No products yet</div>Add your first item to start selling.</td></tr>`;
+    `<tr><td colspan="10" class="empty"><div class="big">No products ${state.hideSoldOut?'in stock':'yet'}</div>${state.hideSoldOut?'Turn off the sold-out filter to see all.':'Add your first item to start selling.'}</td></tr>`;
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Inventory</div><h2>Products &amp; stock</h2></div>
       <button class="btn btn-gold" data-act="product-new">＋ Add product</button></div>
     <div class="toolbar"><div class="search"><span class="mag">⌕</span>
       <input id="inv-search" placeholder="Search name, brand, SKU…" value="${esc(q)}"></div>
+      <button class="btn btn-sm ${state.hideSoldOut?'btn-gold':'btn-ghost'}" data-act="inv-toggle-soldout" title="Show/hide sold-out products">${state.hideSoldOut?'✓ Hiding sold-out':'Hide sold-out'}${soldOutCount?' ('+soldOutCount+')':''}</button>
       <button class="btn btn-ghost btn-sm" data-act="inv-csv-import" title="Import products from CSV">⭱ CSV Import</button>
       <input id="inv-csv-file" type="file" accept=".csv,text/csv" style="display:none">
       <span style="color:var(--muted); font-size:13px">${list.length} item(s)</span></div>
@@ -1088,6 +1093,12 @@ function renderCart(){
 function addToCart(id){
   const p=state.products.find(x=>String(x.ID)===String(id)); if(!p) return;
   const ex=state.cart.find(i=>i.id===p.ID);
+  const inCart=ex?ex.qty:0;
+  const stock=Number(p.Stock)||0;
+  if(inCart+1>stock){
+    if(stock<=0){ if(!confirm('"'+p.Name+'" এখন sold out (stock 0)। তবুও বিক্রি করবে? (stock মাইনাস হয়ে যাবে)')) return; }
+    else if(!confirm('"'+p.Name+'" এর stock মাত্র '+stock+'টা। তবুও যোগ করবে?')) return;
+  }
   if(ex) ex.qty++;
   else state.cart.push({ id:p.ID, name:p.Name, sale:Number(p.SalePrice)||0, buy:Number(p.BuyPrice)||0, qty:1 });
   renderCart();
@@ -1796,6 +1807,7 @@ document.addEventListener('click', function(e){
     case 'modal-close': closeModal(); break;
     case 'product-new': productForm(); break;
     case 'inv-csv-import': { const f=$('#inv-csv-file'); if(f){ f.onchange=()=>importProductsCSV(f); f.click(); } break; }
+    case 'inv-toggle-soldout': state.hideSoldOut=!state.hideSoldOut; renderInventory($('#inv-search')?$('#inv-search').value:''); break;
     case 'product-edit': productForm(state.products.find(p=>String(p.ID)===String(id))); break;
     case 'product-save': saveProduct(id); break;
     case 'product-del': confirmDel('Delete this product?', ()=>api('deleteProduct',{id}).then(()=>{ toast('Deleted','ok'); viewInventory(); })); break;
