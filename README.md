@@ -1,11 +1,33 @@
-# OMME'S GALLERY — Manager (Vol 5)
+# OMME'S GALLERY — Manager (Vol 6 · Local Desktop Edition)
 
-Google Sheets = database. Responsive web app + **PWA** (হোম-স্ক্রিনে install হয়, offline-এ shell চলে)।
+**এই সংস্করণে ডেটা তোমার ব্রাউজারেই (এই কম্পিউটারে) জমা থাকে — Google Sheets বা ইন্টারনেট লাগে না।** খুললেই সরাসরি অ্যাপ, কোনো URL/password নেই। তাৎক্ষণিক গতি।
+
 Modules: **Dashboard · Sale/Invoice · Inventory · Customers · Reports · Purchases · Expenses · Returns · Settings**।
+
+## ⚠️ সবচেয়ে জরুরি — Backup
+ডেটা শুধু এই ব্রাউজারে (IndexedDB) থাকে। কম্পিউটার নষ্ট হলে বা ব্রাউজারের data মুছে গেলে সব হারাবে।
+- **Settings ▸ Export backup** — সপ্তাহে অন্তত একবার চেপে ফাইলটা Google Drive/পেন-ড্রাইভে রাখো।
+- ফিরিয়ে আনতে: **Settings ▸ Import backup** → ওই ফাইলটা বেছে নাও।
+
+## Vol 6-এ যা বদলেছে (Vol 5 থেকে)
+- Google Sheets/Apps Script backend **বাদ** — সব যুক্তি এখন ব্রাউজারে local ভাবে চলে (IndexedDB-তে জমা)।
+- **`Code.gs` আর লাগে না** — Apps Script deploy/authorize কিছুই দরকার নেই।
+- ছবি upload, barcode scan, camera — **বাদ** (শুধু ডেস্কটপ, একটাই ব্রাউজার)।
+- Invoice-এ **JPEG ও PDF download** বাটন (html2canvas + jsPDF)।
+- Settings-এ **Export / Import backup**।
+- Dashboard-এর নতুন চেহারা — কালো background, জুয়েল-টোন রঙিন কার্ড, count-up animation, **Lato** ফন্ট।
+- সব বিক্রি/লাভ/stock/due/return হিসাব Vol 5-এর মতোই — node দিয়ে টেস্ট করা।
+
+## চালু করা (শুধু একটা ফাইল)
+এটা একটা single-file অ্যাপ। যেভাবে চালাও:
+- **GitHub Pages-এ:** এই চ্যাটের `index.html`, `manifest.json`, `sw.js`, ৪টা icon repo-তে replace করো (Code.gs লাগবে না) → লাইভ লিংকে **Ctrl/Cmd+Shift+R** দিয়ে hard refresh।
+- **শুধু ফাইল হিসেবে:** `index.html` double-click করে খুললেও চলে (ইন্টারনেট শুধু প্রথমবার ফন্ট/চার্ট/PDF লাইব্রেরি নামাতে লাগে; একবার cache হলে offline-ও চলবে)।
+
+> ব্রাউজার সবসময় একটাই ব্যবহার করো (যেমন Chrome)। ভিন্ন ব্রাউজার = ভিন্ন storage = আলাদা ডেটা।
 
 ## ফাইলগুলো (GitHub-এ সবগুলো একসাথে রাখতে হবে)
 - `index.html` — অ্যাপ
-- `Code.gs` — backend (Google Apps Script)
+- ~~`Code.gs`~~ — আর লাগে না (Vol 6 local edition)
 - `manifest.json` — PWA তথ্য (install-এর জন্য)
 - `sw.js` — service worker (offline)
 - `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png` — অ্যাপ icon

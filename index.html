@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="OMME'S" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#1b1610; --charcoal:#2a2118; --paper:#f3efe7; --card:#ffffff;
@@ -25,7 +25,13 @@
     --radius:14px; --radius-sm:9px;
     --shadow:0 1px 2px rgba(27,22,16,.04), 0 8px 24px rgba(27,22,16,.06);
     --serif:'Cormorant Garamond', Georgia, serif;
-    --sans:'Inter', system-ui, -apple-system, sans-serif;
+    --sans:'Lato', 'Inter', system-ui, -apple-system, sans-serif;
+    /* dashboard jewel palette (Pakistani festive dyes) */
+    --d-bg:#0b0910; --d-bg2:#141020; --d-ink:#f4eefc; --d-muted:#a99fc4; --d-line:rgba(255,255,255,.09);
+    --j-emerald1:#12b886; --j-emerald2:#0b7a63;
+    --j-gold1:#f9b233; --j-gold2:#e0592b;
+    --j-magenta1:#ff5c9b; --j-magenta2:#b12a8f;
+    --j-indigo1:#7d7bff; --j-indigo2:#5127c4;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%}
@@ -112,6 +118,58 @@
   .stat .v{font-family:var(--serif); font-weight:600; font-size:30px; margin-top:6px; line-height:1}
   .stat .m{font-size:12px; color:var(--muted); margin-top:6px}
   .stat.green .v{color:var(--pos)} .stat.green::before{background:linear-gradient(90deg,var(--pos),#57a97c)}
+
+  /* ===================== DASHBOARD (dark jewel showpiece) ===================== */
+  .dash{
+    background:
+      radial-gradient(120% 80% at 12% -10%, rgba(125,123,255,.18) 0%, transparent 42%),
+      radial-gradient(110% 80% at 100% 0%, rgba(255,92,155,.16) 0%, transparent 45%),
+      linear-gradient(160deg, var(--d-bg2) 0%, var(--d-bg) 60%);
+    color:var(--d-ink); border-radius:24px; padding:30px 30px 26px;
+    box-shadow:0 30px 70px -30px rgba(10,6,20,.8); position:relative; overflow:hidden;
+  }
+  .dash::after{content:""; position:absolute; inset:0; border-radius:24px; border:1px solid var(--d-line); pointer-events:none}
+  .dash-top{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:24px; position:relative; z-index:1}
+  .dash-eyebrow{font-family:var(--sans); font-weight:900; letter-spacing:.28em; font-size:11px;
+    color:var(--gold-2); text-transform:uppercase; margin-bottom:8px}
+  .dash-title{font-family:var(--sans); font-weight:900; font-size:34px; line-height:1.02; letter-spacing:-.01em; margin:0}
+  .dash-date{color:var(--d-muted); font-size:13px; margin-top:7px; font-weight:400}
+  .dash-new{background:linear-gradient(135deg,var(--j-gold1),var(--j-gold2)); color:#2a1500; border:none;
+    font-weight:900; font-size:14px; letter-spacing:.01em; padding:12px 20px; border-radius:12px;
+    box-shadow:0 10px 24px -8px rgba(224,89,43,.6)}
+  .dash-new:active{transform:translateY(1px)}
+
+  .tiles{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:18px; position:relative; z-index:1}
+  .tile{border-radius:18px; padding:20px 18px; color:#fff; position:relative; overflow:hidden;
+    box-shadow:0 16px 34px -18px rgba(0,0,0,.7); opacity:0; transform:translateY(14px)}
+  .tile.in{animation:tileIn .55s cubic-bezier(.2,.7,.2,1) forwards}
+  .tile .tk{font-size:12.5px; font-weight:700; letter-spacing:.01em; opacity:.92}
+  .tile .tv{font-weight:900; font-size:33px; line-height:1.05; margin-top:10px; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+  .tile .tm{font-size:11.5px; margin-top:8px; opacity:.8; font-weight:400}
+  .tile .glyph{position:absolute; right:-6px; top:-10px; font-size:78px; opacity:.16; line-height:1}
+  .tile.emerald{background:linear-gradient(150deg,var(--j-emerald1),var(--j-emerald2))}
+  .tile.gold{background:linear-gradient(150deg,var(--j-gold1),var(--j-gold2))}
+  .tile.magenta{background:linear-gradient(150deg,var(--j-magenta1),var(--j-magenta2))}
+  .tile.indigo{background:linear-gradient(150deg,var(--j-indigo1),var(--j-indigo2))}
+  @keyframes tileIn{to{opacity:1; transform:none}}
+
+  .dash .d-row{display:grid; grid-template-columns:1.6fr 1fr; gap:16px; align-items:start; position:relative; z-index:1}
+  .d-card{background:rgba(255,255,255,.045); border:1px solid var(--d-line); border-radius:16px; padding:18px 20px}
+  .d-card h3{font-family:var(--sans); font-weight:900; font-size:15px; letter-spacing:.01em; margin:0 0 14px;
+    display:flex; align-items:center; justify-content:space-between; color:var(--d-ink)}
+  .d-card h3 .yr{font-weight:700; font-size:12px; color:var(--d-muted)}
+  .dash .low-chip{display:inline-block; margin:0 6px 6px 0; padding:5px 11px; border-radius:999px; font-size:12px;
+    font-weight:700; background:linear-gradient(135deg,rgba(255,92,155,.22),rgba(177,42,143,.22));
+    border:1px solid rgba(255,92,155,.4); color:#ffd6e6}
+  .dash .low-ok{color:var(--d-muted); font-size:13px}
+  .dash table{width:100%; border-collapse:collapse}
+  .dash th{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--d-muted);
+    font-weight:700; text-align:left; padding:9px 12px; border-bottom:1px solid var(--d-line)}
+  .dash td{padding:11px 12px; border-bottom:1px solid rgba(255,255,255,.05); font-size:13.5px; color:#e9e3f5}
+  .dash td.num{text-align:right} .dash th.num{text-align:right}
+  .dash .pos{color:#3ee0a0; font-weight:700}
+  .dash .empty{color:var(--d-muted); text-align:center; padding:22px}
+  @media (prefers-reduced-motion:reduce){ .tile{opacity:1; transform:none; animation:none} }
 
   .row2{display:grid; grid-template-columns:1.5fr 1fr; gap:16px; align-items:start}
   .panel{padding:18px 20px}
@@ -221,6 +279,10 @@
     .mtopbar button{background:none; border:none; color:#cdc3af; font-size:12px}
     .main{padding:18px 16px 96px}
     .stat-grid{grid-template-columns:1fr 1fr; gap:12px}
+    .tiles{grid-template-columns:1fr 1fr; gap:12px}
+    .dash{padding:22px 18px}
+    .dash-title{font-size:26px}
+    .dash .d-row{grid-template-columns:1fr}
     .row2{grid-template-columns:1fr}
     .pos{grid-template-columns:1fr}
     .cart{position:static}
@@ -245,36 +307,6 @@
 </style>
 </head>
 <body>
-
-<!-- SETUP -->
-<div id="setup">
-  <div class="setup-card">
-    <div class="brand">
-      <span class="name">OMME'S</span>
-      <span class="sub">GALLERY</span>
-      <span class="tag">Buy your happiness</span>
-    </div>
-    <h1>Connect your shop</h1>
-    <p class="lead">Paste your Google Apps Script web-app link and password to start.</p>
-    <div class="field">
-      <label>Web app URL</label>
-      <input id="cfg-url" placeholder="https://script.google.com/macros/s/..../exec" />
-      <div class="hint">From Apps Script ▸ Deploy ▸ Web app ▸ the /exec URL.</div>
-    </div>
-    <div class="field">
-      <label>Password</label>
-      <input id="cfg-pass" type="password" placeholder="Same as APP_PASSWORD in the script" />
-    </div>
-    <div class="grid2">
-      <div class="field"><label>Shop name</label><input id="cfg-shop" value="OMME'S GALLERY" /></div>
-      <div class="field"><label>Phone</label><input id="cfg-phone" placeholder="01XXXXXXXXX" /></div>
-    </div>
-    <div class="field"><label>Address (on invoice)</label><input id="cfg-addr" placeholder="Dhaka, Bangladesh" /></div>
-    <button class="btn btn-gold btn-block" data-act="connect">Save &amp; connect</button>
-    <button class="btn btn-ghost btn-block install-btn" data-act="install" style="display:none; margin-top:10px">⤓ Install to home screen</button>
-    <p class="ios-hint" style="display:none; text-align:center; font-size:12px; color:var(--muted); margin:12px 0 0">On iPhone: tap <strong>Share</strong> ▸ <strong>Add to Home Screen</strong> to install.</p>
-  </div>
-</div>
 
 <!-- APP -->
 <div id="app">
@@ -320,18 +352,19 @@
 <div id="printroot"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
-/* ===================== config & state ===================== */
+/* ===================== shop config (local, invoice display only) ===================== */
 const CFG_KEY = 'omme_cfg_v1';
-function getCfg(){ try{ return JSON.parse(localStorage.getItem(CFG_KEY) || 'null'); }catch(e){ return null; } }
+function getCfg(){ try{ return JSON.parse(localStorage.getItem(CFG_KEY) || 'null') || {}; }catch(e){ return {}; } }
 function setCfg(c){ localStorage.setItem(CFG_KEY, JSON.stringify(c)); }
 
 const state = { products:[], customers:[], cart:[], customerId:'', view:'dashboard', chart:null };
 
-/* ===================== helpers ===================== */
+/* ===================== ui helpers ===================== */
 const $ = s => document.querySelector(s);
-const tk = n => '৳' + (Math.round(Number(n)||0)).toLocaleString('en-US');
+const tk = n => '\u09f3' + (Math.round(Number(n)||0)).toLocaleString('en-US');
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function fdate(iso){ const d=new Date(iso); if(isNaN(d)) return esc(iso||''); return d.getDate()+' '+MONTHS[d.getMonth()]+', '+d.getFullYear(); }
@@ -342,26 +375,282 @@ function toast(msg, type){
   clearTimeout(toastT); toastT=setTimeout(()=>t.className='',2600);
 }
 
-/* ===================== api ===================== */
-async function api(action, payload){
-  const cfg=getCfg();
-  if(!cfg) throw new Error('Not configured');
-  const res=await fetch(cfg.url,{
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify(Object.assign({action, pass:cfg.pass}, payload||{}))
+/* ===================== OMME'S GALLERY — Local data core (Vol 6) =====================
+   Ported from the Google Apps Script backend. Runs entirely in the browser against an
+   in-memory DB persisted to IndexedDB. Exposes the same api(action, payload) the UI uses. */
+
+const TABLES = ['Products','Customers','Sales','SaleItems','Suppliers','Expenses',
+  'Purchases','PurchaseItems','Returns','ReturnItems','Dues'];
+const KEY = {
+  Products:'ID', Customers:'ID', Sales:'InvoiceNo', SaleItems:'InvoiceNo',
+  Suppliers:'ID', Expenses:'ID', Purchases:'PurchaseNo', PurchaseItems:'PurchaseNo',
+  Returns:'ReturnNo', ReturnItems:'ReturnNo', Dues:'ID'
+};
+const LOW_STOCK = 3;
+const NUM_FIELDS = ['BuyPrice','SalePrice','Stock','Amount'];
+
+let DB = null;
+
+function emptyDB(){ const o = { _seq:{} }; TABLES.forEach(function(t){ o[t]=[]; }); return o; }
+function ensureDB(){ if(!DB) DB=emptyDB(); if(!DB._seq) DB._seq={}; TABLES.forEach(function(t){ if(!Array.isArray(DB[t])) DB[t]=[]; }); }
+
+function num(v){ return Number(v) || 0; }
+function pad3(n){ return ('000'+n).slice(-3); }
+function p2(n){ return ('0'+n).slice(-2); }
+function ymd(d){ d=d||new Date(); return String(d.getFullYear()).slice(2)+p2(d.getMonth()+1)+p2(d.getDate()); }
+function dstr(v){ const d=new Date(v); return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()); }
+function ym(v){ const d=new Date(v); return d.getFullYear()+'-'+p2(d.getMonth()+1); }
+function yy(v){ return String(new Date(v).getFullYear()); }
+function nextNo(table, prefix){ const n = (DB._seq[table] = (DB._seq[table]||0) + 1); return prefix + ymd() + '-' + pad3(n); }
+function newId(prefix){ return prefix + Date.now().toString(36).toUpperCase() + Math.floor(Math.random()*46656).toString(36); }
+
+function readAll(name){ return DB[name].map(function(r){ return Object.assign({}, r); }); }
+function coerce(item){ NUM_FIELDS.forEach(function(f){ if(item[f]!==undefined && item[f]!=='') item[f]=Number(item[f])||0; }); return item; }
+function rowIndex(name, id){ const k=KEY[name]; return DB[name].findIndex(function(r){ return String(r[k])===String(id); }); }
+function findProduct(id){ return DB.Products.find(function(p){ return String(p.ID)===String(id); }); }
+
+/* ---------- CRUD ---------- */
+function saveRow(name, item, prefix){
+  coerce(item);
+  const k = KEY[name];
+  let id = item[k];
+  const arr = DB[name];
+  if(!id){ id = newId(prefix); item[k]=id; item.CreatedAt = new Date().toISOString(); }
+  const i = arr.findIndex(function(r){ return String(r[k])===String(id); });
+  if(i>-1){ const ex=arr[i]; const merged=Object.assign({}, ex, item); if(ex.CreatedAt) merged.CreatedAt=ex.CreatedAt; arr[i]=merged; }
+  else { if(!item.CreatedAt) item.CreatedAt=new Date().toISOString(); arr.push(Object.assign({}, item)); }
+  return { id:id };
+}
+function deleteRow(name, id){ const i=rowIndex(name,id); if(i>-1) DB[name].splice(i,1); return { deleted:i>-1 }; }
+
+/* ---------- Sales ---------- */
+function L_createSale(sale, items){
+  items = items || [];
+  const invNo = nextNo('Sales','OG');
+  const now = new Date();
+  let subtotal=0, profit=0;
+  items.forEach(function(it){
+    const qty=num(it.Qty), sp=num(it.SalePrice), bp=num(it.BuyPrice);
+    it.LineTotal=qty*sp; it.LineProfit=qty*(sp-bp);
+    subtotal+=it.LineTotal; profit+=it.LineProfit;
+    const p=findProduct(it.ProductID); if(p) p.Stock = num(p.Stock) - qty;
   });
-  const j=await res.json();
-  if(!j.ok){
-    if(j.error==='AUTH'){ toast('Wrong password — check settings','err'); throw new Error('AUTH'); }
-    throw new Error(j.error||'Request failed');
+  const discount=num(sale.Discount), delivery=num(sale.Delivery);
+  const total=subtotal-discount+delivery;
+  const netProfit=profit-discount;
+  DB.Sales.push({ InvoiceNo:invNo, Date:now.toISOString(), CustomerID:sale.CustomerID||'', CustomerName:sale.CustomerName||'',
+    Subtotal:subtotal, Discount:discount, Delivery:delivery, Total:total, Profit:netProfit,
+    Payment:sale.Payment||'Cash', Status:sale.Status||'Delivered', Note:sale.Note||'' });
+  items.forEach(function(it){
+    DB.SaleItems.push({ InvoiceNo:invNo, ProductID:it.ProductID||'', ProductName:it.ProductName||'',
+      Qty:num(it.Qty), SalePrice:num(it.SalePrice), BuyPrice:num(it.BuyPrice), LineTotal:it.LineTotal, LineProfit:it.LineProfit });
+  });
+  const received = (sale.Paid===''||sale.Paid==null) ? total : num(sale.Paid);
+  let due=0;
+  if(received<total){
+    due=total-received;
+    DB.Dues.push({ ID:newId('D'), Date:now.toISOString(), InvoiceNo:invNo, CustomerID:sale.CustomerID||'',
+      CustomerName:sale.CustomerName||'', Amount:due, Paid:0, Balance:due, Status:'Due', Note:'' });
   }
-  return j.data;
+  return { invoiceNo:invNo, subtotal:subtotal, discount:discount, delivery:delivery, total:total, profit:netProfit, received:received, due:due };
+}
+function L_listSales(){ return readAll('Sales').sort(function(a,b){ return new Date(b.Date)-new Date(a.Date); }); }
+function L_getSale(no){
+  return { sale: DB.Sales.filter(function(s){ return String(s.InvoiceNo)===String(no); }).map(function(r){return Object.assign({},r);})[0]||null,
+           items: DB.SaleItems.filter(function(i){ return String(i.InvoiceNo)===String(no); }).map(function(r){return Object.assign({},r);}) };
+}
+function L_customerHistory(id){
+  const sales = readAll('Sales').filter(function(s){ return String(s.CustomerID)===String(id); })
+    .sort(function(a,b){ return new Date(b.Date)-new Date(a.Date); });
+  let spent=0, prof=0; sales.forEach(function(s){ spent+=num(s.Total); prof+=num(s.Profit); });
+  let due=0; DB.Dues.forEach(function(d){ if(String(d.CustomerID)===String(id)) due+=num(d.Balance); });
+  return { sales:sales, orders:sales.length, totalSpent:spent, totalProfit:prof, due:due };
+}
+
+/* ---------- Dashboard ---------- */
+function L_dashboard(){
+  const sales=DB.Sales, products=DB.Products, returns=DB.Returns, dues=DB.Dues;
+  const todayStr=dstr(new Date()), yr=String(new Date().getFullYear());
+  let tSales=0,tProfit=0,tOrders=0,allSales=0,allProfit=0; const monthly={};
+  sales.forEach(function(s){
+    const total=num(s.Total), pf=num(s.Profit);
+    allSales+=total; allProfit+=pf;
+    if(dstr(s.Date)===todayStr){ tSales+=total; tProfit+=pf; tOrders++; }
+    if(yy(s.Date)===yr){ const m=ym(s.Date); monthly[m]=(monthly[m]||0)+total; }
+  });
+  let tRet=0,tRetProfit=0,allRet=0,allRetProfit=0;
+  returns.forEach(function(r){
+    const amt=num(r.Amount), rp=num(r.ProfitReversed);
+    allRet+=amt; allRetProfit+=rp;
+    if(dstr(r.Date)===todayStr){ tRet+=amt; tRetProfit+=rp; }
+    if(yy(r.Date)===yr){ const m=ym(r.Date); monthly[m]=(monthly[m]||0)-amt; }
+  });
+  let outstandingDue=0; dues.forEach(function(x){ outstandingDue+=num(x.Balance); });
+  const recent=readAll('Sales').sort(function(a,b){ return new Date(b.Date)-new Date(a.Date); }).slice(0,8);
+  const low=readAll('Products').filter(function(p){ return num(p.Stock)<=LOW_STOCK; });
+  return {
+    today:{ sales:tSales-tRet, profit:tProfit-tRetProfit, orders:tOrders, returns:tRet },
+    allTime:{ sales:allSales-allRet, profit:allProfit-allRetProfit, orders:sales.length, returns:allRet },
+    outstandingDue:outstandingDue, year:yr, monthly:monthly, recent:recent,
+    lowStock:low, productCount:products.length, customerCount:DB.Customers.length
+  };
+}
+
+/* ---------- Report ---------- */
+function L_report(from, to){
+  const sales=DB.Sales, items=DB.SaleItems, products=DB.Products;
+  const brandOf={}; products.forEach(function(p){ brandOf[p.ID]=p.Brand||'—'; });
+  function inRange(v){ const ds=dstr(v); if(from && ds<from) return false; if(to && ds>to) return false; return true; }
+  const S=sales.filter(function(s){ return s.Date && inRange(s.Date); });
+  const invSet={}; S.forEach(function(s){ invSet[s.InvoiceNo]=true; });
+  const I=items.filter(function(it){ return invSet[it.InvoiceNo]; });
+  let totalSales=0,totalProfit=0,totalDiscount=0,totalDelivery=0,subtotal=0;
+  S.forEach(function(s){ totalSales+=num(s.Total); totalProfit+=num(s.Profit); totalDiscount+=num(s.Discount); totalDelivery+=num(s.Delivery); subtotal+=num(s.Subtotal); });
+  let itemsSold=0,cogs=0; I.forEach(function(it){ itemsSold+=num(it.Qty); cogs+=num(it.Qty)*num(it.BuyPrice); });
+  const orders=S.length;
+  const retRows=DB.Returns.filter(function(r){ return r.Date && inRange(r.Date); });
+  let retAmount=0,retProfit=0; retRows.forEach(function(r){ retAmount+=num(r.Amount); retProfit+=num(r.ProfitReversed); });
+  const netSales=totalSales-retAmount, netProfit=totalProfit-retProfit;
+  const pAgg={}; I.forEach(function(it){ const k=it.ProductID||it.ProductName;
+    if(!pAgg[k]) pAgg[k]={name:it.ProductName, brand:brandOf[it.ProductID]||'—', qty:0, revenue:0, profit:0};
+    pAgg[k].qty+=num(it.Qty); pAgg[k].revenue+=num(it.LineTotal); pAgg[k].profit+=num(it.LineProfit); });
+  const bestSellers=Object.keys(pAgg).map(function(k){return pAgg[k];}).sort(function(a,b){return b.qty-a.qty;});
+  const bAgg={}; I.forEach(function(it){ const b=brandOf[it.ProductID]||'—';
+    if(!bAgg[b]) bAgg[b]={brand:b, qty:0, revenue:0, profit:0};
+    bAgg[b].qty+=num(it.Qty); bAgg[b].revenue+=num(it.LineTotal); bAgg[b].profit+=num(it.LineProfit); });
+  const byBrand=Object.keys(bAgg).map(function(k){return bAgg[k];}).sort(function(a,b){return b.revenue-a.revenue;});
+  const cAgg={}; S.forEach(function(s){ const k=s.CustomerName||'Walk-in';
+    if(!cAgg[k]) cAgg[k]={name:k, orders:0, spent:0, profit:0};
+    cAgg[k].orders++; cAgg[k].spent+=num(s.Total); cAgg[k].profit+=num(s.Profit); });
+  const byCustomer=Object.keys(cAgg).map(function(k){return cAgg[k];}).sort(function(a,b){return b.spent-a.spent;});
+  const pay={}; S.forEach(function(s){ const k=s.Payment||'Cash'; pay[k]=(pay[k]||0)+num(s.Total); });
+  const thisYear=new Date().getFullYear();
+  const cur=[],prev=[],prof=[]; for(let i=0;i<12;i++){ cur.push(0); prev.push(0); prof.push(0); }
+  sales.forEach(function(s){ if(!s.Date) return; const y=new Date(s.Date).getFullYear(), m=new Date(s.Date).getMonth();
+    if(y===thisYear){ cur[m]+=num(s.Total); prof[m]+=num(s.Profit); } else if(y===thisYear-1){ prev[m]+=num(s.Total); } });
+  DB.Returns.forEach(function(r){ if(!r.Date) return; const y=new Date(r.Date).getFullYear(), m=new Date(r.Date).getMonth();
+    if(y===thisYear){ cur[m]-=num(r.Amount); prof[m]-=num(r.ProfitReversed); } else if(y===thisYear-1){ prev[m]-=num(r.Amount); } });
+  return {
+    range:{from:from||null,to:to||null},
+    summary:{ totalSales:netSales, totalProfit:netProfit, grossSales:totalSales, returns:retAmount, retProfit:retProfit,
+      orders:orders, itemsSold:itemsSold, totalDiscount:totalDiscount, totalDelivery:totalDelivery, cogs:cogs, subtotal:subtotal,
+      avgOrder:orders?netSales/orders:0, avgProfit:orders?netProfit/orders:0, margin:netSales?(netProfit/netSales*100):0 },
+    bestSellers:bestSellers, byBrand:byBrand, byCustomer:byCustomer, byPayment:pay,
+    yoy:{ year:thisYear, cur:cur, prev:prev, profit:prof }
+  };
+}
+
+/* ---------- Purchases ---------- */
+function L_createPurchase(pur, items){
+  items=items||[]; const no=nextNo('Purchases','PO'); const now=new Date(); let total=0;
+  items.forEach(function(it){ const qty=num(it.Qty), bp=num(it.BuyPrice); it.LineTotal=qty*bp; total+=it.LineTotal;
+    const p=findProduct(it.ProductID); if(p){ p.Stock=num(p.Stock)+qty; if(bp>0) p.BuyPrice=bp; } });
+  const paid=num(pur.Paid), due=total-paid;
+  DB.Purchases.push({ PurchaseNo:no, Date:now.toISOString(), SupplierID:pur.SupplierID||'', SupplierName:pur.SupplierName||'',
+    Total:total, Paid:paid, Due:due, Status:(due<=0?'Paid':'Due'), Note:pur.Note||'' });
+  items.forEach(function(it){ DB.PurchaseItems.push({ PurchaseNo:no, ProductID:it.ProductID||'', ProductName:it.ProductName||'',
+    Qty:num(it.Qty), BuyPrice:num(it.BuyPrice), LineTotal:it.LineTotal }); });
+  return { purchaseNo:no, total:total, paid:paid, due:due };
+}
+function L_listPurchases(){ return readAll('Purchases').sort(function(a,b){ return new Date(b.Date)-new Date(a.Date); }); }
+function L_getPurchase(no){
+  return { purchase: DB.Purchases.filter(function(x){return String(x.PurchaseNo)===String(no);}).map(function(r){return Object.assign({},r);})[0]||null,
+           items: DB.PurchaseItems.filter(function(i){return String(i.PurchaseNo)===String(no);}).map(function(r){return Object.assign({},r);}) };
+}
+function L_updatePurchasePayment(no, paid){
+  const i=rowIndex('Purchases',no); if(i<0) return {error:'not found'};
+  const row=DB.Purchases[i]; const total=num(row.Total), p=num(paid), due=total-p;
+  row.Paid=p; row.Due=due; row.Status=(due<=0?'Paid':'Due'); return { paid:p, due:due };
+}
+
+/* ---------- Returns & Dues ---------- */
+function L_createReturn(ret, items){
+  items=items||[]; const no=nextNo('Returns','RT'); const now=new Date(); let amount=0, profitRev=0;
+  items.forEach(function(it){ const qty=num(it.Qty), sp=num(it.SalePrice), bp=num(it.BuyPrice);
+    it.LineTotal=qty*sp; it.LineProfit=qty*(sp-bp); amount+=it.LineTotal; profitRev+=it.LineProfit;
+    const p=findProduct(it.ProductID); if(p) p.Stock=num(p.Stock)+qty; });
+  DB.Returns.push({ ReturnNo:no, Date:now.toISOString(), InvoiceNo:ret.InvoiceNo||'', CustomerName:ret.CustomerName||'',
+    Amount:amount, ProfitReversed:profitRev, Note:ret.Note||'' });
+  items.forEach(function(it){ DB.ReturnItems.push({ ReturnNo:no, ProductID:it.ProductID||'', ProductName:it.ProductName||'',
+    Qty:num(it.Qty), SalePrice:num(it.SalePrice), BuyPrice:num(it.BuyPrice), LineTotal:it.LineTotal, LineProfit:it.LineProfit }); });
+  return { returnNo:no, amount:amount, profitReversed:profitRev };
+}
+function L_listReturns(){ return readAll('Returns').sort(function(a,b){ return new Date(b.Date)-new Date(a.Date); }); }
+function L_listDues(){ return readAll('Dues').filter(function(d){ return num(d.Balance)>0; }).sort(function(a,b){ return new Date(b.Date)-new Date(a.Date); }); }
+function L_payDue(id, amount){
+  const i=rowIndex('Dues',id); if(i<0) return {error:'not found'};
+  const row=DB.Dues[i]; const amt=num(row.Amount); const paidNow=num(row.Paid)+num(amount); const bal=amt-paidNow;
+  row.Paid=paidNow; row.Balance=bal; row.Status=(bal<=0?'Paid':'Due'); return { paid:paidNow, balance:bal };
+}
+
+/* ---------- dispatcher (same interface the UI already uses) ---------- */
+const MUTATIONS = ['saveProduct','deleteProduct','saveCustomer','deleteCustomer','createSale','saveSupplier',
+  'deleteSupplier','saveExpense','deleteExpense','createPurchase','updatePurchasePayment','createReturn','payDue'];
+
+async function api(action, p){
+  p = p || {}; ensureDB(); let out;
+  switch(action){
+    case 'dashboard':       out=L_dashboard(); break;
+    case 'listProducts':    out=readAll('Products'); break;
+    case 'saveProduct':     out=saveRow('Products', p.item, 'P'); break;
+    case 'deleteProduct':   out=deleteRow('Products', p.id); break;
+    case 'listCustomers':   out=readAll('Customers'); break;
+    case 'saveCustomer':    out=saveRow('Customers', p.item, 'C'); break;
+    case 'deleteCustomer':  out=deleteRow('Customers', p.id); break;
+    case 'customerHistory': out=L_customerHistory(p.id); break;
+    case 'listSales':       out=L_listSales(); break;
+    case 'getSale':         out=L_getSale(p.invoiceNo); break;
+    case 'createSale':      out=L_createSale(p.sale, p.items); break;
+    case 'report':          out=L_report(p.from, p.to); break;
+    case 'listSuppliers':   out=readAll('Suppliers'); break;
+    case 'saveSupplier':    out=saveRow('Suppliers', p.item, 'S'); break;
+    case 'deleteSupplier':  out=deleteRow('Suppliers', p.id); break;
+    case 'listExpenses':    out=readAll('Expenses'); break;
+    case 'saveExpense':     out=saveRow('Expenses', p.item, 'E'); break;
+    case 'deleteExpense':   out=deleteRow('Expenses', p.id); break;
+    case 'listPurchases':   out=L_listPurchases(); break;
+    case 'getPurchase':     out=L_getPurchase(p.purchaseNo); break;
+    case 'createPurchase':  out=L_createPurchase(p.purchase, p.items); break;
+    case 'updatePurchasePayment': out=L_updatePurchasePayment(p.purchaseNo, p.paid); break;
+    case 'createReturn':    out=L_createReturn(p.ret, p.items); break;
+    case 'listReturns':     out=L_listReturns(); break;
+    case 'listDues':        out=L_listDues(); break;
+    case 'payDue':          out=L_payDue(p.id, p.amount); break;
+    default: throw new Error('Unknown action: '+action);
+  }
+  if(MUTATIONS.indexOf(action)>-1) await persist();
+  return out;
+}
+
+/* ---------- persistence (IndexedDB single blob) ---------- */
+const IDB_NAME='ommes_local_v1', IDB_STORE='kv', IDB_KEY='db';
+function idbOpen(){ return new Promise(function(res,rej){ const r=indexedDB.open(IDB_NAME,1);
+  r.onupgradeneeded=function(){ r.result.createObjectStore(IDB_STORE); };
+  r.onsuccess=function(){ res(r.result); }; r.onerror=function(){ rej(r.error); }; }); }
+async function idbGet(){ const db=await idbOpen(); return new Promise(function(res,rej){
+  const t=db.transaction(IDB_STORE,'readonly').objectStore(IDB_STORE).get(IDB_KEY);
+  t.onsuccess=function(){ res(t.result||null); }; t.onerror=function(){ rej(t.error); }; }); }
+async function idbSet(v){ const db=await idbOpen(); return new Promise(function(res,rej){
+  const tx=db.transaction(IDB_STORE,'readwrite'); tx.objectStore(IDB_STORE).put(v,IDB_KEY);
+  tx.oncomplete=function(){ res(); }; tx.onerror=function(){ rej(tx.error); }; }); }
+
+let PERSIST_OK=true;
+async function persist(){ if(!PERSIST_OK) return; try{ await idbSet(DB); }catch(e){ PERSIST_OK=false; } }
+async function loadDB(){ try{ DB=await idbGet(); }catch(e){ DB=null; PERSIST_OK=false; } ensureDB(); }
+
+/* ---------- backup ---------- */
+function exportBackup(){ ensureDB(); return JSON.stringify(DB); }
+function importBackup(json){
+  const obj = (typeof json==='string') ? JSON.parse(json) : json;
+  if(!obj || typeof obj!=='object') throw new Error('Invalid backup file');
+  const ok = TABLES.some(function(t){ return Array.isArray(obj[t]); });
+  if(!ok) throw new Error('This file does not look like an OMME backup');
+  DB = obj; ensureDB(); return true;
 }
 
 /* ===================== modal ===================== */
 function openModal(html){ $('#modal').innerHTML=html; $('#backdrop').classList.add('on'); }
-function closeModal(){ stopScanner(); $('#backdrop').classList.remove('on'); $('#modal').innerHTML=''; }
+function closeModal(){ $('#backdrop').classList.remove('on'); $('#modal').innerHTML=''; }
 $('#backdrop').addEventListener('click', e=>{ if(e.target.id==='backdrop') closeModal(); });
 
 /* ===================== navigation ===================== */
@@ -405,51 +694,105 @@ async function viewDashboard(){
       <td>${esc(s.InvoiceNo)}</td>
       <td>${esc(s.CustomerName||'Walk-in')}</td>
       <td>${fdate(s.Date)}</td>
-      <td class="num tnum money">${tk(s.Total)}</td>
-      <td class="num tnum money pos">${tk(s.Profit)}</td>
+      <td class="num tnum">${tk(s.Total)}</td>
+      <td class="num tnum pos">${tk(s.Profit)}</td>
     </tr>`).join('') || `<tr><td colspan="5" class="empty">No sales yet — record your first one from “New sale”.</td></tr>`;
 
-  const low=(d.lowStock||[]).map(p=>`<span class="pill warn" style="margin:0 6px 6px 0; display:inline-block">${esc(p.Name)} · ${Number(p.Stock)} left</span>`).join('')
-    || '<span style="color:var(--muted); font-size:13px">Everything is well stocked. ✦</span>';
+  const low=(d.lowStock||[]).map(p=>`<span class="low-chip">${esc(p.Name)} · ${Number(p.Stock)} left</span>`).join('')
+    || '<span class="low-ok">Everything is well stocked. ✦</span>';
+
+  const greet=(()=>{ const h=new Date().getHours(); return h<12?'Good morning':h<17?'Good afternoon':'Good evening'; })();
+  const dateStr=(()=>{ const n=new Date(); return n.getDate()+' '+MONTHS[n.getMonth()]+', '+n.getFullYear(); })();
 
   $('#view').innerHTML=`
-    <div class="view-head"><div><div class="eyebrow">Overview</div><h2>Today at the shop</h2></div>
-      <button class="btn btn-gold btn-sm" data-nav="sales">＋ New sale</button></div>
-    <div class="stat-grid">
-      <div class="card stat"><div class="k">Today's sales</div><div class="v tnum">${tk(d.today.sales)}</div><div class="m">${d.today.orders} order(s)${d.today.returns?' · ↩ '+tk(d.today.returns):''}</div></div>
-      <div class="card stat green"><div class="k">Today's profit</div><div class="v tnum">${tk(d.today.profit)}</div><div class="m">net after cost</div></div>
-      <div class="card stat"><div class="k">To collect (dues)</div><div class="v tnum" style="${d.outstandingDue?'color:var(--neg)':''}">${tk(d.outstandingDue||0)}</div><div class="m">customer credit</div></div>
-      <div class="card stat green"><div class="k">All-time profit</div><div class="v tnum">${tk(d.allTime.profit)}</div><div class="m">since day one</div></div>
-    </div>
-    <div class="row2">
-      <div class="card panel">
-        <h3>Monthly sales <span class="count">${yr}</span></h3>
-        <canvas id="mchart" height="150"></canvas>
+    <div class="dash">
+      <div class="dash-top">
+        <div>
+          <div class="dash-eyebrow">Omme's Gallery</div>
+          <h1 class="dash-title">${greet} ✦</h1>
+          <div class="dash-date">Here's your shop today — ${dateStr}</div>
+        </div>
+        <button class="dash-new" data-nav="sales">＋ New sale</button>
       </div>
-      <div class="card panel">
-        <h3>Low stock</h3>
-        <div>${low}</div>
+
+      <div class="tiles">
+        <div class="tile emerald" style="animation-delay:.00s">
+          <span class="glyph">৳</span>
+          <div class="tk">Today's sales</div>
+          <div class="tv" data-count="${d.today.sales}">৳0</div>
+          <div class="tm">${d.today.orders} order(s)${d.today.returns?' · ↩ '+tk(d.today.returns):''}</div>
+        </div>
+        <div class="tile gold" style="animation-delay:.08s">
+          <span class="glyph">◆</span>
+          <div class="tk">Today's profit</div>
+          <div class="tv" data-count="${d.today.profit}">৳0</div>
+          <div class="tm">net after cost</div>
+        </div>
+        <div class="tile magenta" style="animation-delay:.16s">
+          <span class="glyph">⚑</span>
+          <div class="tk">To collect (dues)</div>
+          <div class="tv" data-count="${d.outstandingDue||0}">৳0</div>
+          <div class="tm">customer credit</div>
+        </div>
+        <div class="tile indigo" style="animation-delay:.24s">
+          <span class="glyph">★</span>
+          <div class="tk">All-time profit</div>
+          <div class="tv" data-count="${d.allTime.profit}">৳0</div>
+          <div class="tm">since day one</div>
+        </div>
       </div>
-    </div>
-    <div class="card panel" style="margin-top:16px">
-      <h3>Recent orders</h3>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Invoice</th><th>Customer</th><th>Date</th><th class="num">Total</th><th class="num">Profit</th></tr></thead>
-        <tbody>${recent}</tbody></table></div>
+
+      <div class="d-row">
+        <div class="d-card">
+          <h3>Monthly sales <span class="yr">${yr}</span></h3>
+          <canvas id="mchart" height="150"></canvas>
+        </div>
+        <div class="d-card">
+          <h3>Low stock</h3>
+          <div>${low}</div>
+        </div>
+      </div>
+
+      <div class="d-card" style="margin-top:16px">
+        <h3>Recent orders</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Invoice</th><th>Customer</th><th>Date</th><th class="num">Total</th><th class="num">Profit</th></tr></thead>
+          <tbody>${recent}</tbody></table></div>
+      </div>
     </div>`;
 
+  animateTiles();
   drawChart(months);
+}
+function animateTiles(){
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  document.querySelectorAll('.tile').forEach(function(t){ t.classList.add('in'); });
+  document.querySelectorAll('.tile .tv').forEach(function(el){
+    const to=Number(el.getAttribute('data-count'))||0;
+    if(reduce || to===0){ el.textContent=tk(to); return; }
+    const dur=750, t0=performance.now();
+    function step(now){
+      const p=Math.min((now-t0)/dur,1);
+      const e=1-Math.pow(1-p,3); // easeOutCubic
+      el.textContent=tk(Math.round(to*e));
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
 }
 function drawChart(months){
   const el=document.getElementById('mchart'); if(!el||!window.Chart) return;
   if(state.chart){ state.chart.destroy(); }
+  const ctx=el.getContext('2d');
+  const grad=ctx.createLinearGradient(0,0,0,180);
+  grad.addColorStop(0,'#f9b233'); grad.addColorStop(1,'rgba(224,89,43,.55)');
   state.chart=new Chart(el,{
     type:'bar',
     data:{ labels:months.map(m=>m.label),
-      datasets:[{ data:months.map(m=>m.val), backgroundColor:'#c79a49', hoverBackgroundColor:'#a9782f', borderRadius:6, maxBarThickness:34 }]},
-    options:{ plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>tk(c.raw)}}},
-      scales:{ y:{ticks:{callback:v=>v>=1000?(v/1000)+'k':v, color:'#8c8172'}, grid:{color:'#f0ebe0'}},
-               x:{ticks:{color:'#8c8172'}, grid:{display:false}} } }
+      datasets:[{ data:months.map(m=>m.val), backgroundColor:grad, hoverBackgroundColor:'#ffd27a', borderRadius:7, maxBarThickness:34 }]},
+    options:{ animation:{duration:800}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>tk(c.raw)}}},
+      scales:{ y:{ticks:{callback:v=>v>=1000?(v/1000)+'k':v, color:'#a99fc4'}, grid:{color:'rgba(255,255,255,.07)'}},
+               x:{ticks:{color:'#a99fc4'}, grid:{display:false}} } }
   });
 }
 
@@ -465,7 +808,6 @@ function renderInventory(q){
     const low=Number(p.Stock)<=3;
     return `<tr class="${low?'lowstock':''}">
       <td><div style="display:flex;align-items:center;gap:10px">
-        ${p.ImageURL?'<img src="'+esc(p.ImageURL)+'" loading="lazy" style="width:34px;height:34px;object-fit:cover;border-radius:6px;border:1px solid var(--line-2)">':''}
         <span><strong>${esc(p.Name)}</strong>${p.Size?' <span class="stock-tag">('+esc(p.Size)+')</span>':''}</span></div></td>
       <td>${p.Brand?'<span class="pill brand">'+esc(p.Brand)+'</span>':''}</td>
       <td>${esc(p.SKU||'')}</td>
@@ -482,7 +824,6 @@ function renderInventory(q){
       <button class="btn btn-gold" data-act="product-new">＋ Add product</button></div>
     <div class="toolbar"><div class="search"><span class="mag">⌕</span>
       <input id="inv-search" placeholder="Search name, brand, SKU…" value="${esc(q)}"></div>
-      <button class="btn-icon" data-act="inv-scan" title="Scan barcode/QR" style="padding:9px 12px;font-size:16px">⌾</button>
       <span style="color:var(--muted); font-size:13px">${list.length} item(s)</span></div>
     <div class="card"><div class="table-wrap"><table>
       <thead><tr><th>Name</th><th>Brand</th><th>SKU</th><th class="num">Buy</th><th class="num">Sale</th><th class="num">Stock</th><th class="num">Actions</th></tr></thead>
@@ -509,44 +850,14 @@ function productForm(p){
         <div class="field"><label>Sale price (৳)</label><input id="f-sale" type="number" value="${p.SalePrice||''}"></div>
       </div>
       <div class="field"><label>Stock quantity</label><input id="f-stock" type="number" value="${p.Stock!==undefined?p.Stock:''}"></div>
-      <div class="field"><label>Photo</label>
-        <div id="img-wrap" style="margin-bottom:8px">${p.ImageURL?'<img src="'+esc(p.ImageURL)+'" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line-2)">':''}</div>
-        <input id="f-img" type="file" accept="image/*" capture="environment">
-        <div class="hint" id="img-status">Optional. Uploaded to your Google Drive.</div></div>
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
       <button class="btn btn-gold" data-act="product-save" data-id="${esc(p.ID||'')}">Save product</button></div>`);
-  state.formImageURL = p.ImageURL || '';
-  const fi=$('#f-img'); if(fi) fi.onchange=()=>handleImageFile(fi);
-}
-function downscaleImage(file, maxW, quality){
-  return new Promise((res,rej)=>{
-    const url=URL.createObjectURL(file); const img=new Image();
-    img.onload=()=>{ URL.revokeObjectURL(url);
-      let w=img.width, h=img.height; if(w>maxW){ h=Math.round(h*maxW/w); w=maxW; }
-      const c=document.createElement('canvas'); c.width=w; c.height=h;
-      c.getContext('2d').drawImage(img,0,0,w,h);
-      const d=c.toDataURL('image/jpeg', quality); res({b64:d.split(',')[1], mime:'image/jpeg'});
-    };
-    img.onerror=rej; img.src=url;
-  });
-}
-async function handleImageFile(input){
-  const file=input.files&&input.files[0]; if(!file) return;
-  const st=$('#img-status'); if(st) st.textContent='Uploading…';
-  try{
-    const {b64,mime}=await downscaleImage(file, 800, 0.8);
-    const r=await api('uploadImage',{fileName:file.name, mimeType:mime, data:b64});
-    state.formImageURL=r.url;
-    const w=$('#img-wrap'); if(w) w.innerHTML='<img src="'+esc(r.url)+'" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line-2)">';
-    if(st) st.textContent='Uploaded ✓';
-  }catch(e){ if(st) st.textContent='Upload failed'; toast(e.message,'err'); }
 }
 async function saveProduct(id){
   const item={ ID:id||'', Name:$('#f-name').value.trim(), Brand:$('#f-brand').value.trim(),
     Category:$('#f-cat').value.trim(), Size:$('#f-size').value.trim(), SKU:$('#f-sku').value.trim(),
-    BuyPrice:$('#f-buy').value, SalePrice:$('#f-sale').value, Stock:$('#f-stock').value,
-    ImageURL: state.formImageURL||'' };
+    BuyPrice:$('#f-buy').value, SalePrice:$('#f-sale').value, Stock:$('#f-stock').value };
   if(!item.Name){ toast('Name is required','err'); return; }
   try{ await api('saveProduct',{item}); closeModal(); toast('Product saved','ok'); viewInventory(); }
   catch(e){ toast(e.message,'err'); }
@@ -686,7 +997,6 @@ function renderProductList(q){
   box.innerHTML=prods.map(p=>{
     const low=Number(p.Stock)<=3;
     return `<div class="pitem" data-act="cart-add" data-id="${esc(p.ID)}">
-      ${p.ImageURL?'<img src="'+esc(p.ImageURL)+'" loading="lazy" style="width:38px;height:38px;object-fit:cover;border-radius:7px;border:1px solid var(--line-2)">':''}
       <div><div class="pn">${esc(p.Name)}</div>
         <div class="pd">${esc(p.Brand||'')} ${p.Size?'· '+esc(p.Size):''} · <span class="stock-tag ${low?'low':''}">${Number(p.Stock)} in stock</span></div></div>
       <div class="pr"><div class="tnum" style="font-weight:600">${tk(p.SalePrice)}</div></div>
@@ -700,10 +1010,7 @@ function renderSales(){
     <div class="view-head"><div><div class="eyebrow">Point of sale</div><h2>New sale</h2></div></div>
     <div class="pos">
       <div class="card pos-products">
-        <div style="display:flex; gap:8px; align-items:center">
-          <div class="search" style="flex:1"><span class="mag">⌕</span><input id="pos-search" placeholder="Search product to add…"></div>
-          <button class="btn-icon" data-act="pos-scan" title="Scan barcode/QR" style="padding:9px 12px; font-size:16px">⌾</button>
-        </div>
+        <div class="search"><span class="mag">⌕</span><input id="pos-search" placeholder="Search product to add…"></div>
         <div class="plist" id="plist"></div>
       </div>
       <div class="card cart">
@@ -811,7 +1118,7 @@ function showInvoice(sale, items){
   const lines=items.map(i=>`<tr><td>${esc(i.ProductName)}</td><td class="num tnum">${i.Qty}</td>
     <td class="num tnum">${tk(i.SalePrice)}</td><td class="num tnum">${tk(i.LineTotal!==undefined?i.LineTotal:i.Qty*i.SalePrice)}</td></tr>`).join('');
   const html=`
-    <div class="inv">
+    <div class="inv" id="invnode">
       <div class="ih">
         <div><div class="shop">${esc(cfg.shopName||"OMME'S GALLERY")}</div>
           <div style="font-size:12px;color:var(--muted)">${esc(cfg.shopAddress||'')} ${cfg.shopPhone?' · '+esc(cfg.shopPhone):''}</div></div>
@@ -834,13 +1141,39 @@ function showInvoice(sale, items){
   openModal(`
     <div class="modal-head"><h3>Invoice</h3><button class="x" data-act="modal-close">×</button></div>
     <div class="modal-body">${html}</div>
-    <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Close</button>
-      <button class="btn btn-primary" data-act="print-inv">⎙ Print / Save PDF</button></div>`);
+    <div class="modal-foot" style="flex-wrap:wrap">
+      <button class="btn btn-ghost" data-act="modal-close">Close</button>
+      <button class="btn btn-ghost" data-act="inv-jpeg" data-no="${esc(sale.InvoiceNo)}">⭳ JPEG</button>
+      <button class="btn btn-primary" data-act="inv-pdf" data-no="${esc(sale.InvoiceNo)}">⭳ PDF</button></div>`);
   window._invHTML=html;
 }
-function printInvoice(){
-  $('#printroot').innerHTML=window._invHTML||'';
-  window.print();
+async function invoiceCanvas(){
+  const node=document.getElementById('invnode');
+  if(!node || !window.html2canvas) throw new Error('nothing to render');
+  return await html2canvas(node, { scale:2, backgroundColor:'#ffffff' });
+}
+async function downloadInvoiceJPEG(no){
+  try{
+    const canvas=await invoiceCanvas();
+    const a=document.createElement('a');
+    a.href=canvas.toDataURL('image/jpeg', 0.92);
+    a.download='invoice-'+(no||'omme')+'.jpg';
+    document.body.appendChild(a); a.click(); a.remove();
+    toast('JPEG downloaded ✦','ok');
+  }catch(e){ toast('Could not make JPEG','err'); }
+}
+async function downloadInvoicePDF(no){
+  try{
+    const canvas=await invoiceCanvas();
+    const img=canvas.toDataURL('image/jpeg', 0.95);
+    const JS=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:(window.jsPDF);
+    const pdf=new JS({ unit:'pt', format:'a4' });
+    const pw=pdf.internal.pageSize.getWidth();
+    const margin=28, w=pw-margin*2, h=canvas.height*(w/canvas.width);
+    pdf.addImage(img,'JPEG',margin,margin,w,h);
+    pdf.save('invoice-'+(no||'omme')+'.pdf');
+    toast('PDF downloaded ✦','ok');
+  }catch(e){ toast('Could not make PDF','err'); }
 }
 
 /* ===================== REPORTS ===================== */
@@ -1288,34 +1621,6 @@ function moreMenu(){
     </div>`);
 }
 
-/* ===================== BARCODE / QR SCANNER ===================== */
-let qrScanner=null;
-function stopScanner(){ if(qrScanner){ const q=qrScanner; qrScanner=null; try{ q.stop().catch(function(){}); }catch(e){} } }
-function openScanner(onScan){
-  openModal(`<div class="modal-head"><h3>Scan code</h3><button class="x" data-act="modal-close">×</button></div>
-    <div class="modal-body"><div id="qr-reader" style="width:100%"></div>
-    <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px">Point the camera at a barcode / QR code.</p></div>`);
-  if(!window.Html5Qrcode){ toast('Scanner not loaded — check internet','err'); return; }
-  qrScanner=new Html5Qrcode('qr-reader');
-  const conf={fps:10, qrbox:{width:250,height:170}};
-  const ok=function(txt){ stopScanner(); closeModal(); onScan(String(txt).trim()); };
-  Html5Qrcode.getCameras().then(function(cams){
-    let id=null;
-    if(cams&&cams.length){ const back=cams.find(function(c){return /back|rear|environment/i.test(c.label);}); id=(back||cams[cams.length-1]).id; }
-    qrScanner.start(id||{facingMode:'environment'}, conf, ok, function(){}).catch(function(){
-      qrScanner.start({facingMode:'environment'}, conf, ok, function(){}).catch(function(e){ toast('Camera error','err'); });
-    });
-  }).catch(function(){
-    qrScanner.start({facingMode:'environment'}, conf, ok, function(){}).catch(function(e){ toast('Camera error','err'); });
-  });
-}
-function posScan(){ openScanner(function(code){
-  const s=$('#pos-search'); if(s) s.value=code; renderProductList(code);
-  const hit=(state.products||[]).find(function(p){ return String(p.SKU)===code || String(p.ID)===code; });
-  if(hit){ addToCart(hit.ID); toast('Added: '+hit.Name,'ok'); }
-}); }
-function invScan(){ openScanner(function(code){ const s=$('#inv-search'); if(s) s.value=code; renderInventory(code); }); }
-
 /* ===================== RETURNS / REFUND ===================== */
 async function viewReturns(){ state.retInv=null; state.retSaleItems=[]; renderReturns(); }
 function renderReturns(){
@@ -1324,7 +1629,6 @@ function renderReturns(){
     <div class="card panel" style="margin-bottom:16px"><h3>Find the sale</h3>
       <div class="toolbar" style="margin-bottom:0">
         <div class="search"><span class="mag">⌕</span><input id="ret-inv" placeholder="Invoice no e.g. OG260830-001"></div>
-        <button class="btn-icon" data-act="ret-scan" title="Scan" style="padding:9px 12px;font-size:16px">⌾</button>
         <button class="btn btn-primary btn-sm" data-act="ret-load">Load</button>
       </div></div>
     <div id="ret-body"></div>
@@ -1382,15 +1686,18 @@ function viewSettings(){
       <div class="field"><label>Address</label><input id="set-addr" value="${esc(cfg.shopAddress||'')}"></div>
       <div class="field"><label>Invoice footer note</label><input id="set-note" value="${esc(cfg.invoiceNote||'Thank you for shopping with us. ✦ Buy your happiness.')}"></div>
       <button class="btn btn-gold" data-act="set-save">Save shop info</button></div>
-    <div class="card panel" style="margin-bottom:16px"><h3>Connection</h3>
-      <div class="field"><label>Web app URL</label><input id="set-url" value="${esc(cfg.url||'')}"></div>
-      <div class="field"><label>Password</label><input id="set-pass" type="password" value="${esc(cfg.pass||'')}"></div>
-      <button class="btn btn-ghost" data-act="set-conn">Save &amp; reconnect</button></div>
+    <div class="card panel" style="margin-bottom:16px"><h3>Backup &amp; restore</h3>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.55">Your shop data lives only in this browser on this computer. Export a backup file regularly (once a week is a good habit) and keep it safe on Google Drive or a pen drive. If this computer is lost or the browser data is cleared, the backup is the only way to get everything back.</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap">
+        <button class="btn btn-gold" data-act="backup-export">⭳ Export backup</button>
+        <button class="btn btn-ghost" data-act="backup-import">⭱ Import backup</button>
+      </div>
+      <input id="backup-file" type="file" accept="application/json,.json" style="display:none"></div>
     <div class="card panel"><h3>App</h3>
       <button class="btn btn-ghost install-btn" data-act="install" style="display:none;margin-bottom:10px">⤓ Install to home screen</button>
-      <p style="font-size:12px;color:var(--muted);margin:0 0 12px">Your data lives in your Google Sheet. Product photos are stored in your Google Drive.</p>
-      <button class="btn btn-danger" data-act="disconnect">Disconnect this device</button></div>`;
+      <p style="font-size:12px;color:var(--muted);margin:0">Local desktop edition — no internet needed. Data is saved on this device.</p></div>`;
   if(deferredPrompt) showInstall(true);
+  const bf=$('#backup-file'); if(bf) bf.onchange=()=>doImportBackup(bf);
 }
 function saveShopInfo(){
   const cfg=getCfg()||{};
@@ -1398,10 +1705,31 @@ function saveShopInfo(){
   cfg.shopAddress=$('#set-addr').value.trim(); cfg.invoiceNote=$('#set-note').value.trim();
   setCfg(cfg); toast('Saved','ok');
 }
-async function saveConn(){
-  const cfg=getCfg()||{};
-  cfg.url=$('#set-url').value.trim(); cfg.pass=$('#set-pass').value.trim(); setCfg(cfg);
-  try{ await api('dashboard'); toast('Connected ✓','ok'); }catch(e){ toast('Failed: '+e.message,'err'); }
+function doExportBackup(){
+  try{
+    const data=exportBackup();
+    const blob=new Blob([data],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const d=new Date(); const p=n=>('0'+n).slice(-2);
+    a.href=url; a.download='ommes-backup-'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'.json';
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    toast('Backup downloaded ✦','ok');
+  }catch(e){ toast('Export failed: '+e.message,'err'); }
+}
+function doImportBackup(input){
+  const file=input.files&&input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async function(){
+    try{
+      importBackup(String(reader.result));
+      await persist();
+      toast('Backup restored ✦','ok');
+      setNav('dashboard');
+    }catch(e){ toast('Import failed: '+e.message,'err'); }
+    input.value='';
+  };
+  reader.readAsText(file);
 }
 
 /* ===================== global click handling ===================== */
@@ -1410,8 +1738,6 @@ document.addEventListener('click', function(e){
   const el=e.target.closest('[data-act]'); if(!el) return;
   const act=el.dataset.act, id=el.dataset.id;
   switch(act){
-    case 'connect': doConnect(); break;
-    case 'disconnect': doDisconnect(); break;
     case 'install': doInstall(); break;
     case 'modal-close': closeModal(); break;
     case 'product-new': productForm(); break;
@@ -1430,7 +1756,8 @@ document.addEventListener('click', function(e){
     case 'cart-clear': state.cart=[]; renderCart(); break;
     case 'sale-save': saveSale(); break;
     case 'sale-view': reprint(el.dataset.inv); break;
-    case 'print-inv': printInvoice(); break;
+    case 'inv-jpeg': downloadInvoiceJPEG(el.dataset.no); break;
+    case 'inv-pdf': downloadInvoicePDF(el.dataset.no); break;
     case 'rep-preset': repSetPreset(el.dataset.preset); break;
     case 'rep-apply': repApply(); break;
     case 'rep-export-sales': exportSales(); break;
@@ -1455,16 +1782,14 @@ document.addEventListener('click', function(e){
     case 'pur-save': savePurchase(); break;
     case 'pur-view': viewPurchase(el.dataset.no); break;
     case 'pur-pay-save': savePurPayment(el.dataset.no); break;
-    case 'pos-scan': posScan(); break;
-    case 'inv-scan': invScan(); break;
-    case 'ret-scan': openScanner(function(code){ const i=$('#ret-inv'); if(i){ i.value=code; } retLoad(); }); break;
     case 'ret-load': retLoad(); break;
     case 'ret-process': retProcess(); break;
     case 'cus-tab': state.custTab=el.dataset.tab; renderCustomers(''); break;
     case 'due-pay': duePayForm(id, Number(el.dataset.bal)||0, el.dataset.name||''); break;
     case 'due-pay-save': savePayDue(id); break;
     case 'set-save': saveShopInfo(); break;
-    case 'set-conn': saveConn(); break;
+    case 'backup-export': doExportBackup(); break;
+    case 'backup-import': { const f=$('#backup-file'); if(f) f.click(); break; }
   }
 });
 function confirmDel(msg, fn){
@@ -1476,24 +1801,9 @@ function confirmDel(msg, fn){
 }
 
 /* ===================== connect / boot ===================== */
-async function doConnect(){
-  const url=$('#cfg-url').value.trim(), pass=$('#cfg-pass').value.trim();
-  if(!url || !pass){ toast('URL and password are required','err'); return; }
-  const cfg={ url, pass, shopName:$('#cfg-shop').value.trim()||"OMME'S GALLERY",
-    shopPhone:$('#cfg-phone').value.trim(), shopAddress:$('#cfg-addr').value.trim() };
-  setCfg(cfg);
-  toast('Connecting…');
-  try{ await api('dashboard'); boot(); }
-  catch(e){ toast('Connection failed: '+e.message,'err'); }
-}
-function doDisconnect(){
-  const cfg=getCfg()||{};
-  $('#cfg-url').value=cfg.url||''; $('#cfg-pass').value=cfg.pass||'';
-  $('#cfg-shop').value=cfg.shopName||"OMME'S GALLERY"; $('#cfg-phone').value=cfg.shopPhone||''; $('#cfg-addr').value=cfg.shopAddress||'';
-  $('#app').style.display='none'; $('#setup').style.display='grid';
-}
 function boot(){
-  $('#setup').style.display='none'; $('#app').style.display='block';
+  const su=$('#setup'); if(su) su.style.display='none';
+  $('#app').style.display='block';
   setNav('dashboard');
 }
 /* ===================== PWA: install + offline ===================== */
@@ -1522,10 +1832,10 @@ if('serviceWorker' in navigator){
   });
 }
 
-(function init(){
-  const cfg=getCfg();
-  if(cfg && cfg.url && cfg.pass){ boot(); }
-  else { $('#setup').style.display='grid'; }
+(async function init(){
+  try{ await loadDB(); }catch(e){ ensureDB(); }
+  boot();
+  if(!PERSIST_OK) toast('Heads up: this browser can\u2019t save data on disk here. Use Export backup often.','err');
 })();
 </script>
 </body>

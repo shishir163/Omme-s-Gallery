@@ -1,7 +1,7 @@
-/* OMME'S GALLERY — service worker (Vol 2)
+/* OMME'S GALLERY — service worker (Vol 6, local)
    Caches the app shell so it opens offline. API calls (POST to Apps Script)
    always go to the network and are never cached. */
-const CACHE = 'omme-shell-v2';
+const CACHE = 'omme-shell-v6';
 const SHELL = [
   './',
   './index.html',
