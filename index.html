@@ -386,7 +386,7 @@ const KEY = {
   Suppliers:'ID', Expenses:'ID', Purchases:'PurchaseNo', PurchaseItems:'PurchaseNo',
   Returns:'ReturnNo', ReturnItems:'ReturnNo', Dues:'ID'
 };
-const LOW_STOCK = 3;
+const LOW_STOCK = 1;
 const NUM_FIELDS = ['BuyPrice','SalePrice','Stock','Amount'];
 
 let DB = null;
@@ -486,12 +486,13 @@ function L_dashboard(){
     if(yy(r.Date)===yr){ const m=ym(r.Date); monthly[m]=(monthly[m]||0)-amt; }
   });
   let outstandingDue=0; dues.forEach(function(x){ outstandingDue+=num(x.Balance); });
+  const totalStock=products.reduce(function(s,p){ return s+num(p.Stock); },0);
   const recent=readAll('Sales').sort(function(a,b){ return new Date(b.Date)-new Date(a.Date); }).slice(0,8);
   const low=readAll('Products').filter(function(p){ return num(p.Stock)<=LOW_STOCK; });
   return {
     today:{ sales:tSales-tRet, profit:tProfit-tRetProfit, orders:tOrders, returns:tRet },
     allTime:{ sales:allSales-allRet, profit:allProfit-allRetProfit, orders:sales.length, returns:allRet },
-    outstandingDue:outstandingDue, year:yr, monthly:monthly, recent:recent,
+    outstandingDue:outstandingDue, totalStock:totalStock, year:yr, monthly:monthly, recent:recent,
     lowStock:low, productCount:products.length, customerCount:DB.Customers.length
   };
 }
@@ -748,8 +749,9 @@ async function viewDashboard(){
           <canvas id="mchart" height="150"></canvas>
         </div>
         <div class="d-card">
-          <h3>Low stock</h3>
-          <div>${low}</div>
+          <h3>Total stock</h3>
+          <div style="font-size:46px; font-weight:900; color:var(--j-emerald1); line-height:1; margin-bottom:10px">${d.totalStock||0}</div>
+          <div style="font-size:13px; color:var(--d-muted)">${d.productCount} ধরনের পণ্য${d.lowStock&&d.lowStock.length?' · <span style="color:#ff8fab">'+d.lowStock.length+' low (≤1)</span>':' · সব ঠিকঠাক ✦'}</div>
         </div>
       </div>
 
@@ -844,6 +846,15 @@ function productForm(p){
       </div>
       <datalist id="brands"><option>Cross Stitch</option><option>So Kamal</option><option>Sapphire</option><option>Gul Ahmed</option><option>Khaadi</option><option>Beechtree</option><option>Zellbury</option><option>Nishat</option><option>Limelight</option><option>Asim Jofa</option></datalist>
       <div class="grid2">
+        <div class="field"><label>Type</label><input id="f-type" value="${esc(p.Type||'')}" placeholder="Lawn / Chiffon / Embroidered…"></div>
+        <div class="field"><label>Dupatta</label>
+          <select id="f-dupatta" class="fullsel">
+            <option value="" ${!p.Dupatta?'selected':''}>—</option>
+            <option value="আছে" ${p.Dupatta==='আছে'?'selected':''}>আছে (Included)</option>
+            <option value="নেই" ${p.Dupatta==='নেই'?'selected':''}>নেই (Not included)</option>
+          </select></div>
+      </div>
+      <div class="grid2">
         <div class="field"><label>Size</label><input id="f-size" value="${esc(p.Size)}"></div>
         <div class="field"><label>SKU</label><input id="f-sku" value="${esc(p.SKU)}"></div>
       </div>
@@ -851,7 +862,11 @@ function productForm(p){
         <div class="field"><label>Buy price (৳)</label><input id="f-buy" type="number" value="${p.BuyPrice||''}"></div>
         <div class="field"><label>Sale price (৳)</label><input id="f-sale" type="number" value="${p.SalePrice||''}"></div>
       </div>
-      <div class="field"><label>Stock quantity</label><input id="f-stock" type="number" value="${p.Stock!==undefined?p.Stock:''}"></div>
+      <div class="grid2">
+        <div class="field"><label>Stock quantity</label><input id="f-stock" type="number" value="${p.Stock!==undefined?p.Stock:''}"></div>
+        <div class="field"><label>Shipping cost (৳) <span style="font-weight:400;color:var(--muted);font-size:11px">— শুধু তোমার জন্য</span></label>
+          <input id="f-shipping" type="number" value="${p.ShippingCost||''}" placeholder="0"></div>
+      </div>
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
       <button class="btn btn-gold" data-act="product-save" data-id="${esc(p.ID||'')}">Save product</button></div>`);
@@ -859,6 +874,8 @@ function productForm(p){
 async function saveProduct(id){
   const item={ ID:id||'', Name:$('#f-name').value.trim(), Brand:$('#f-brand').value.trim(),
     Category:$('#f-cat').value.trim(), Size:$('#f-size').value.trim(), SKU:$('#f-sku').value.trim(),
+    Type:$('#f-type').value.trim(), Dupatta:$('#f-dupatta').value,
+    ShippingCost:$('#f-shipping').value||'0',
     BuyPrice:$('#f-buy').value, SalePrice:$('#f-sale').value, Stock:$('#f-stock').value };
   if(!item.Name){ toast('Name is required','err'); return; }
   try{ await api('saveProduct',{item}); closeModal(); toast('Product saved','ok'); viewInventory(); }
@@ -1000,7 +1017,7 @@ function renderProductList(q){
     const low=Number(p.Stock)<=3;
     return `<div class="pitem" data-act="cart-add" data-id="${esc(p.ID)}">
       <div><div class="pn">${esc(p.Name)}</div>
-        <div class="pd">${esc(p.Brand||'')} ${p.Size?'· '+esc(p.Size):''} · <span class="stock-tag ${low?'low':''}">${Number(p.Stock)} in stock</span></div></div>
+        <div class="pd">${esc(p.Brand||'')} ${p.Size?'· '+esc(p.Size):''} ${p.SKU?'· <strong>SKU: '+esc(p.SKU)+'</strong>':''} · <span class="stock-tag ${low?'low':''}">${Number(p.Stock)} in stock</span></div></div>
       <div class="pr"><div class="tnum" style="font-weight:600">${tk(p.SalePrice)}</div></div>
       <div class="add">＋</div></div>`;}).join('') ||
     `<div class="empty">No products. Add some in Inventory first.</div>`;
