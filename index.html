@@ -381,11 +381,11 @@ function toast(msg, type){
    in-memory DB persisted to IndexedDB. Exposes the same api(action, payload) the UI uses. */
 
 const TABLES = ['Products','Customers','Sales','SaleItems','Suppliers','Expenses',
-  'Purchases','PurchaseItems','Returns','ReturnItems','Dues'];
+  'Purchases','PurchaseItems','Returns','ReturnItems','Dues','Lots'];
 const KEY = {
   Products:'ID', Customers:'ID', Sales:'InvoiceNo', SaleItems:'InvoiceNo',
   Suppliers:'ID', Expenses:'ID', Purchases:'PurchaseNo', PurchaseItems:'PurchaseNo',
-  Returns:'ReturnNo', ReturnItems:'ReturnNo', Dues:'ID'
+  Returns:'ReturnNo', ReturnItems:'ReturnNo', Dues:'ID', Lots:'ID'
 };
 const LOW_STOCK = 1;
 const NUM_FIELDS = ['BuyPrice','SalePrice','Stock','Amount'];
@@ -416,13 +416,37 @@ function saveRow(name, item, prefix){
   const k = KEY[name];
   let id = item[k];
   const arr = DB[name];
+  let isNew=false;
   if(!id){ id = newId(prefix); item[k]=id; item.CreatedAt = new Date().toISOString(); }
   const i = arr.findIndex(function(r){ return String(r[k])===String(id); });
   if(i>-1){ const ex=arr[i]; const merged=Object.assign({}, ex, item); if(ex.CreatedAt) merged.CreatedAt=ex.CreatedAt; arr[i]=merged; }
-  else { if(!item.CreatedAt) item.CreatedAt=new Date().toISOString(); arr.push(Object.assign({}, item)); }
-  return { id:id };
+  else { if(!item.CreatedAt) item.CreatedAt=new Date().toISOString(); arr.push(Object.assign({}, item)); isNew=true; }
+  return { id:id, isNew:isNew };
 }
 function deleteRow(name, id){ const i=rowIndex(name,id); if(i>-1) DB[name].splice(i,1); return { deleted:i>-1 }; }
+
+/* ---------- FIFO lot costing ----------
+   Every time stock enters (new product, Purchase, Return) a Lot row is recorded
+   with its own BuyPrice and remaining Qty. Every sale consumes the OLDEST lots
+   first, so profit reflects what that specific unit actually cost — even if the
+   product's displayed BuyPrice has since gone up from a later restock. */
+function consumeLotsFIFO(productId, qty, fallbackBuyPrice){
+  let remaining=num(qty), costSum=0;
+  const lots=DB.Lots.filter(function(l){ return String(l.ProductID)===String(productId) && num(l.Qty)>0; })
+    .sort(function(a,b){ return new Date(a.Date)-new Date(b.Date); });
+  for(let i=0;i<lots.length && remaining>0;i++){
+    const l=lots[i]; const take=Math.min(num(l.Qty), remaining);
+    if(take<=0) continue;
+    costSum += take*num(l.BuyPrice); l.Qty=num(l.Qty)-take; remaining-=take;
+  }
+  if(remaining>0){ costSum += remaining*num(fallbackBuyPrice); remaining=0; }
+  return num(qty)>0 ? costSum/num(qty) : 0;
+}
+function addLot(productId, buyPrice, qty, purchaseNo){
+  if(!productId || num(qty)<=0) return;
+  DB.Lots.push({ ID:newId('LOT'), ProductID:productId, BuyPrice:num(buyPrice), Qty:num(qty),
+    Date:new Date().toISOString(), PurchaseNo:purchaseNo||'' });
+}
 
 /* ---------- Sales ---------- */
 function L_createSale(sale, items){
@@ -431,10 +455,14 @@ function L_createSale(sale, items){
   const now = new Date();
   let subtotal=0, profit=0;
   items.forEach(function(it){
-    const qty=num(it.Qty), sp=num(it.SalePrice), bp=num(it.BuyPrice);
-    it.LineTotal=qty*sp; it.LineProfit=qty*(sp-bp);
+    const qty=num(it.Qty), sp=num(it.SalePrice);
+    const p=findProduct(it.ProductID);
+    const fallback=p?num(p.BuyPrice):num(it.BuyPrice);
+    const bp = it.ProductID ? consumeLotsFIFO(it.ProductID, qty, fallback) : num(it.BuyPrice);
+    it.BuyPrice = Math.round(bp*100)/100;
+    it.LineTotal=qty*sp; it.LineProfit=qty*(sp-it.BuyPrice);
     subtotal+=it.LineTotal; profit+=it.LineProfit;
-    const p=findProduct(it.ProductID); if(p) p.Stock = num(p.Stock) - qty;
+    if(p) p.Stock = num(p.Stock) - qty;
   });
   const discount=num(sale.Discount), delivery=num(sale.Delivery);
   const total=subtotal-discount+delivery;
@@ -546,7 +574,8 @@ function L_report(from, to){
 function L_createPurchase(pur, items){
   items=items||[]; const no=nextNo('Purchases','PO'); const now=new Date(); let total=0;
   items.forEach(function(it){ const qty=num(it.Qty), bp=num(it.BuyPrice); it.LineTotal=qty*bp; total+=it.LineTotal;
-    const p=findProduct(it.ProductID); if(p){ p.Stock=num(p.Stock)+qty; if(bp>0) p.BuyPrice=bp; } });
+    const p=findProduct(it.ProductID); if(p){ p.Stock=num(p.Stock)+qty; if(bp>0) p.BuyPrice=bp; }
+    addLot(it.ProductID, bp, qty, no); });
   const paid=num(pur.Paid), due=total-paid;
   DB.Purchases.push({ PurchaseNo:no, Date:now.toISOString(), SupplierID:pur.SupplierID||'', SupplierName:pur.SupplierName||'',
     Total:total, Paid:paid, Due:due, Status:(due<=0?'Paid':'Due'), Note:pur.Note||'' });
@@ -570,7 +599,8 @@ function L_createReturn(ret, items){
   items=items||[]; const no=nextNo('Returns','RT'); const now=new Date(); let amount=0, profitRev=0;
   items.forEach(function(it){ const qty=num(it.Qty), sp=num(it.SalePrice), bp=num(it.BuyPrice);
     it.LineTotal=qty*sp; it.LineProfit=qty*(sp-bp); amount+=it.LineTotal; profitRev+=it.LineProfit;
-    const p=findProduct(it.ProductID); if(p) p.Stock=num(p.Stock)+qty; });
+    const p=findProduct(it.ProductID); if(p) p.Stock=num(p.Stock)+qty;
+    addLot(it.ProductID, bp, qty, ''); });
   DB.Returns.push({ ReturnNo:no, Date:now.toISOString(), InvoiceNo:ret.InvoiceNo||'', CustomerName:ret.CustomerName||'',
     Amount:amount, ProfitReversed:profitRev, Note:ret.Note||'' });
   items.forEach(function(it){ DB.ReturnItems.push({ ReturnNo:no, ProductID:it.ProductID||'', ProductName:it.ProductName||'',
@@ -594,7 +624,13 @@ async function api(action, p){
   switch(action){
     case 'dashboard':       out=L_dashboard(); break;
     case 'listProducts':    out=readAll('Products'); break;
-    case 'saveProduct':     out=saveRow('Products', p.item, 'P'); break;
+    case 'saveProduct': {
+      const r=saveRow('Products', p.item, 'P');
+      if(r.isNew) addLot(r.id, p.item.BuyPrice, p.item.Stock, '');
+      out=r; break;
+    }
+    case 'productLots':     out=readAll('Lots').filter(function(l){ return String(l.ProductID)===String(p.id) && num(l.Qty)>0; })
+                               .sort(function(a,b){ return new Date(a.Date)-new Date(b.Date); }); break;
     case 'deleteProduct':   out=deleteRow('Products', p.id); break;
     case 'listCustomers':   out=readAll('Customers'); break;
     case 'saveCustomer':    out=saveRow('Customers', p.item, 'C'); break;
@@ -862,13 +898,24 @@ function productForm(p){
           <input id="f-shipping" type="number" value="${p.ShippingCost||''}" placeholder="0"></div>
       </div>
       <div class="grid2">
-        <div class="field"><label>Buy price (৳)</label><input id="f-buy" type="number" value="${p.BuyPrice||''}"></div>
+        <div class="field"><label>Buy price (৳) ${p.ID?'<span style="font-weight:400;color:var(--muted);font-size:11px">— নতুন lot-এর দাম দিতে হলে Purchase করো</span>':''}</label><input id="f-buy" type="number" value="${p.BuyPrice||''}"></div>
         <div class="field"><label>Sale price (৳)</label><input id="f-sale" type="number" value="${p.SalePrice||''}"></div>
       </div>
       <div class="field"><label>Stock quantity</label><input id="f-stock" type="number" value="${p.Stock!==undefined?p.Stock:''}"></div>
+      ${p.ID?`<div class="field"><label>Purchase lots (FIFO — পুরনো lot আগে বিক্রি হয়)</label><div id="lots-box"><div class="hint">Loading…</div></div></div>`:''}
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
       <button class="btn btn-gold" data-act="product-save" data-id="${esc(p.ID||'')}">Save product</button></div>`);
+  if(p.ID) loadProductLots(p.ID);
+}
+async function loadProductLots(id){
+  const box=$('#lots-box'); if(!box) return;
+  try{
+    const lots=await api('productLots',{id});
+    if(!lots.length){ box.innerHTML='<div class="hint">এই product-এর জন্য এখনো কোনো আলাদা lot নেই (হয়তো Purchase ছাড়াই stock বসানো হয়েছিল)।</div>'; return; }
+    const rows=lots.map(function(l){ return '<tr><td>'+fdate(l.Date)+'</td><td class="num tnum">'+tk(l.BuyPrice)+'</td><td class="num tnum">'+Number(l.Qty)+'</td></tr>'; }).join('');
+    box.innerHTML='<div class="table-wrap"><table><thead><tr><th>তারিখ</th><th class="num">কেনা দাম</th><th class="num">বাকি আছে</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }catch(e){ box.innerHTML=''; }
 }
 async function saveProduct(id){
   const item={ ID:id||'', Name:$('#f-name').value.trim(), Brand:$('#f-brand').value.trim(),
@@ -1712,27 +1759,56 @@ function parseCSV(text){
     cells.push(cur); return cells;
   });
 }
+function skuDupIndexes(items, existing){
+  const existingSku={}; (existing||[]).forEach(function(p){ const s=(p.SKU||'').trim().toLowerCase(); if(s) existingSku[s]=true; });
+  const seenInFile={}; const dup=[];
+  items.forEach(function(it,idx){
+    const s=(it.SKU||'').trim().toLowerCase(); if(!s) return;
+    if(existingSku[s] || seenInFile[s]) dup.push(idx);
+    seenInFile[s]=true;
+  });
+  return dup;
+}
 async function importProductsCSV(input){
   const file=input.files&&input.files[0]; if(!file) return;
   const reader=new FileReader();
   reader.onload=async function(){
     try{
       const rows=parseCSV(String(reader.result)).filter(function(r){ return r.some(function(c){ return c.trim(); }); });
-      if(rows.length<2){ toast('CSV ফাঁকা বা শুধু header আছে','err'); return; }
-      // normalize headers: remove trailing * and trim
+      if(rows.length<2){ toast('CSV ফাঁকা বা শুধু header আছে','err'); input.value=''; return; }
       const hdrs=rows[0].map(function(h){ return h.trim().replace(/\s*\*$/,''); });
-      let count=0;
+      const items=[];
       for(let i=1;i<rows.length;i++){
-        const row=rows[i];
-        const item={};
+        const row=rows[i]; const item={};
         hdrs.forEach(function(h,j){ item[h]=(row[j]||'').trim(); });
-        if(!item.Name) continue; // skip rows without name
-        // keep ID if provided (preserves link from template), otherwise blank → auto-generated
-        await api('saveProduct',{item});
+        if(!item.Name) continue;
+        items.push(item);
+      }
+      if(!items.length){ toast('কোনো valid product row পাওয়া যায়নি','err'); input.value=''; return; }
+
+      let skipSet=null;
+      try{
+        const existing=await api('listProducts');
+        const dupIdx=skuDupIndexes(items, existing);
+        if(dupIdx.length){
+          const sample=dupIdx.slice(0,8).map(function(i){ return items[i].SKU+(items[i].Name?' — '+items[i].Name:''); }).join('\n');
+          const more=dupIdx.length>8?'\n…আরও '+(dupIdx.length-8)+'টা':'';
+          const proceed=confirm(
+            dupIdx.length+' টা SKU ইতিমধ্যে Inventory-তে আছে (বা এই CSV-তেই দুইবার আছে):\n\n'+sample+more+
+            '\n\nOK চাপলে এগুলোও নতুন আলাদা entry হিসেবে import হবে।\nCancel চাপলে শুধু এই SKU-গুলো বাদ দিয়ে বাকি নতুন product-গুলো import হবে।'
+          );
+          if(!proceed){ skipSet={}; dupIdx.forEach(function(i){ skipSet[i]=true; }); }
+        }
+      }catch(e){ /* if the check itself fails, continue importing normally */ }
+
+      let count=0, skipped=0;
+      for(let i=0;i<items.length;i++){
+        if(skipSet && skipSet[i]){ skipped++; continue; }
+        await api('saveProduct',{item:items[i]});
         count++;
       }
       input.value='';
-      toast(count+' টা product import হয়েছে ✦','ok');
+      toast(count+' টা product import হয়েছে'+(skipped?' · '+skipped+' টা duplicate SKU বাদ দেওয়া হয়েছে':'')+' ✦','ok');
       viewInventory();
     }catch(e){ toast('Import failed: '+e.message,'err'); input.value=''; }
   };
