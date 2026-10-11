@@ -87,6 +87,13 @@
   .btn-icon{padding:7px 9px; font-size:13px; background:#faf7f1; border:1px solid var(--line-2); border-radius:8px; color:var(--charcoal)}
   .btn-icon:hover{border-color:var(--muted)}
 
+  /* ---------- splash + login ---------- */
+  #splash{min-height:100%; display:grid; place-items:center}
+  #login{min-height:100%; display:none; place-items:center; padding:24px;
+    background:radial-gradient(120% 90% at 50% -10%, #efe7d6 0%, var(--paper) 55%)}
+  #login.on{display:grid}
+  #lg-err{color:var(--neg); font-size:13px; font-weight:600; min-height:18px; margin:-2px 0 12px; text-align:center}
+
   /* ---------- app shell ---------- */
   #app{display:none; min-height:100%}
   .shell{display:grid; grid-template-columns:250px 1fr; min-height:100vh}
@@ -309,6 +316,20 @@
 </head>
 <body>
 
+<!-- SPLASH + LOGIN -->
+<div id="splash"><div class="loading"><div class="spin"></div><span id="splash-msg">Loading…</span></div></div>
+<div id="login">
+  <form class="setup-card" id="lg-form" autocomplete="on">
+    <div class="brand"><span class="name">OMME'S</span><span class="sub">GALLERY</span><span class="tag">Buy your happiness</span></div>
+    <h1>Sign in</h1>
+    <p class="lead">Only invited accounts can open this app.</p>
+    <div class="field"><label>Email</label><input id="lg-email" type="email" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+    <div class="field"><label>Password</label><input id="lg-pass" type="password" autocomplete="current-password"></div>
+    <div id="lg-err"></div>
+    <button class="btn btn-gold btn-block" id="lg-btn" type="submit">Sign in</button>
+  </form>
+</div>
+
 <!-- APP -->
 <div id="app">
   <div class="mtopbar">
@@ -334,6 +355,7 @@
       <div class="foot">
         <button class="install-btn" data-act="install" style="display:none">⤓ Install app</button>
         <button data-nav="settings">⚙ Settings</button>
+        <button data-act="signout">⎋ Sign out</button>
         <span id="side-meta"></span>
       </div>
     </aside>
@@ -355,11 +377,12 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script>
-/* ===================== shop config (local, invoice display only) ===================== */
-const CFG_KEY = 'omme_cfg_v1';
-function getCfg(){ try{ return JSON.parse(localStorage.getItem(CFG_KEY) || 'null') || {}; }catch(e){ return {}; } }
-function setCfg(c){ localStorage.setItem(CFG_KEY, JSON.stringify(c)); }
+/* shop info (invoice header/footer) now lives in Firestore: see getCfg/setCfg in the sync layer below */
 
 const state = { products:[], customers:[], cart:[], customerId:'', view:'dashboard', chart:null };
 
@@ -378,7 +401,7 @@ function toast(msg, type){
 
 /* ===================== OMME'S GALLERY — Local data core (Vol 6) =====================
    Ported from the Google Apps Script backend. Runs entirely in the browser against an
-   in-memory DB persisted to IndexedDB. Exposes the same api(action, payload) the UI uses. */
+   in-memory DB kept in sync with Firestore (see sync layer below). Exposes the same api(action, payload) the UI uses. */
 
 const TABLES = ['Products','Customers','Sales','SaleItems','Suppliers','Expenses',
   'Purchases','PurchaseItems','Returns','ReturnItems','Dues','Lots'];
@@ -402,7 +425,13 @@ function ymd(d){ d=d||new Date(); return String(d.getFullYear()).slice(2)+p2(d.g
 function dstr(v){ const d=new Date(v); return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()); }
 function ym(v){ const d=new Date(v); return d.getFullYear()+'-'+p2(d.getMonth()+1); }
 function yy(v){ return String(new Date(v).getFullYear()); }
-function nextNo(table, prefix){ const n = (DB._seq[table] = (DB._seq[table]||0) + 1); return prefix + ymd() + '-' + pad3(n); }
+/* numbers normally come from the shared counter (claimed in api() before the action runs) */
+function nextNo(table, prefix){
+  let n = CLAIM[table];
+  if(n == null){ n = (DB._seq[table]||0) + 1; PENDING_INC.push(table); }   // offline: take locally, bump the counter on sync
+  DB._seq[table] = Math.max(DB._seq[table]||0, n); delete CLAIM[table];
+  return prefix + ymd() + '-' + pad3(n);
+}
 function newId(prefix){ return prefix + Date.now().toString(36).toUpperCase() + Math.floor(Math.random()*46656).toString(36); }
 
 function readAll(name){ return DB[name].map(function(r){ return Object.assign({}, r); }); }
@@ -621,6 +650,10 @@ const MUTATIONS = ['saveProduct','deleteProduct','saveCustomer','deleteCustomer'
 
 async function api(action, p){
   p = p || {}; ensureDB(); let out;
+  if(SEQ_ACTION[action]){
+    const tb = SEQ_ACTION[action], n = await claimSeq(tb);
+    if(n != null) CLAIM[tb] = n; else toast('Offline: number taken on this device, it will sync when you are back online');
+  }
   switch(action){
     case 'dashboard':       out=L_dashboard(); break;
     case 'listProducts':    out=readAll('Products'); break;
@@ -660,7 +693,147 @@ async function api(action, p){
   return out;
 }
 
-/* ---------- persistence (IndexedDB single blob) ---------- */
+/* ---------- Firebase sync layer (Vol 7) ----------
+   Everything still runs against the in-memory DB above. Firestore is now the source of truth:
+   one collection per table, live listeners keep DB up to date on every device, and each change
+   is written to Firestore as a small diff (never the whole DB). Stock and lot quantities are
+   written as increments so two devices selling at the same time cannot overwrite each other. */
+const CHILD = { SaleItems:'InvoiceNo', PurchaseItems:'PurchaseNo', ReturnItems:'ReturnNo' }; // rows that share a parent number
+const INC_FIELD = { Products:'Stock', Lots:'Qty' };
+const SEQ_TABLES = ['Sales','Purchases','Returns'];
+const SEQ_ACTION = { createSale:'Sales', createPurchase:'Purchases', createReturn:'Returns' };
+const CLAIM = {};          // numbers claimed from the shared counter, consumed by nextNo()
+const PENDING_INC = [];    // counters to bump later when a number had to be taken offline
+let fdb = null, fauth = null;
+let SHADOW = {};           // what Firestore is known to hold, per table: Map(docId -> row)
+let CFG = {};              // shop info (invoice header/footer), stored in Firestore meta/shop
+let SERVER_SEEN = false;   // true once Products were confirmed from the server, not only the cache
+let BOOTED = false, SYNC_STARTED = false;
+let UNSUBS = [];
+
+function getCfg(){ return CFG || {}; }
+function setCfg(c){
+  CFG = c;
+  if(fdb) fdb.collection('meta').doc('shop').set(cleanRow(c)).catch(function(e){ toast('Sync problem: '+((e&&e.message)||e),'err'); });
+}
+
+function cleanRow(r){ return JSON.parse(JSON.stringify(r)); }
+function keyOf(t, r){ return CHILD[t] ? r._k : r[KEY[t]]; }
+
+/* child rows (sale items etc.) share their parent's number, so each gets its own id: "<no>#001" */
+function assignChildKeys(target){
+  Object.keys(CHILD).forEach(function(t){
+    const pk = CHILD[t], cnt = {}, rows = target[t] || [];
+    rows.forEach(function(r){ if(r._k){ const n = parseInt(String(r._k).split('#')[1], 10) || 0; cnt[r[pk]] = Math.max(cnt[r[pk]] || 0, n); } });
+    rows.forEach(function(r){ if(!r._k){ cnt[r[pk]] = (cnt[r[pk]] || 0) + 1; r._k = r[pk] + '#' + ('000' + cnt[r[pk]]).slice(-3); } });
+  });
+}
+function sortRows(t, rows){
+  if(CHILD[t]) rows.sort(function(a,b){ return String(a._k||'').localeCompare(String(b._k||'')); });
+  else rows.sort(function(a,b){ return String(a.CreatedAt||a.Date||'').localeCompare(String(b.CreatedAt||b.Date||'')); });
+}
+function makeShadow(t, rows){
+  const m = new Map();
+  rows.forEach(function(r){ const k = keyOf(t, r); if(k != null && k !== '') m.set(String(k), cleanRow(r)); });
+  return m;
+}
+
+/* Compare DB with what Firestore holds and send only the differences. Runs synchronously up to the
+   commit, so a second change made right after the first is diffed against the updated shadow. */
+async function persist(){
+  if(!fdb) return;
+  assignChildKeys(DB);
+  const FV = firebase.firestore.FieldValue;
+  let batch = fdb.batch(), n = 0; const batches = [];
+  function add(fn){ fn(batch); n++; if(n >= 400){ batches.push(batch); batch = fdb.batch(); n = 0; } }
+  TABLES.forEach(function(t){
+    const col = fdb.collection(t), sh = SHADOW[t] || (SHADOW[t] = new Map()), seen = new Set();
+    DB[t].forEach(function(r){
+      const k = keyOf(t, r); if(k == null || k === '') return;
+      const id = String(k); seen.add(id);
+      const prev = sh.get(id);
+      if(!prev){ add(function(b){ b.set(col.doc(id), cleanRow(r)); }); return; }
+      const upd = {}; let changed = false;
+      Object.keys(r).forEach(function(f){
+        if(JSON.stringify(r[f]) === JSON.stringify(prev[f])) return;
+        changed = true;
+        if(INC_FIELD[t] === f && typeof r[f] === 'number' && typeof prev[f] === 'number') upd[f] = FV.increment(r[f] - prev[f]);
+        else upd[f] = (r[f] === undefined ? null : r[f]);
+      });
+      if(changed) add(function(b){ b.set(col.doc(id), upd, {merge:true}); });
+    });
+    sh.forEach(function(_, id){ if(!seen.has(id)) add(function(b){ b.delete(col.doc(id)); }); });
+    SHADOW[t] = makeShadow(t, DB[t]);
+  });
+  PENDING_INC.splice(0).forEach(function(t){
+    const o = {}; o[t] = FV.increment(1);
+    add(function(b){ b.set(fdb.collection('meta').doc('counters'), o, {merge:true}); });
+  });
+  batches.push(batch);
+  batches.forEach(function(b){ b.commit().catch(function(e){ toast('Sync problem: '+((e&&e.message)||e),'err'); }); });
+}
+
+/* Invoice / PO / return numbers come from one shared counter so two devices never reuse a number. */
+async function claimSeq(table){
+  if(typeof navigator !== 'undefined' && navigator.onLine === false) return null;
+  try{
+    const ref = fdb.collection('meta').doc('counters');
+    return await fdb.runTransaction(async function(tx){
+      const s = await tx.get(ref);
+      const cur = (s.exists && Number(s.data()[table])) || 0;
+      const o = {}; o[table] = cur + 1; tx.set(ref, o, {merge:true});
+      return cur + 1;
+    });
+  }catch(e){ return null; }
+}
+
+/* live listeners: every collection + counters + shop info. Resolves when all have delivered once. */
+function listenAll(){
+  const waits = [];
+  function watch(ref, onData){
+    waits.push(new Promise(function(resolve, reject){
+      let first = true;
+      UNSUBS.push(ref.onSnapshot(function(snap){
+        onData(snap);
+        if(first){ first = false; resolve(); } else scheduleRefresh();
+      }, function(err){
+        if(first){ first = false; reject(err); } else toast('Sync problem: '+((err&&err.message)||err),'err');
+      }));
+    }));
+  }
+  TABLES.forEach(function(t){
+    watch(fdb.collection(t), function(snap){
+      const rows = snap.docs.map(function(d){ return d.data(); });
+      sortRows(t, rows);
+      DB[t] = rows; SHADOW[t] = makeShadow(t, rows);
+      if(t === 'Products' && !snap.metadata.fromCache) SERVER_SEEN = true;
+    });
+  });
+  watch(fdb.collection('meta').doc('counters'), function(s){ DB._seq = s.exists ? Object.assign({}, s.data()) : {}; });
+  watch(fdb.collection('meta').doc('shop'), function(s){ CFG = s.exists ? s.data() : {}; });
+  return Promise.all(waits);
+}
+
+/* re-draw the current screen when another device changes data (never while typing or in a popup) */
+let refreshT = null;
+function scheduleRefresh(){
+  if(!BOOTED) return;
+  clearTimeout(refreshT);
+  refreshT = setTimeout(function(){
+    if($('#backdrop').classList.contains('on')) return;
+    const a = document.activeElement;
+    if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
+    const v = state.view;
+    if(v === 'sales'){
+      state.products = readAll('Products'); state.customers = readAll('Customers');
+      const s = $('#pos-search'); renderProductList(s ? s.value : '');
+      return;
+    }
+    if(['dashboard','inventory','customers','reports','expenses'].indexOf(v) > -1) setNav(v);
+  }, 700);
+}
+
+/* ---------- old local data (Vol 6 kept everything in this browser's IndexedDB) ---------- */
 const IDB_NAME='ommes_local_v1', IDB_STORE='kv', IDB_KEY='db';
 function idbOpen(){ return new Promise(function(res,rej){ const r=indexedDB.open(IDB_NAME,1);
   r.onupgradeneeded=function(){ r.result.createObjectStore(IDB_STORE); };
@@ -668,22 +841,141 @@ function idbOpen(){ return new Promise(function(res,rej){ const r=indexedDB.open
 async function idbGet(){ const db=await idbOpen(); return new Promise(function(res,rej){
   const t=db.transaction(IDB_STORE,'readonly').objectStore(IDB_STORE).get(IDB_KEY);
   t.onsuccess=function(){ res(t.result||null); }; t.onerror=function(){ rej(t.error); }; }); }
-async function idbSet(v){ const db=await idbOpen(); return new Promise(function(res,rej){
-  const tx=db.transaction(IDB_STORE,'readwrite'); tx.objectStore(IDB_STORE).put(v,IDB_KEY);
-  tx.oncomplete=function(){ res(); }; tx.onerror=function(){ rej(tx.error); }; }); }
+async function findLegacyData(){
+  try{ const old = await idbGet(); if(old && TABLES.some(function(t){ return Array.isArray(old[t]) && old[t].length; })) return old; }catch(e){}
+  return null;
+}
+function legacyCfg(){ try{ return JSON.parse(localStorage.getItem('omme_cfg_v1') || 'null') || null; }catch(e){ return null; } }
+function legacyCounts(o){ return (o.Products||[]).length+' products · '+(o.Customers||[]).length+' customers · '+(o.Sales||[]).length+' sales'; }
 
-let PERSIST_OK=true;
-async function persist(){ if(!PERSIST_OK) return; try{ await idbSet(DB); }catch(e){ PERSIST_OK=false; } }
-async function loadDB(){ try{ DB=await idbGet(); }catch(e){ DB=null; PERSIST_OK=false; } ensureDB(); }
+/* Copy a whole backup (or the old local data) into Firestore. Safe to run twice: same ids overwrite. */
+async function uploadToCloud(obj){
+  if(typeof navigator !== 'undefined' && navigator.onLine === false) throw new Error('Internet connection is needed for this');
+  const src = {};
+  TABLES.forEach(function(t){ src[t] = Array.isArray(obj[t]) ? obj[t].map(cleanRow) : []; });
+  assignChildKeys(src);
+  let batch = fdb.batch(), n = 0, total = 0; const batches = [];
+  TABLES.forEach(function(t){
+    src[t].forEach(function(r){
+      const k = keyOf(t, r); if(k == null || k === '') return;
+      batch.set(fdb.collection(t).doc(String(k)), r); total++; n++;
+      if(n >= 400){ batches.push(batch); batch = fdb.batch(); n = 0; }
+    });
+  });
+  batches.push(batch);
+  for(let i = 0; i < batches.length; i++) await batches[i].commit();
+  const seq = obj._seq || {}, ref = fdb.collection('meta').doc('counters');
+  await fdb.runTransaction(async function(tx){
+    const s = await tx.get(ref), cur = s.exists ? s.data() : {}, o = {};
+    SEQ_TABLES.forEach(function(t){ o[t] = Math.max(Number(cur[t]) || 0, Number(seq[t]) || 0, src[t].length); });
+    tx.set(ref, o, {merge:true});
+  });
+  return total;
+}
+async function runMigration(){
+  closeModal();
+  if((DB.Products.length || DB.Sales.length || DB.Customers.length) &&
+     !confirm('Firebase already has shop data.\n\nUploading the old local data will overwrite any record with the same id (for example a stock count you changed since).\n\nContinue?')) return;
+  toast('Uploading your old data…');
+  try{
+    const old = await findLegacyData();
+    if(!old){ toast('No old local data found in this browser','err'); return; }
+    const n = await uploadToCloud(old);
+    const lc = legacyCfg(); if(lc && !Object.keys(CFG || {}).length) setCfg(lc);
+    localStorage.setItem('omme_migrated','1');
+    toast(n+' records uploaded ✦','ok');
+    setNav(state.view);
+  }catch(e){ toast('Upload failed: '+e.message,'err'); }
+}
+async function offerMigration(){
+  try{
+    if(localStorage.getItem('omme_migrated') === '1') return;
+    const old = await findLegacyData(); if(!old) return;
+    for(let i = 0; i < 25 && !SERVER_SEEN; i++) await new Promise(function(r){ setTimeout(r, 200); });
+    if(!SERVER_SEEN || DB.Products.length || DB.Sales.length) return;   // offline, or cloud already has data
+    openModal(`<div class="modal-head"><h3>Old data found</h3><button class="x" data-act="modal-close">×</button></div>
+      <div class="modal-body"><p style="margin:0 0 10px">This browser still holds your earlier shop data:</p>
+        <p style="margin:0 0 10px"><strong>${esc(legacyCounts(old))}</strong></p>
+        <p style="margin:0;font-size:13px;color:var(--muted)">Upload it to Firebase so it shows on every device. Your local copy is not deleted.</p></div>
+      <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Not now</button>
+        <button class="btn btn-gold" data-act="migrate-yes">Upload</button></div>`);
+  }catch(e){}
+}
+async function renderLegacyBox(){
+  const box = $('#legacy-box'); if(!box) return;
+  if(localStorage.getItem('omme_migrated') === '1') return;
+  const old = await findLegacyData(); if(!old) return;
+  box.innerHTML = `<div class="card panel" style="margin-bottom:16px"><h3>Old local data</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.55">This browser still has data from the earlier offline version (${esc(legacyCounts(old))}). Upload it once so it appears on every device.</p>
+    <button class="btn btn-gold" data-act="migrate-yes">⭱ Upload old local data to Firebase</button></div>`;
+}
 
 /* ---------- backup ---------- */
-function exportBackup(){ ensureDB(); return JSON.stringify(DB); }
+function exportBackup(){ ensureDB(); assignChildKeys(DB); return JSON.stringify(DB); }
 function importBackup(json){
   const obj = (typeof json==='string') ? JSON.parse(json) : json;
   if(!obj || typeof obj!=='object') throw new Error('Invalid backup file');
   const ok = TABLES.some(function(t){ return Array.isArray(obj[t]); });
   if(!ok) throw new Error('This file does not look like an OMME backup');
-  DB = obj; ensureDB(); return true;
+  return obj;
+}
+
+/* ---------- login + start-up ---------- */
+function setScreen(s){
+  $('#splash').style.display = (s === 'splash') ? 'grid' : 'none';
+  $('#login').classList.toggle('on', s === 'login');
+  $('#app').style.display = (s === 'app') ? 'block' : 'none';
+}
+function loginMsg(m){ const e = $('#lg-err'); if(e) e.textContent = m || ''; }
+function authErrorText(e){
+  const c = (e && e.code) || '';
+  if(c === 'auth/invalid-credential' || c === 'auth/wrong-password' || c === 'auth/user-not-found') return 'Email or password is not correct.';
+  if(c === 'auth/invalid-email') return 'Please enter a valid email address.';
+  if(c === 'auth/too-many-requests') return 'Too many attempts. Wait a few minutes and try again.';
+  if(c === 'auth/network-request-failed') return 'No internet connection.';
+  if(c === 'auth/user-disabled') return 'This account has been disabled.';
+  return 'Could not sign in: ' + ((e && e.message) || e);
+}
+function doLogin(){
+  const email = $('#lg-email').value.trim(), pass = $('#lg-pass').value;
+  if(!email || !pass){ loginMsg('Enter your email and password.'); return; }
+  const btn = $('#lg-btn'); btn.disabled = true; btn.textContent = 'Signing in…'; loginMsg('');
+  fauth.signInWithEmailAndPassword(email, pass).catch(function(e){ loginMsg(authErrorText(e)); })
+    .then(function(){ btn.disabled = false; btn.textContent = 'Sign in'; });
+}
+function doSignOut(){ if(fauth) fauth.signOut().then(function(){ location.reload(); }); }
+
+async function onAuth(user){
+  if(!user){ SYNC_STARTED = false; setScreen('login'); return; }
+  if(SYNC_STARTED) return;
+  SYNC_STARTED = true;
+  setScreen('splash');
+  const slow = setTimeout(function(){ const m = $('#splash-msg'); if(m) m.textContent = 'Still loading… check your internet connection.'; }, 12000);
+  try{ await listenAll(); }
+  catch(e){
+    clearTimeout(slow);
+    UNSUBS.forEach(function(u){ try{ u(); }catch(x){} }); UNSUBS = [];
+    SYNC_STARTED = false;
+    const denied = e && e.code === 'permission-denied';
+    try{ await fauth.signOut(); }catch(x){}
+    setScreen('login');
+    loginMsg(denied ? 'This account is not allowed to open this app. Ask the admin to add your email.' : 'Could not load data: ' + ((e && e.message) || e));
+    return;
+  }
+  clearTimeout(slow);
+  BOOTED = true;
+  boot();
+  offerMigration();
+}
+
+async function startFirebase(){
+  const bad = (typeof FIREBASE_CONFIG === 'undefined') || !FIREBASE_CONFIG.apiKey || /^PASTE/i.test(FIREBASE_CONFIG.apiKey);
+  if(bad){ setScreen('login'); loginMsg('Firebase is not set up yet. Fill in firebase-config.js (see README).'); return; }
+  if(typeof firebase === 'undefined'){ setScreen('login'); loginMsg('Could not load Firebase. Check your internet connection and reload.'); return; }
+  firebase.initializeApp(FIREBASE_CONFIG);
+  fauth = firebase.auth(); fdb = firebase.firestore();
+  try{ await fdb.enablePersistence({ synchronizeTabs:true }); }catch(e){ /* private window or unsupported: works online only */ }
+  fauth.onAuthStateChanged(onAuth);
 }
 
 /* ===================== modal ===================== */
@@ -1827,16 +2119,22 @@ function viewSettings(){
       <div class="field"><label>Address</label><input id="set-addr" value="${esc(cfg.shopAddress||'')}"></div>
       <div class="field"><label>Invoice footer note</label><input id="set-note" value="${esc(cfg.invoiceNote||'Thank you for shopping with us. ✦ Buy your happiness.')}"></div>
       <button class="btn btn-gold" data-act="set-save">Save shop info</button></div>
+    <div id="legacy-box"></div>
     <div class="card panel" style="margin-bottom:16px"><h3>Backup &amp; restore</h3>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.55">Your shop data lives only in this browser on this computer. Export a backup file regularly (once a week is a good habit) and keep it safe on Google Drive or a pen drive. If this computer is lost or the browser data is cleared, the backup is the only way to get everything back.</p>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.55">Your data is saved in Firebase and shows on every signed-in device. A backup file is still a good safety copy: export one now and then and keep it on Google Drive. Importing a backup adds its records to the cloud data (same ids are overwritten).</p>
       <div style="display:flex; gap:10px; flex-wrap:wrap">
         <button class="btn btn-gold" data-act="backup-export">⭳ Export backup</button>
         <button class="btn btn-ghost" data-act="backup-import">⭱ Import backup</button>
       </div>
       <input id="backup-file" type="file" accept="application/json,.json" style="display:none"></div>
-    <div class="card panel"><h3>App</h3>
-      <button class="btn btn-ghost install-btn" data-act="install" style="display:none;margin-bottom:10px">⤓ Install to home screen</button>
-      <p style="font-size:12px;color:var(--muted);margin:0">Local desktop edition — no internet needed. Data is saved on this device.</p></div>`;
+    <div class="card panel"><h3>Account &amp; app</h3>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Signed in as <strong>${esc((fauth&&fauth.currentUser&&fauth.currentUser.email)||'')}</strong></p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap">
+        <button class="btn btn-ghost" data-act="signout">⎋ Sign out</button>
+        <button class="btn btn-ghost install-btn" data-act="install" style="display:none">⤓ Install to home screen</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin:12px 0 0">Online sync edition (Vol 7). Works offline too: changes are saved on this device and sent when the internet is back.</p></div>`;
+  renderLegacyBox();
   if(deferredPrompt) showInstall(true);
   const bf=$('#backup-file'); if(bf) bf.onchange=()=>doImportBackup(bf);
 }
@@ -1863,9 +2161,12 @@ function doImportBackup(input){
   const reader=new FileReader();
   reader.onload=async function(){
     try{
-      importBackup(String(reader.result));
-      await persist();
-      toast('Backup restored ✦','ok');
+      const obj = importBackup(String(reader.result));
+      const cnt = TABLES.reduce(function(a,t){ return a + (Array.isArray(obj[t]) ? obj[t].length : 0); }, 0);
+      if(!confirm('Add '+cnt+' records from this backup to the cloud data?\n\nRecords with the same id will be overwritten.')){ input.value=''; return; }
+      toast('Uploading backup…');
+      await uploadToCloud(obj);
+      toast('Backup imported ✦','ok');
       setNav('dashboard');
     }catch(e){ toast('Import failed: '+e.message,'err'); }
     input.value='';
@@ -1933,6 +2234,8 @@ document.addEventListener('click', function(e){
     case 'set-save': saveShopInfo(); break;
     case 'backup-export': doExportBackup(); break;
     case 'backup-import': { const f=$('#backup-file'); if(f) f.click(); break; }
+    case 'signout': doSignOut(); break;
+    case 'migrate-yes': runMigration(); break;
   }
 });
 function confirmDel(msg, fn){
@@ -1945,8 +2248,7 @@ function confirmDel(msg, fn){
 
 /* ===================== connect / boot ===================== */
 function boot(){
-  const su=$('#setup'); if(su) su.style.display='none';
-  $('#app').style.display='block';
+  setScreen('app');
   setNav('dashboard');
 }
 /* ===================== PWA: install + offline ===================== */
@@ -1992,10 +2294,10 @@ if('serviceWorker' in navigator){
   });
 }
 
-(async function init(){
-  try{ await loadDB(); }catch(e){ ensureDB(); }
-  boot();
-  if(!PERSIST_OK) toast('Heads up: this browser can\u2019t save data on disk here. Use Export backup often.','err');
+(function init(){
+  ensureDB();
+  $('#lg-form').addEventListener('submit', function(e){ e.preventDefault(); doLogin(); });
+  startFirebase();
 })();
 </script>
 </body>

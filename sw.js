@@ -1,11 +1,12 @@
-/* OMME'S GALLERY — service worker (Vol 6, local)
-   Caches the app shell so it opens offline. API calls (POST to Apps Script)
-   always go to the network and are never cached. */
-const CACHE = 'omme-shell-v7';
+/* OMME'S GALLERY — service worker (Vol 7, Firebase)
+   Caches the app shell so it opens offline. Firebase / Google API calls
+   always go straight to the network (Firestore keeps its own offline copy of the data). */
+const CACHE = 'omme-shell-v8';
 const SHELL = [
   './',
   './index.html',
   './manifest.json',
+  './firebase-config.js',
   './icon-192.png',
   './icon-512.png',
   './icon-maskable-512.png',
@@ -41,10 +42,14 @@ self.addEventListener('fetch', function(e){
 
   var url = new URL(req.url);
 
+  // never touch Firebase / Google API traffic (login + database sync)
+  if (/(^|\.)(googleapis\.com|firebaseio\.com|firebaseapp\.com)$/.test(url.hostname)) return;
+
   // Always fetch the app shell fresh (network-first) so new versions show up.
   if (url.origin === self.location.origin &&
       (url.pathname.endsWith('/') || url.pathname.endsWith('index.html') ||
-       url.pathname.endsWith('sw.js') || url.pathname.endsWith('manifest.json'))){
+       url.pathname.endsWith('sw.js') || url.pathname.endsWith('manifest.json') ||
+       url.pathname.endsWith('firebase-config.js'))){
     e.respondWith(
       fetch(req).then(function(res){
         var copy = res.clone();
@@ -58,8 +63,10 @@ self.addEventListener('fetch', function(e){
   e.respondWith(
     caches.match(req).then(function(cached){
       var net = fetch(req).then(function(res){
-        if (res && res.status === 200 &&
-            (url.origin === self.location.origin || url.href.indexOf('jsdelivr') !== -1)){
+        var okRes = res && (res.status === 200 || res.type === 'opaque');   // <script> tags load cross-site files as opaque
+        if (okRes &&
+            (url.origin === self.location.origin || url.href.indexOf('jsdelivr') !== -1 ||
+             url.hostname === 'www.gstatic.com')){
           var copy = res.clone();
           caches.open(CACHE).then(function(c){ c.put(req, copy); });
         }

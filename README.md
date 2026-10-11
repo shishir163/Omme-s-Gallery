@@ -1,5 +1,39 @@
-# OMME'S GALLERY — Manager (Vol 6 · Local Desktop Edition)
+# OMME'S GALLERY — Manager (Vol 7 · Firebase: login + sync)
 
+**Vol 7 = same app, now online.** Login with email + password (only the accounts you allow), and one shared database in Firebase, so a sale made on the laptop shows on the phone straight away. It still works offline: changes wait on the device and are sent when the internet is back.
+
+## Files (all go in the GitHub repo together)
+- `index.html` — the app
+- `firebase-config.js` — your Firebase project settings (**fill this in once**)
+- `firestore.rules` — who may read/write (paste into the Firebase console, not used by GitHub)
+- `manifest.json`, `sw.js`, 4 icons — PWA
+- `Code.gs` — old Google Sheets backend, not used any more
+
+## One-time Firebase setup
+1. console.firebase.google.com > **Add project** (name e.g. `ommes-gallery`, Google Analytics off).
+2. **Authentication** > Get started > turn on **Email/Password**. Under **Users** add the admin and the other 2-3 accounts (email + password).
+3. **Firestore Database** > Create database > production mode > location `asia-southeast1` (Singapore).
+4. **Project settings** (gear) > Your apps > Web `</>` > register the app > copy the `firebaseConfig` values into `firebase-config.js`.
+5. **Authentication** > Settings > **Authorized domains** > add `shishir163.github.io`.
+6. **Firestore Database** > **Rules**: paste `firestore.rules` after replacing the 3 example emails with the real (lowercase) ones > **Publish**.
+7. Upload `index.html`, `sw.js`, `firebase-config.js` (and the other files) to the GitHub repo, wait a minute, then open the live link and hard refresh (Cmd+Shift+R).
+
+## First sign-in
+- Sign in on the **same browser and same link** where the old data was entered. The app finds that old data and offers to upload it to Firebase (also under Settings > Old local data). Your local copy is not deleted.
+- Do **not** clear this browser's data until you have checked the data shows on another device. Export a backup first (Settings > Export backup).
+
+## Adding or removing a person
+Add/delete the login under Authentication > Users, then edit the email list in the Firestore Rules and Publish. Admin = the owner of the Firebase project (you).
+
+## How sync works (short)
+- One Firestore collection per table (Products, Sales, SaleItems, ...), plus `meta/counters` (shared invoice / PO / return numbers) and `meta/shop` (shop info).
+- Stock and FIFO lot quantities are saved as increments, so two devices selling at once never overwrite each other.
+- Invoice numbers come from the shared counter. If a sale is made offline the number is taken on that device and the counter is bumped when it syncs (very rarely two offline devices could pick the same number).
+- Free Firebase (Spark) plan is enough for a small shop: no image uploads in this app, so no Storage needed.
+
+---
+
+## Older notes (Vol 6 and before)
 **এই সংস্করণে ডেটা তোমার ব্রাউজারেই (এই কম্পিউটারে) জমা থাকে — Google Sheets বা ইন্টারনেট লাগে না।** খুললেই সরাসরি অ্যাপ, কোনো URL/password নেই। তাৎক্ষণিক গতি।
 
 Modules: **Dashboard · Sale/Invoice · Inventory · Customers · Reports · Purchases · Expenses · Returns · Settings**।
@@ -34,7 +68,7 @@ Modules: **Dashboard · Sale/Invoice · Inventory · Customers · Reports · Pur
 
 ---
 
-## PART A — Backend বসানো (একবারই, ~১০ মিনিট)
+## PART A — (OBSOLETE since Vol 6) Backend বসানো
 1. নতুন **Google Sheet** খোলো (নাম: `OMME'S GALLERY DB`)।
 2. **Extensions ▸ Apps Script** → সব মুছে **`Code.gs`** paste করো।
 3. ৪ নম্বর লাইনে পাসওয়ার্ড বদলাও: `const APP_PASSWORD = '...'` → নিজের পাসওয়ার্ড।
@@ -63,7 +97,7 @@ Vol 5-এ product ছবি **Google Drive**-এ জমা হয়, তাই 
 3. **Settings ▸ Pages ▸ Branch: main ▸ Save** → `https://...github.io/...` লিংক পাবে।
 4. ওই লিংকই সবাই ব্যবহার করবে।
 
-## PART C — প্রথমবার connect
+## PART C — (OBSOLETE since Vol 6) প্রথমবার connect
 - অ্যাপ খুললে setup স্ক্রিন → **Web app URL** (`/exec`) + **Password** বসাও → shop name/phone/address → **Save & connect**।
 - একবার connect হলে ওই device-এ মনে থাকে।
 
@@ -112,6 +146,8 @@ Vol 5-এ product ছবি **Google Drive**-এ জমা হয়, তাই 
 - Expense নোট: Buy price-এ যেহেতু packaging/delivery/ad খরচ ধরা আছে, Expense ledger আলাদা ট্র্যাকিং — sales profit থেকে আবার বাদ দেওয়া হয় না (double-count এড়াতে)।
 - createPurchase/updatePayment mock-Sheet দিয়ে verify করা হয়েছে।
 
+**Vol 7 — IN PROGRESS 🔧 (current)**  Firebase login + sync: code is ready and tested against a simulated Firestore (two devices, concurrent sales, offline, old-data upload). Waiting for the real Firebase project settings (`firebase-config.js`) and the allowed emails (`firestore.rules`). After that works, the app changes the owner wants are done as Vol 8.
+
 **পরের ধাপ:**
 **Vol 5 — DONE ✅ (current)**  Extras:
 - **Barcode/QR scan** — POS ও Inventory-তে ⌾ বোতাম, ক্যামেরায় SKU/QR স্ক্যান করে পণ্য খোঁজা/কার্টে যোগ (https দরকার)।
@@ -121,7 +157,7 @@ Vol 5-এ product ছবি **Google Drive**-এ জমা হয়, তাই 
 - **Settings** — shop নাম/ফোন/ঠিকানা/invoice footer, connection বদল, install, disconnect।
 - ব্যাকএন্ড টেস্টেড (due, return stock-back, dashboard/report net, payDue)।
 
-সব Vol শেষ। পরে চাইলে: SMS/WhatsApp (paid gateway), multi-user auth, Supabase migration।
+Vol 5 শেষ। (Vol 6 = local edition, Vol 7 = Firebase login + sync — above.)
 - **পরে (external খরচ):** SMS/WhatsApp notification।
 
 > **Resume করতে:** শেষ Vol-এর `index.html` + `Code.gs` + (Vol 2+ থেকে) `manifest.json`, `sw.js`, iconগুলো + এই STATE অংশ paste করলেই আমি পরের Vol থেকে শুরু করব।
@@ -129,4 +165,4 @@ Vol 5-এ product ছবি **Google Drive**-এ জমা হয়, তাই 
 ---
 
 ## Tech summary
-Frontend vanilla HTML/CSS/JS + Chart.js (CDN)। Backend Apps Script web app (POST `text/plain`, CORS preflight এড়াতে)। DB Google Sheets। PWA: manifest + cache-first service worker (API bypass)। Auth: shared password + secret URL।
+Frontend vanilla HTML/CSS/JS + Chart.js (CDN)। Backend Apps Script web app (POST `text/plain`, CORS preflight এড়াতে)। DB Google Sheets। PWA: manifest + cache-first service worker (API bypass)। Auth (Vol 7): Firebase Auth email/password + Firestore rules. DB (Vol 7): Cloud Firestore.
