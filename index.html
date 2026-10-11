@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="OMME'S" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Lato:wght@400;700;900&family=Roboto:wght@400;500;700&family=Poppins:wght@400;600;700&family=League+Spartan:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#1b1610; --charcoal:#2a2118; --paper:#f3efe7; --card:#ffffff;
@@ -27,6 +27,7 @@
     --shadow:0 1px 2px rgba(27,22,16,.04), 0 8px 24px rgba(27,22,16,.06);
     --serif:'Cormorant Garamond', Georgia, serif;
     --sans:'Lato', 'Inter', system-ui, -apple-system, sans-serif;
+    --side-bg:#1b1610; --input-bg:#fdfcf9; --hover:#faf7f1; --glow:#efe7d6;
     /* dashboard jewel palette (Pakistani festive dyes) */
     --d-bg:#0b0910; --d-bg2:#141020; --d-ink:#f4eefc; --d-muted:#a99fc4; --d-line:rgba(255,255,255,.09);
     --j-emerald1:#12b886; --j-emerald2:#0b7a63;
@@ -34,6 +35,29 @@
     --j-magenta1:#ff5c9b; --j-magenta2:#b12a8f;
     --j-indigo1:#7d7bff; --j-indigo2:#5127c4;
   }
+  /* ---- themes (per-device, chosen in Settings) ---- */
+  html[data-theme="deep"]{ --paper:#e7dbc4; --card:#f6efe0; --line:#dccfb6; --line-2:#ccbd9d;
+    --glow:#dcc9a4; --hover:#efe5d1; --input-bg:#fbf6ea; }
+  html[data-theme="dark"]{ --ink:#efe7d8; --charcoal:#dad1c1; --paper:#1b1712; --card:#26201a;
+    --line:#362e24; --line-2:#463b2d; --muted:#a89a85; --muted-2:#857a69;
+    --gold-soft:#3b2f1b; --pos-soft:#15271d; --neg-soft:#2f1b19; --side-bg:#120f0b;
+    --input-bg:#201a13; --hover:#2c251b; --glow:#241d13;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.45); }
+  html[data-theme="night"]{ --ink:#f2ebdf; --charcoal:#ded5c6; --paper:#0a0908; --card:#15120e;
+    --line:#241f18; --line-2:#332b20; --muted:#9a8e7b; --muted-2:#776d5d;
+    --gold-soft:#2f260f; --pos-soft:#10211a; --neg-soft:#281614; --side-bg:#060504;
+    --input-bg:#120f09; --hover:#1d1811; --glow:#15100a;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.6); }
+  /* ---- fonts (per-device) ---- */
+  html[data-font="roboto"]{ --sans:'Roboto', system-ui, sans-serif; }
+  html[data-font="poppins"]{ --sans:'Poppins', system-ui, sans-serif; }
+  html[data-font="spartan"]{ --sans:'League Spartan', system-ui, sans-serif; }
+  html[data-font="serif"]{ --sans:'Cormorant Garamond', Georgia, serif; }
+  /* theme-switch segmented control */
+  .seg{display:flex; gap:8px; flex-wrap:wrap}
+  .seg-btn{padding:9px 16px; border:1px solid var(--line-2); border-radius:9px; background:var(--input-bg);
+    color:var(--charcoal); font-weight:700; font-size:13px}
+  .seg-btn.on{background:var(--gold); color:#fff; border-color:var(--gold)}
   *{box-sizing:border-box}
   html,body{margin:0;height:100%}
   body{
@@ -54,7 +78,7 @@
 
   /* ---------- setup screen ---------- */
   #setup{min-height:100%; display:grid; place-items:center; padding:24px;
-    background:radial-gradient(120% 90% at 50% -10%, #efe7d6 0%, var(--paper) 55%)}
+    background:radial-gradient(120% 90% at 50% -10%, var(--glow) 0%, var(--paper) 55%)}
   .setup-card{width:100%; max-width:440px; background:var(--card); border:1px solid var(--line);
     border-radius:var(--radius); box-shadow:var(--shadow); padding:30px 28px}
   .setup-card .brand{align-items:center; text-align:center; margin-bottom:6px}
@@ -65,7 +89,7 @@
     letter-spacing:.02em; margin-bottom:6px}
   .field input, .field textarea, .field select{
     width:100%; padding:11px 12px; border:1px solid var(--line-2); border-radius:var(--radius-sm);
-    background:#fdfcf9; color:var(--ink); transition:border-color .15s, box-shadow .15s}
+    background:var(--input-bg); color:var(--ink); transition:border-color .15s, box-shadow .15s}
   .field input:focus, .field textarea:focus, .field select:focus{
     outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(169,120,47,.14)}
   .field .hint{font-size:11.5px; color:var(--muted-2); margin-top:5px}
@@ -74,30 +98,30 @@
     padding:11px 18px; border-radius:var(--radius-sm); border:1px solid transparent;
     font-weight:600; font-size:14px; transition:transform .05s, background .15s, border-color .15s}
   .btn:active{transform:translateY(1px)}
-  .btn-primary{background:var(--ink); color:#f6f1e7}
+  .btn-primary{background:var(--side-bg); color:#f6f1e7}
   .btn-primary:hover{background:#000}
   .btn-gold{background:var(--gold); color:#fff}
   .btn-gold:hover{background:#986a26}
   .btn-ghost{background:transparent; color:var(--charcoal); border-color:var(--line-2)}
-  .btn-ghost:hover{border-color:var(--muted); background:#faf7f1}
+  .btn-ghost:hover{border-color:var(--muted); background:var(--hover)}
   .btn-danger{background:var(--neg-soft); color:var(--neg); border-color:#ecccc8}
   .btn-danger:hover{background:#f2d9d6}
   .btn-block{width:100%}
   .btn-sm{padding:7px 12px; font-size:13px}
-  .btn-icon{padding:7px 9px; font-size:13px; background:#faf7f1; border:1px solid var(--line-2); border-radius:8px; color:var(--charcoal)}
+  .btn-icon{padding:7px 9px; font-size:13px; background:var(--hover); border:1px solid var(--line-2); border-radius:8px; color:var(--charcoal)}
   .btn-icon:hover{border-color:var(--muted)}
 
   /* ---------- splash + login ---------- */
   #splash{min-height:100%; display:grid; place-items:center}
   #login{min-height:100%; display:none; place-items:center; padding:24px;
-    background:radial-gradient(120% 90% at 50% -10%, #efe7d6 0%, var(--paper) 55%)}
+    background:radial-gradient(120% 90% at 50% -10%, var(--glow) 0%, var(--paper) 55%)}
   #login.on{display:grid}
   #lg-err{color:var(--neg); font-size:13px; font-weight:600; min-height:18px; margin:-2px 0 12px; text-align:center}
 
   /* ---------- app shell ---------- */
   #app{display:none; min-height:100%}
   .shell{display:grid; grid-template-columns:250px 1fr; min-height:100vh}
-  .side{background:var(--ink); color:#e9e1d2; padding:26px 18px; display:flex; flex-direction:column; gap:26px}
+  .side{background:var(--side-bg); color:#e9e1d2; padding:26px 18px; display:flex; flex-direction:column; gap:26px}
   .side .brand .name{color:#f6f1e7}
   .side .brand .tag{color:#b8ab93}
   .nav{display:flex; flex-direction:column; gap:4px}
@@ -147,7 +171,7 @@
     box-shadow:0 10px 24px -8px rgba(224,89,43,.6)}
   .dash-new:active{transform:translateY(1px)}
 
-  .tiles{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:18px; position:relative; z-index:1}
+  .tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:18px; position:relative; z-index:1}
   .tile{border-radius:18px; padding:20px 18px; color:#fff; position:relative; overflow:hidden;
     box-shadow:0 16px 34px -18px rgba(0,0,0,.7); opacity:0; transform:translateY(14px)}
   .tile.in{animation:tileIn .55s cubic-bezier(.2,.7,.2,1) forwards}
@@ -179,7 +203,7 @@
   .dash .empty{color:var(--d-muted); text-align:center; padding:22px}
   @media (prefers-reduced-motion:reduce){ .tile{opacity:1; transform:none; animation:none} }
 
-  .row2{display:grid; grid-template-columns:1.5fr 1fr; gap:16px; align-items:start}
+  .row2{display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:16px; align-items:start}
   .panel{padding:18px 20px}
   .panel h3{font-family:var(--sans); font-weight:900; font-size:16px; margin:0 0 14px; display:flex; align-items:center; justify-content:space-between; text-transform:uppercase; letter-spacing:.02em}
   .panel h3 .count{font-family:var(--sans); font-size:11px; color:var(--muted); font-weight:600}
@@ -190,15 +214,16 @@
     font-weight:600; text-align:left; padding:9px 12px; border-bottom:1px solid var(--line)}
   td{padding:11px 12px; border-bottom:1px solid #f0ebe0; font-size:14px; vertical-align:middle}
   tr:last-child td{border-bottom:none}
-  tbody tr:hover{background:#faf7f1}
+  tbody tr:hover{background:var(--hover)}
   td.num, th.num{text-align:right}
+  td.num, th.num{white-space:nowrap}
   .lowstock td{background:var(--neg-soft)}
   .lowstock:hover td{background:#f4ddda}
 
   .pill{display:inline-block; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:600; letter-spacing:.02em}
   .pill.pos{background:var(--pos-soft); color:var(--pos)}
   .pill.warn{background:var(--neg-soft); color:var(--neg)}
-  .pill.brand{background:var(--gold-soft); color:#8a6220}
+  .pill.brand{background:var(--gold-soft); color:var(--gold-2)}
   .money.pos{color:var(--pos); font-weight:600}
 
   .toolbar{display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center}
@@ -211,11 +236,11 @@
   .empty .big{font-family:var(--serif); font-size:20px; color:var(--charcoal); margin-bottom:6px}
 
   /* ---------- POS ---------- */
-  .pos{display:grid; grid-template-columns:1fr 380px; gap:16px; align-items:start}
+  .posview{display:grid; grid-template-columns:1fr 380px; gap:16px; align-items:start}
   .pos-products{padding:16px 18px; max-height:72vh; overflow:auto}
   .plist{display:flex; flex-direction:column; gap:8px; margin-top:12px}
-  .pitem{display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; cursor:pointer; background:#fdfcf9}
-  .pitem:hover{border-color:var(--gold-2); background:#fffdf8}
+  .pitem{display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; cursor:pointer; background:var(--input-bg)}
+  .pitem:hover{border-color:var(--gold-2); background:var(--hover)}
   .pitem .pn{font-weight:600}
   .pitem .pd{font-size:12px; color:var(--muted)}
   .pitem .pr{margin-left:auto; text-align:right}
@@ -239,7 +264,7 @@
   .totline.grand{border-top:1px solid var(--line-2); margin-top:6px; padding-top:10px; font-size:16px; font-weight:700}
   .totline.grand .v{font-family:var(--serif); font-size:22px}
   .cart .mini{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0}
-  .cart .mini input, .cart select, .cart .fullsel{width:100%; padding:9px 10px; border:1px solid var(--line-2); border-radius:8px; background:#fdfcf9}
+  .cart .mini input, .cart select, .cart .fullsel{width:100%; padding:9px 10px; border:1px solid var(--line-2); border-radius:8px; background:var(--input-bg)}
   .cart label.mini-l{font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px}
 
   /* ---------- modal ---------- */
@@ -255,7 +280,7 @@
 
   /* ---------- toast ---------- */
   #toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
-    background:var(--ink); color:#f6f1e7; padding:12px 20px; border-radius:10px; font-size:14px;
+    background:var(--side-bg); color:#f6f1e7; padding:12px 20px; border-radius:10px; font-size:14px;
     opacity:0; transition:all .25s; z-index:80; box-shadow:0 12px 30px rgba(0,0,0,.3); max-width:90vw}
   #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
   #toast.err{background:var(--neg)}
@@ -281,10 +306,12 @@
   @media (max-width:900px){
     .shell{grid-template-columns:1fr}
     .side{display:none}
-    .mtopbar{display:flex; align-items:center; justify-content:space-between; padding:14px 18px;
-      background:var(--ink); color:#f6f1e7; position:sticky; top:0; z-index:30}
+    .mtopbar{display:flex; align-items:center; justify-content:space-between;
+      padding:calc(14px + env(safe-area-inset-top, 0px)) 18px 14px;
+      background:var(--side-bg); color:#f6f1e7; position:sticky; top:0; z-index:30}
     .mtopbar .name{font-family:var(--serif); font-weight:700; letter-spacing:.12em; font-size:19px}
-    .mtopbar button{background:none; border:none; color:#cdc3af; font-size:12px}
+    .mtopbar button{background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
+      color:#f6f1e7; font-size:13px; font-weight:700; padding:8px 14px; border-radius:9px}
     .main{padding:18px 16px 96px}
     .stat-grid{grid-template-columns:1fr 1fr; gap:12px}
     .tiles{grid-template-columns:1fr 1fr; gap:12px}
@@ -292,10 +319,11 @@
     .dash-title{font-size:26px}
     .dash .d-row{grid-template-columns:1fr}
     .row2{grid-template-columns:1fr}
-    .pos{grid-template-columns:1fr}
+    .posview{grid-template-columns:1fr}
     .cart{position:static}
     .mbottom{display:flex; position:fixed; bottom:0; left:0; right:0; z-index:40;
-      background:var(--card); border-top:1px solid var(--line); padding:6px 4px 8px;
+      background:var(--card); border-top:1px solid var(--line);
+      padding:6px 4px calc(8px + env(safe-area-inset-bottom, 0px));
       box-shadow:0 -6px 18px rgba(27,22,16,.07)}
     .mbottom button{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
       background:none; border:none; color:var(--muted); font-size:10.5px; font-weight:600; padding:6px 0}
@@ -350,7 +378,6 @@
         <button data-nav="reports"><span class="ic">∑</span> Reports</button>
         <button data-nav="purchases"><span class="ic">⇩</span> Purchases</button>
         <button data-nav="expenses"><span class="ic">৳</span> Expenses</button>
-        <button data-nav="returns"><span class="ic">↩</span> Returns</button>
       </nav>
       <div class="foot">
         <button class="install-btn" data-act="install" style="display:none">⤓ Install app</button>
@@ -383,8 +410,14 @@
 <script src="firebase-config.js"></script>
 <script>
 /* shop info (invoice header/footer) now lives in Firestore: see getCfg/setCfg in the sync layer below */
-
 const state = { products:[], customers:[], cart:[], customerId:'', view:'dashboard', chart:null };
+
+/* ---- appearance: theme + font, saved per device ---- */
+function lsGet(k,d){ try{ return localStorage.getItem(k)||d; }catch(e){ return d; } }
+function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); try{ localStorage.setItem('omme_theme',t); }catch(e){} }
+function applyFont(f){ document.documentElement.setAttribute('data-font',f); try{ localStorage.setItem('omme_font',f); }catch(e){} }
+(function(){ document.documentElement.setAttribute('data-theme', lsGet('omme_theme','mild'));
+  document.documentElement.setAttribute('data-font', lsGet('omme_font','lato')); })();
 
 /* ===================== ui helpers ===================== */
 const $ = s => document.querySelector(s);
@@ -530,18 +563,22 @@ function L_dashboard(){
   const sales=DB.Sales, products=DB.Products, returns=DB.Returns, dues=DB.Dues;
   const todayStr=dstr(new Date()), yr=String(new Date().getFullYear());
   let tSales=0,tProfit=0,tOrders=0,allSales=0,allProfit=0; const monthly={};
+  const curMK=ym(new Date()); const _pd=new Date(); const prevMK=ym(new Date(_pd.getFullYear(),_pd.getMonth()-1,1));
+  let monProfit=0, prevMonProfit=0;
   sales.forEach(function(s){
     const total=num(s.Total), pf=num(s.Profit);
     allSales+=total; allProfit+=pf;
     if(dstr(s.Date)===todayStr){ tSales+=total; tProfit+=pf; tOrders++; }
-    if(yy(s.Date)===yr){ const m=ym(s.Date); monthly[m]=(monthly[m]||0)+total; }
+    const mk=ym(s.Date); if(mk===curMK) monProfit+=pf; else if(mk===prevMK) prevMonProfit+=pf;
+    if(yy(s.Date)===yr){ monthly[mk]=(monthly[mk]||0)+total; }
   });
   let tRet=0,tRetProfit=0,allRet=0,allRetProfit=0;
   returns.forEach(function(r){
     const amt=num(r.Amount), rp=num(r.ProfitReversed);
     allRet+=amt; allRetProfit+=rp;
     if(dstr(r.Date)===todayStr){ tRet+=amt; tRetProfit+=rp; }
-    if(yy(r.Date)===yr){ const m=ym(r.Date); monthly[m]=(monthly[m]||0)-amt; }
+    const rmk=ym(r.Date); if(rmk===curMK) monProfit-=rp; else if(rmk===prevMK) prevMonProfit-=rp;
+    if(yy(r.Date)===yr){ monthly[rmk]=(monthly[rmk]||0)-amt; }
   });
   let outstandingDue=0; dues.forEach(function(x){ outstandingDue+=num(x.Balance); });
   const totalStock=products.reduce(function(s,p){ return s+num(p.Stock); },0);
@@ -550,7 +587,8 @@ function L_dashboard(){
   return {
     today:{ sales:tSales-tRet, profit:tProfit-tRetProfit, orders:tOrders, returns:tRet },
     allTime:{ sales:allSales-allRet, profit:allProfit-allRetProfit, orders:sales.length, returns:allRet },
-    outstandingDue:outstandingDue, totalStock:totalStock, year:yr, monthly:monthly, recent:recent,
+    outstandingDue:outstandingDue, totalStock:totalStock, monthProfit:monProfit, prevMonthProfit:prevMonProfit,
+    year:yr, monthly:monthly, recent:recent,
     lowStock:low, productCount:products.length, customerCount:DB.Customers.length
   };
 }
@@ -994,10 +1032,9 @@ function setNav(v){
   if(v==='reports') viewReports();
   if(v==='purchases') viewPurchases();
   if(v==='expenses') viewExpenses();
-  if(v==='returns') viewReturns();
   if(v==='settings') viewSettings();
   const mb=document.getElementById('moreBtn');
-  if(mb) mb.classList.toggle('on', ['reports','purchases','expenses','returns','settings'].indexOf(v)>-1);
+  if(mb) mb.classList.toggle('on', ['reports','purchases','expenses','settings'].indexOf(v)>-1);
 }
 
 /* ===================== data loaders ===================== */
@@ -1033,6 +1070,7 @@ async function viewDashboard(){
 
   const greet=(()=>{ const h=new Date().getHours(); return h<12?'Good morning':h<17?'Good afternoon':'Good evening'; })();
   const dateStr=(()=>{ const n=new Date(); return n.getDate()+' '+MONTHS[n.getMonth()]+', '+n.getFullYear(); })();
+  const curMonName=MONTHS[new Date().getMonth()]; const prevMonName=MONTHS[(new Date().getMonth()+11)%12];
 
   $('#view').innerHTML=`
     <div class="dash">
@@ -1050,21 +1088,33 @@ async function viewDashboard(){
           <span class="glyph">৳</span>
           <div class="tk">Today's sales</div>
           <div class="tv" data-count="${d.today.sales}">৳0</div>
-          <div class="tm">${d.today.orders} order(s)${d.today.returns?' · ↩ '+tk(d.today.returns):''}</div>
+          <div class="tm">${d.today.orders} order(s)</div>
         </div>
-        <div class="tile gold" style="animation-delay:.08s">
+        <div class="tile gold" style="animation-delay:.06s">
           <span class="glyph">◆</span>
           <div class="tk">Today's profit</div>
           <div class="tv" data-count="${d.today.profit}">৳0</div>
           <div class="tm">net after cost</div>
         </div>
-        <div class="tile magenta" style="animation-delay:.16s">
+        <div class="tile emerald" style="animation-delay:.12s">
+          <span class="glyph">▲</span>
+          <div class="tk">${curMonName} profit</div>
+          <div class="tv" data-count="${d.monthProfit}">৳0</div>
+          <div class="tm">this month</div>
+        </div>
+        <div class="tile indigo" style="animation-delay:.18s">
+          <span class="glyph">▣</span>
+          <div class="tk">${prevMonName} profit</div>
+          <div class="tv" data-count="${d.prevMonthProfit}">৳0</div>
+          <div class="tm">last month</div>
+        </div>
+        <div class="tile magenta" style="animation-delay:.24s">
           <span class="glyph">⚑</span>
           <div class="tk">To collect (dues)</div>
           <div class="tv" data-count="${d.outstandingDue||0}">৳0</div>
           <div class="tm">customer credit</div>
         </div>
-        <div class="tile indigo" style="animation-delay:.24s">
+        <div class="tile gold" style="animation-delay:.30s">
           <span class="glyph">★</span>
           <div class="tk">All-time profit</div>
           <div class="tv" data-count="${d.allTime.profit}">৳0</div>
@@ -1365,7 +1415,7 @@ function renderSales(){
 
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Point of sale</div><h2>New sale</h2></div></div>
-    <div class="pos">
+    <div class="posview">
       <div class="card pos-products">
         <div class="search"><span class="mag">⌕</span><input id="pos-search" placeholder="Search product to add…"></div>
         <div class="plist" id="plist"></div>
@@ -1631,7 +1681,7 @@ function renderReports(d){
       </div>
       <div class="card panel">
         <h3>Profit / Loss</h3>
-        <table>
+        <div class="table-wrap"><table>
           <tr><td>Product sales (subtotal)</td><td class="num tnum">${tk(s.subtotal)}</td></tr>
           <tr><td>Less: Cost of goods</td><td class="num tnum">− ${tk(s.cogs)}</td></tr>
           <tr><td><strong>Gross profit</strong></td><td class="num tnum"><strong>${tk(gross)}</strong></td></tr>
@@ -1640,7 +1690,7 @@ function renderReports(d){
           <tr><td><strong>Net profit</strong></td><td class="num tnum money pos"><strong>${tk(s.totalProfit)}</strong></td></tr>
           <tr><td style="color:var(--muted)">Delivery collected (pass-through)</td><td class="num tnum" style="color:var(--muted)">${tk(s.totalDelivery)}</td></tr>
           ${(s.returns>0)?`<tr><td style="color:var(--muted)">Refunds paid out (returns)</td><td class="num tnum" style="color:var(--muted)">${tk(s.returns)}</td></tr>`:''}
-        </table>
+        </table></div>
         <h3 style="margin-top:18px">Payment methods</h3>
         <div>${pays}</div>
       </div>
@@ -1843,7 +1893,7 @@ function renderNewPurchase(){
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Stock inward</div><h2>New purchase</h2></div>
       <button class="btn btn-ghost btn-sm" data-act="pur-tab" data-tab="list">← Back</button></div>
-    <div class="pos">
+    <div class="posview">
       <div class="card pos-products">
         <div class="search"><span class="mag">⌕</span><input id="pur-search" placeholder="Search product to add…"></div>
         <div class="plist" id="pur-plist"></div>
@@ -1979,62 +2029,8 @@ function moreMenu(){
       <button class="btn btn-ghost btn-block" data-nav="reports" style="margin-bottom:10px">∑&nbsp; Reports</button>
       <button class="btn btn-ghost btn-block" data-nav="purchases" style="margin-bottom:10px">⇩&nbsp; Purchases</button>
       <button class="btn btn-ghost btn-block" data-nav="expenses" style="margin-bottom:10px">৳&nbsp; Expenses</button>
-      <button class="btn btn-ghost btn-block" data-nav="returns" style="margin-bottom:10px">↩&nbsp; Returns</button>
       <button class="btn btn-ghost btn-block" data-nav="settings">⚙&nbsp; Settings</button>
     </div>`);
-}
-
-/* ===================== RETURNS / REFUND ===================== */
-async function viewReturns(){ state.retInv=null; state.retSaleItems=[]; renderReturns(); }
-function renderReturns(){
-  $('#view').innerHTML=`
-    <div class="view-head"><div><div class="eyebrow">Return / Refund</div><h2>Returns</h2></div></div>
-    <div class="card panel" style="margin-bottom:16px"><h3>Find the sale</h3>
-      <div class="toolbar" style="margin-bottom:0">
-        <div class="search"><span class="mag">⌕</span><input id="ret-inv" placeholder="Invoice no e.g. OG260830-001"></div>
-        <button class="btn btn-primary btn-sm" data-act="ret-load">Load</button>
-      </div></div>
-    <div id="ret-body"></div>
-    <div class="card panel" style="margin-top:16px"><h3>Recent returns</h3><div id="ret-recent" class="loading" style="padding:20px">…</div></div>`;
-  loadRecentReturns();
-}
-async function retLoad(){
-  const inv=($('#ret-inv')?$('#ret-inv').value:'').trim();
-  if(!inv){ toast('Enter invoice no','err'); return; }
-  try{
-    const r=await api('getSale',{invoiceNo:inv});
-    if(!r.sale){ toast('Invoice not found','err'); $('#ret-body').innerHTML=''; return; }
-    state.retInv=r.sale; state.retSaleItems=r.items;
-    const rows=r.items.map((it,i)=>`<tr>
-        <td>${esc(it.ProductName)}</td><td class="num tnum">${it.Qty}</td><td class="num tnum">${tk(it.SalePrice)}</td>
-        <td class="num"><input type="number" min="0" max="${it.Qty}" value="0" data-ret="${i}" style="width:66px;padding:5px 7px;border:1px solid var(--line-2);border-radius:7px"></td></tr>`).join('');
-    $('#ret-body').innerHTML=`<div class="card panel">
-      <h3>${esc(r.sale.InvoiceNo)} <span class="count">${esc(r.sale.CustomerName||'Walk-in')} · ${fdate(r.sale.Date)}</span></h3>
-      <div class="table-wrap"><table><thead><tr><th>Item</th><th class="num">Sold</th><th class="num">Price</th><th class="num">Return qty</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <p style="font-size:12px;color:var(--muted);margin:10px 0">Returned items go back into stock and are subtracted from sales &amp; profit.</p>
-      <button class="btn btn-gold" data-act="ret-process">Process return</button></div>`;
-  }catch(e){ toast(e.message,'err'); }
-}
-async function retProcess(){
-  const items=[];
-  document.querySelectorAll('[data-ret]').forEach(function(inp){
-    const q=Number(inp.value)||0; if(q>0){ const it=state.retSaleItems[Number(inp.dataset.ret)];
-      items.push({ProductID:it.ProductID, ProductName:it.ProductName, Qty:q, SalePrice:Number(it.SalePrice)||0, BuyPrice:Number(it.BuyPrice)||0}); }
-  });
-  if(!items.length){ toast('Set at least one return qty','err'); return; }
-  try{
-    const r=await api('createReturn',{ret:{InvoiceNo:state.retInv.InvoiceNo, CustomerName:state.retInv.CustomerName}, items});
-    toast('Return '+r.returnNo+' done · stock restored','ok');
-    state.retInv=null; renderReturns();
-  }catch(e){ toast(e.message,'err'); }
-}
-async function loadRecentReturns(){
-  try{
-    const rs=await api('listReturns'); const box=$('#ret-recent'); if(!box)return; box.className='';
-    box.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Return</th><th>Date</th><th>Invoice</th><th class="num">Amount</th></tr></thead><tbody>${
-      rs.slice(0,10).map(r=>`<tr><td>${esc(r.ReturnNo)}</td><td>${fdate(r.Date)}</td><td>${esc(r.InvoiceNo||'')}</td><td class="num tnum">${tk(r.Amount)}</td></tr>`).join('')
-      ||'<tr><td colspan="4" class="empty">No returns yet.</td></tr>'}</tbody></table></div>`;
-  }catch(e){ const box=$('#ret-recent'); if(box){ box.className=''; box.textContent=''; } }
 }
 
 /* ===================== CSV IMPORT (Products) ===================== */
@@ -2110,8 +2106,18 @@ async function importProductsCSV(input){
 /* ===================== SETTINGS ===================== */
 function viewSettings(){
   const cfg=getCfg()||{};
+  const curTheme=lsGet('omme_theme','mild'), curFont=lsGet('omme_font','lato');
+  const themes=[['mild','Mild'],['deep','Deep'],['dark','Dark'],['night','Night']];
+  const fonts=[['lato','Lato'],['roboto','Roboto'],['poppins','Poppins'],['spartan','League Spartan'],['serif','Serif (Cormorant)']];
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Settings</div><h2>Shop settings</h2></div></div>
+    <div class="card panel" style="margin-bottom:16px"><h3>Appearance <span class="count">this device only</span></h3>
+      <div class="field"><label>Theme</label>
+        <div class="seg">${themes.map(t=>`<button class="seg-btn ${curTheme===t[0]?'on':''}" data-act="set-theme" data-theme="${t[0]}">${t[1]}</button>`).join('')}</div></div>
+      <div class="field" style="margin-bottom:0"><label>Font</label>
+        <select id="set-font" class="fullsel" style="width:100%; padding:11px 12px; border:1px solid var(--line-2); border-radius:var(--radius-sm); background:var(--input-bg); color:var(--ink)">
+          ${fonts.map(f=>`<option value="${f[0]}" ${curFont===f[0]?'selected':''}>${f[1]}</option>`).join('')}</select></div>
+    </div>
     <div class="card panel" style="margin-bottom:16px"><h3>Shop info (shown on invoice)</h3>
       <div class="grid2">
         <div class="field"><label>Shop name</label><input id="set-name" value="${esc(cfg.shopName||"OMME'S GALLERY")}"></div>
@@ -2137,6 +2143,7 @@ function viewSettings(){
   renderLegacyBox();
   if(deferredPrompt) showInstall(true);
   const bf=$('#backup-file'); if(bf) bf.onchange=()=>doImportBackup(bf);
+  const ff=$('#set-font'); if(ff) ff.onchange=()=>applyFont(ff.value);
 }
 function saveShopInfo(){
   const cfg=getCfg()||{};
@@ -2226,12 +2233,11 @@ document.addEventListener('click', function(e){
     case 'pur-save': savePurchase(); break;
     case 'pur-view': viewPurchase(el.dataset.no); break;
     case 'pur-pay-save': savePurPayment(el.dataset.no); break;
-    case 'ret-load': retLoad(); break;
-    case 'ret-process': retProcess(); break;
     case 'cus-tab': state.custTab=el.dataset.tab; renderCustomers(''); break;
     case 'due-pay': duePayForm(id, Number(el.dataset.bal)||0, el.dataset.name||''); break;
     case 'due-pay-save': savePayDue(id); break;
     case 'set-save': saveShopInfo(); break;
+    case 'set-theme': applyTheme(el.dataset.theme); viewSettings(); break;
     case 'backup-export': doExportBackup(); break;
     case 'backup-import': { const f=$('#backup-file'); if(f) f.click(); break; }
     case 'signout': doSignOut(); break;
