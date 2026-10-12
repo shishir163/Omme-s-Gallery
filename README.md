@@ -1,4 +1,4 @@
-# OMME'S GALLERY — Manager (Vol 7 · Firebase: login + sync)
+# OMME'S GALLERY — Manager (Vol 8 · Firebase login + sync)
 
 **Vol 7 = same app, now online.** Login with email + password (only the accounts you allow), and one shared database in Firebase, so a sale made on the laptop shows on the phone straight away. It still works offline: changes wait on the device and are sent when the internet is back.
 
@@ -146,7 +146,21 @@ Vol 5-এ product ছবি **Google Drive**-এ জমা হয়, তাই 
 - Expense নোট: Buy price-এ যেহেতু packaging/delivery/ad খরচ ধরা আছে, Expense ledger আলাদা ট্র্যাকিং — sales profit থেকে আবার বাদ দেওয়া হয় না (double-count এড়াতে)।
 - createPurchase/updatePayment mock-Sheet দিয়ে verify করা হয়েছে।
 
-**Vol 7 — IN PROGRESS 🔧 (current)**  Firebase login + sync: code is ready and tested against a simulated Firestore (two devices, concurrent sales, offline, old-data upload). Waiting for the real Firebase project settings (`firebase-config.js`) and the allowed emails (`firestore.rules`). After that works, the app changes the owner wants are done as Vol 8.
+**Vol 7 — DONE ✅**  Firebase login + sync, live on GitHub Pages (login, 2–3 accounts, laptop/mobile sync, offline, old-data upload).
+
+**Vol 9 — DONE ✅ (current)**  Pre-order, themes, search, new invoice:
+- **Pre-order**: New sale has a ✅ প্রি-অর্ডার tick + expected date + Order status (Delivered / Pending). Stock and "sold out" behave as before. When the dress arrives: Customers ▸ History ▸ Edit, type the real **Buy ৳** per item → profit adjusts by itself, set status Delivered.
+- **Buyer directory** shows Paid / Partial (due) / Due and the pre-order / Pending status per buyer; History shows the same per invoice. Advance / due use the existing "Received now" + Dues system.
+- **Themes**: Mild, Deep (clearly tan now), Rose Blush, Peacock Teal, Lavender, Sunset, Dark, Night, Midnight Blue, Plum Wine, Charcoal Gold. The dashboard follows the theme (light themes get a light panel).
+- **Dashboard tiles**: "This Month" and "Previous Month" profit (no month names); the All-time profit tile is replaced by **Pre-orders · This Month** (count, pending / delivered). Reports ▸ **Pre-orders** panel: totals for the chosen dates + a month-by-month stacked graph (Delivered / Pending) for this year.
+- **Dashboard search**: customer name / mobile / address, dress name / SKU / brand, invoice no. → History / Edit / View buttons.
+- **Invoice** uses the OMME'S GALLERY template (logo embedded, courier / zone / time / note editable before sharing). **Share** button opens the phone share sheet with the invoice picture (Messenger, WhatsApp…); "WhatsApp chat" opens the customer's chat; JPG / PDF download. Total Payable includes delivery; Due = Total Payable − Advance (0 when Full Paid).
+
+**Vol 8 — DONE ✅**  App changes:
+- Themes (Mild / Deep / Dark / Night) + fonts (Lato, Roboto, Poppins, League Spartan, Serif) in Settings ▸ Appearance (per device).
+- Dashboard: this-month and last-month profit tiles. Recent Orders and Reports layout fixed (class clash `.pos` → `.posview`). Mobile top bar safe-area fix + visible Settings button. Returns screen removed from the UI (old data stays safe).
+- **Delivery charge is invoice-only**: shown on the invoice (customer pays Subtotal − Discount + Delivery) but never counted in sales, profit, dues or reports. Sale amount = Subtotal − Discount (`saleNet()`), so old rows whose Total included delivery are counted correctly too.
+- **Edit a sale** (Customers ▸ History ▸ Edit, or Dashboard ▸ Recent Orders ▸ Edit): customer, date, payment, discount, delivery, money received, each line's qty/price (qty 0 removes the line). Stock and FIFO lots are corrected, profit recalculated, the due row rebuilt. Cannot add a new product to an old invoice (make a new sale instead).
 
 **পরের ধাপ:**
 **Vol 5 — DONE ✅ (current)**  Extras:
