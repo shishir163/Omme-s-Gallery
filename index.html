@@ -399,6 +399,7 @@
   .pill.warn{background:var(--neg-soft); color:var(--neg)}
   .pill.brand{background:var(--gold-soft); color:var(--gold-2)}
   .pill.pre{background:rgba(124,92,224,.17); color:#6b47d6}
+  .pill.pre{white-space:nowrap}
   .pill.amber{background:rgba(240,170,40,.2); color:#b97800}
   .chips{display:flex; flex-wrap:wrap; gap:5px}
   .chk{display:flex; align-items:center; gap:9px; cursor:pointer; font-size:14px}
@@ -1329,7 +1330,7 @@ async function viewDashboard(){
 
   const recent=(d.recent||[]).map(s=>`
     <tr>
-      <td>${esc(s.InvoiceNo)}</td>
+      <td>${esc(s.InvoiceNo)}${s.Preorder?'<div style="margin-top:3px"><span class="pill pre">✅ প্রি-অর্ডার'+(s.Status==='Pending'?' · Pending':'')+'</span></div>':''}</td>
       <td>${esc(s.CustomerName||'Walk-in')}</td>
       <td>${fdate(s.Date)}</td>
       <td class="num tnum">${tk(saleNet(s))}</td>
@@ -1513,7 +1514,7 @@ function renderInventory(q){
     const low=Number(p.Stock)<=1;
     const out=Number(p.Stock)<=0;
     return `<tr class="${low?'lowstock':''}">
-      <td><strong>${esc(p.Name)}</strong></td>
+      <td><strong>${esc(p.Name)}</strong>${p.Preorder?'<div style="margin-top:3px"><span class="pill pre">✅ প্রি-অর্ডার</span></div>':''}</td>
       <td>${p.Brand?'<span class="pill brand">'+esc(p.Brand)+'</span>':''}</td>
       <td>${esc(p.Category||'')}</td>
       <td>${esc(p.Type||'')}</td>
@@ -1521,7 +1522,7 @@ function renderInventory(q){
       <td>${esc(p.SKU||'')}</td>
       <td class="num tnum">${tk(p.BuyPrice)}</td>
       <td class="num tnum">${tk(p.SalePrice)}</td>
-      <td class="num tnum">${Number(p.Stock)} ${out?'<span class="pill warn">sold out</span>':(low?'<span class="pill warn">low</span>':'')}</td>
+      <td class="num tnum">${Number(p.Stock)} ${out?'<span class="pill warn">sold out</span>':(low?'<span class="pill warn">low</span>':'')}${p.Preorder?'<div style="margin-top:3px"><span class="pill pre">প্রি-অর্ডার dress</span></div>':''}</td>
       <td class="num">
         <button class="btn-icon" data-act="product-edit" data-id="${esc(p.ID)}">Edit</button>
         <button class="btn-icon" data-act="product-del" data-id="${esc(p.ID)}">✕</button></td>
@@ -1566,6 +1567,7 @@ function productForm(p){
         <div class="field"><label>Sale price (৳)</label><input id="f-sale" type="number" value="${p.SalePrice||''}"></div>
       </div>
       <div class="field"><label>Stock quantity</label><input id="f-stock" type="number" value="${p.Stock!==undefined?p.Stock:''}"></div>
+      <div class="field"><label class="chk"><input type="checkbox" id="f-pre" ${p.Preorder?'checked':''}> ✅ প্রি-অর্ডার dress (this is pre-order)</label></div>
       ${p.ID?`<div class="field"><label>Purchase lots (FIFO — পুরনো lot আগে বিক্রি হয়)</label><div id="lots-box"><div class="hint">Loading…</div></div></div>`:''}
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
@@ -1586,7 +1588,8 @@ async function saveProduct(id){
     Category:$('#f-cat').value.trim(), Size:'', SKU:$('#f-sku').value.trim(),
     Type:$('#f-type').value.trim(), Dupatta:$('#f-dupatta').value.trim(),
     ShippingCost:$('#f-shipping').value||'0',
-    BuyPrice:$('#f-buy').value, SalePrice:$('#f-sale').value, Stock:$('#f-stock').value };
+    BuyPrice:$('#f-buy').value, SalePrice:$('#f-sale').value, Stock:$('#f-stock').value,
+    Preorder:!!($('#f-pre')&&$('#f-pre').checked) };
   if(!item.Name){ toast('Name is required','err'); return; }
   try{ await api('saveProduct',{item}); closeModal(); toast('Product saved','ok'); viewInventory(); }
   catch(e){ toast(e.message,'err'); }
@@ -1827,7 +1830,7 @@ function renderProductList(q){
   box.innerHTML=prods.map(p=>{
     const low=Number(p.Stock)<=3;
     return `<div class="pitem" data-act="cart-add" data-id="${esc(p.ID)}">
-      <div><div class="pn">${esc(p.Name)}</div>
+      <div><div class="pn">${esc(p.Name)}${p.Preorder?' <span class="pill pre">প্রি-অর্ডার</span>':''}</div>
         <div class="pd">${esc(p.Brand||'')} ${p.Size?'· '+esc(p.Size):''} ${p.SKU?'· <strong>SKU: '+esc(p.SKU)+'</strong>':''} · <span class="stock-tag ${low?'low':''}">${Number(p.Stock)} in stock</span></div></div>
       <div class="pr"><div class="tnum" style="font-weight:600">${tk(p.SalePrice)}</div></div>
       <div class="add">＋</div></div>`;}).join('') ||
@@ -1866,7 +1869,14 @@ function renderSales(){
           <div id="s-predate-box" style="display:none"><label class="mini-l">Expected date</label><input id="s-predate" type="date"></div>
           <div><label class="mini-l">Order status</label><select class="fullsel" id="s-status"><option>Delivered</option><option>Pending</option></select></div>
         </div>
-        <div style="margin-top:8px"><label class="mini-l">Received now ৳ (blank = full paid, delivery chhara)</label><input class="fullsel" id="s-received" type="number" placeholder="full"></div>
+        <div style="margin-top:10px"><label class="mini-l">Payment received</label>
+          <div class="seg" id="s-paymode">
+            <button type="button" class="seg-btn on" data-act="pay-mode" data-m="full">Full paid</button>
+            <button type="button" class="seg-btn" data-act="pay-mode" data-m="adv">Advance</button>
+            <button type="button" class="seg-btn" data-act="pay-mode" data-m="none">Due</button>
+          </div>
+          <div id="s-recv-box" style="display:none; margin-top:8px"><label class="mini-l">Advance / received now ৳ (delivery chhara)</label><input class="fullsel" id="s-received" type="number" placeholder="koto taka dilo?"></div>
+        </div>
         <div id="cart-tot" style="margin-top:12px"></div>
         <div style="display:flex; gap:8px; margin-top:14px">
           <button class="btn btn-ghost btn-sm" data-act="cart-clear">Clear</button>
@@ -1878,8 +1888,19 @@ function renderSales(){
   const s=$('#pos-search'); if(s){ s.oninput=()=>renderProductList(s.value); }
   const cs=$('#s-cust'); if(cs) cs.onchange=()=>{ state.customerId=cs.value; };
   ['s-disc','s-deliv','s-received'].forEach(id=>{ const el=$('#'+id); if(el) el.oninput=renderCart; });
-  const pre=$('#s-pre'); if(pre) pre.onchange=()=>{ $('#s-predate-box').style.display=pre.checked?'':'none'; $('#s-status').value=pre.checked?'Pending':'Delivered'; };
+  const pre=$('#s-pre'); if(pre) pre.onchange=()=>{ $('#s-predate-box').style.display=pre.checked?'':'none'; $('#s-status').value=pre.checked?'Pending':'Delivered'; if(pre.checked && state.payMode!=='none') setPayMode('adv'); };
+  setPayMode(state.payMode||'full');
   renderCart();
+}
+function setPayMode(m){
+  state.payMode=m;
+  document.querySelectorAll('#s-paymode .seg-btn').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-m')===m); });
+  const box=$('#s-recv-box'), inp=$('#s-received'); if(!inp) return;
+  box.style.display = m==='adv' ? '' : 'none';
+  if(m==='full') inp.value=''; else if(m==='none') inp.value='0';
+  else if(inp.value==='0') inp.value='';
+  renderCart();
+  if(m==='adv'){ try{ inp.focus(); }catch(e){} }
 }
 function renderCart(){
   const box=$('#cart-lines'); if(!box) return;
@@ -1907,6 +1928,7 @@ function renderCart(){
     <div class="totline grand"><span>Total (hisab)</span><span class="v tnum">${tk(t.total)}</span></div>
     <div class="totline" style="color:var(--muted)"><span>Delivery (invoice only)</span><span class="tnum">+ ${tk(t.delivery)}</span></div>
     ${t.delivery>0?`<div class="totline" style="color:var(--muted)"><span>Customer pays (invoice)</span><span class="tnum">${tk(t.payable)}</span></div>`:''}
+    ${(recv!==''&&received>0&&due>0)?`<div class="totline"><span>Advance received</span><span class="tnum">${tk(received)}</span></div>`:''}
     ${(recv!==''&&due>0)?`<div class="totline"><span>Due (credit)</span><span class="tnum" style="color:var(--neg);font-weight:600">${tk(due)}</span></div>`:''}`;
 }
 function addToCart(id){
@@ -1914,12 +1936,13 @@ function addToCart(id){
   const ex=state.cart.find(i=>i.id===p.ID);
   const inCart=ex?ex.qty:0;
   const stock=Number(p.Stock)||0;
-  if(inCart+1>stock){
+  if(inCart+1>stock && !p.Preorder){
     if(stock<=0){ if(!confirm('"'+p.Name+'" এখন sold out (stock 0)। তবুও বিক্রি করবে? (stock মাইনাস হয়ে যাবে)')) return; }
     else if(!confirm('"'+p.Name+'" এর stock মাত্র '+stock+'টা। তবুও যোগ করবে?')) return;
   }
   if(ex) ex.qty++;
   else state.cart.push({ id:p.ID, name:p.Name, sale:Number(p.SalePrice)||0, buy:Number(p.BuyPrice)||0, qty:1 });
+  if(p.Preorder){ const pc=$('#s-pre'); if(pc && !pc.checked){ pc.checked=true; pc.onchange&&pc.onchange(); } }
   renderCart();
 }
 function cartQty(id, d){
@@ -1950,6 +1973,7 @@ async function saveSale(){
     state.cart=[]; state.customerId='';
     state.products=await api('listProducts'); // refresh stock
     ['s-received','s-disc','s-deliv'].forEach(function(id){ const el=$('#'+id); if(el) el.value = id==='s-received'?'':'0'; });
+    state.payMode='full'; setPayMode('full');
     const cs2=$('#s-cust'); if(cs2) cs2.value='';
     const pc=$('#s-pre'); if(pc){ pc.checked=false; $('#s-predate-box').style.display='none'; $('#s-predate').value=''; $('#s-status').value='Delivered'; }
     renderProductList($('#pos-search')?$('#pos-search').value:''); renderCart();
@@ -2778,6 +2802,7 @@ document.addEventListener('click', function(e){
     case 'customer-save': saveCustomer(id, window._afterCustSelect); window._afterCustSelect=false; break;
     case 'customer-hist': customerHistory(id); break;
     case 'cart-add': addToCart(id); break;
+    case 'pay-mode': setPayMode(el.getAttribute('data-m')); break;
     case 'cart-inc': cartQty(id,1); break;
     case 'cart-dec': cartQty(id,-1); break;
     case 'cart-del': cartQty(id,-9999); break;
