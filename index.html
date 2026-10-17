@@ -715,7 +715,8 @@ function L_createSale(sale, items){
   DB.Sales.push({ InvoiceNo:invNo, Date:now.toISOString(), CustomerID:sale.CustomerID||'', CustomerName:sale.CustomerName||'',
     Subtotal:subtotal, Discount:discount, Delivery:delivery, Total:total, Profit:netProfit,
     Payment:sale.Payment||'Cash', Status:sale.Status||'Delivered', Note:sale.Note||'',
-    Preorder:!!sale.Preorder, PreorderDate:sale.PreorderDate||'' });
+    Preorder:!!sale.Preorder, PreorderDate:sale.PreorderDate||'',
+    DeliverAfter:sale.DeliverAfter||'', DeliverBy:deliverBy(now.toISOString(), sale.DeliverAfter||'') });
   items.forEach(function(it){
     DB.SaleItems.push({ InvoiceNo:invNo, ProductID:it.ProductID||'', ProductName:it.ProductName||'',
       Qty:num(it.Qty), SalePrice:num(it.SalePrice), BuyPrice:num(it.BuyPrice), LineTotal:it.LineTotal, LineProfit:it.LineProfit });
@@ -776,10 +777,13 @@ function L_updateSale(no, patch, edits){
   if(patch.Preorder!==undefined) sale.Preorder=!!patch.Preorder;
   if(patch.PreorderDate!==undefined) sale.PreorderDate=patch.PreorderDate||'';
   if(patch.Status) sale.Status=patch.Status;
+  if(patch.Note!==undefined) sale.Note=patch.Note||'';
+  if(patch.DeliverAfter!==undefined){ sale.DeliverAfter=patch.DeliverAfter||''; }
   if(patch.CustomerID!==undefined){ sale.CustomerID=patch.CustomerID||''; sale.CustomerName=patch.CustomerName||''; }
   if(patch.Date && dstr(sale.Date)!==patch.Date){
     const q=patch.Date.split('-'); sale.Date=new Date(+q[0],+q[1]-1,+q[2],12,0,0).toISOString();
   }
+  if(patch.DeliverAfter!==undefined || patch.Date){ sale.DeliverBy=deliverBy(sale.Date, sale.DeliverAfter||''); }
   const received = (patch.Received===''||patch.Received==null) ? cur.received : Math.max(0,num(patch.Received));
   for(let i=DB.Dues.length-1;i>=0;i--){ if(String(DB.Dues[i].InvoiceNo)===String(no)) DB.Dues.splice(i,1); }
   const bal = net - received;
@@ -798,6 +802,16 @@ function payInfo(){
   };
 }
 /* one summary line per customer for the Buyer directory */
+const DELIVER_OPTS=[['','— (none)'],['3 days','3 days'],['1 week','1 week'],['2 weeks','2 weeks'],['3 weeks','3 weeks'],['1 month','1 month']];
+function deliverDays(l){ return ({'3 days':3,'1 week':7,'2 weeks':14,'3 weeks':21,'1 month':30})[l]||0; }
+function ymdLocal(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+function deliverBy(dateISO,label){ const n=deliverDays(label); if(!n||!dateISO) return ''; const d=new Date(dateISO); if(isNaN(d)) return ''; d.setDate(d.getDate()+n); return ymdLocal(d); }
+function delOptsHtml(sel){ return DELIVER_OPTS.map(function(o){ return '<option value="'+o[0]+'"'+((sel||'')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join(''); }
+function delChip(s){
+  if(!s || !s.DeliverAfter || (s.Status||'Delivered')!=='Pending') return '';
+  const late = s.DeliverBy && s.DeliverBy < ymdLocal(new Date());
+  return '<span class="pill '+(late?'warn':'amber')+'">🚚 Delivery after '+esc(s.DeliverAfter)+(s.DeliverBy?(late?' · overdue':' · by '+fdate(s.DeliverBy)):'')+'</span>';
+}
 function L_customerSummary(){
   const pi=payInfo(), out={};
   DB.Sales.forEach(function(s){
@@ -805,7 +819,7 @@ function L_customerSummary(){
     const o=out[id]||(out[id]={orders:0,net:0,due:0,pre:0,prePending:0,pending:0}); const x=pi(s);
     o.orders++; o.net+=x.net; o.due+=x.due;
     if(s.Preorder){ o.pre++; if(s.Status==='Pending') o.prePending++; }
-    if(s.Status==='Pending') o.pending++;
+    if(s.Status==='Pending'){ o.pending++; if(s.DeliverAfter && (!o.del || (s.DeliverBy||'9')<(o.del.DeliverBy||'9'))) o.del={DeliverAfter:s.DeliverAfter, DeliverBy:s.DeliverBy||'', Status:'Pending'}; }
   });
   Object.keys(out).forEach(function(id){ const o=out[id]; o.state = o.due<=0 ? 'Paid' : (o.due>=o.net ? 'Due' : 'Partial'); });
   return out;
@@ -1330,7 +1344,7 @@ async function viewDashboard(){
 
   const recent=(d.recent||[]).map(s=>`
     <tr>
-      <td>${esc(s.InvoiceNo)}${s.Preorder?'<div style="margin-top:3px"><span class="pill pre">✅ প্রি-অর্ডার'+(s.Status==='Pending'?' · Pending':'')+'</span></div>':''}</td>
+      <td>${esc(s.InvoiceNo)}${(s.Preorder||delChip(s))?'<div class="chips" style="margin-top:3px">'+(s.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার'+(s.Status==='Pending'?' · Pending':'')+'</span>':'')+delChip(s)+'</div>':''}${s.Note?'<div style="margin-top:3px;font-size:11.5px;color:var(--muted)">📝 '+esc(s.Note)+'</div>':''}</td>
       <td>${esc(s.CustomerName||'Walk-in')}</td>
       <td>${fdate(s.Date)}</td>
       <td class="num tnum">${tk(saleNet(s))}</td>
@@ -1447,7 +1461,7 @@ function globalSearch(q){
   const cu=DB.Customers.filter(function(c){ return match([c.Name,c.Phone,c.Address,c.Email]); }).slice(0,6);
   const pr=DB.Products.filter(function(p){ return match([p.Name,p.Brand,p.SKU,p.Category,p.Type]); }).slice(0,6);
   const sa=DB.Sales.filter(function(x){ const c=custById[String(x.CustomerID)]||{};
-      return match([x.InvoiceNo,x.CustomerName,c.Phone,c.Address,x.Payment,x.Status,x.Preorder?'preorder pre-order প্রি-অর্ডার':'',itemNames[String(x.InvoiceNo)]||'']); })
+      return match([x.InvoiceNo,x.CustomerName,c.Phone,c.Address,x.Payment,x.Status,x.Preorder?'preorder pre-order প্রি-অর্ডার':'',x.Note||'',x.DeliverAfter?'delivery after '+x.DeliverAfter:'',itemNames[String(x.InvoiceNo)]||'']); })
     .sort(function(a,b){ return new Date(b.Date)-new Date(a.Date); }).slice(0,6);
   let h='';
   if(cu.length) h+='<div class="gs-h">Buyers</div>'+cu.map(function(c){ return `<div class="gs-row"><div><strong>${esc(c.Name)}</strong>
@@ -1459,7 +1473,7 @@ function globalSearch(q){
       <div class="acts"><button class="btn-icon" data-act="product-edit" data-id="${esc(p.ID)}">Edit</button></div></div>`; }).join('');
   if(sa.length) h+='<div class="gs-h">Invoices</div>'+sa.map(function(x){ const pyi=pi(x); return `<div class="gs-row"><div><strong>${esc(x.InvoiceNo)}</strong>
       <span class="sub"> · ${esc(x.CustomerName||'Walk-in')} · ${fdate(x.Date)} · ${tk(saleNet(x))}</span>
-      <div class="chips" style="margin-top:5px">${x.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার</span>':''}<span class="pill ${(x.Status||'Delivered')==='Pending'?'amber':'pos'}">${esc(x.Status||'Delivered')}</span>${payChip(pyi.state,pyi.due)}</div></div>
+      <div class="chips" style="margin-top:5px">${x.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার</span>':''}<span class="pill ${(x.Status||'Delivered')==='Pending'?'amber':'pos'}">${esc(x.Status||'Delivered')}</span>${payChip(pyi.state,pyi.due)}${delChip(x)}</div>${x.Note?'<div class="sub" style="margin-top:4px">📝 '+esc(x.Note)+'</div>':''}</div>
       <div class="acts"><button class="btn-icon" data-act="sale-view" data-inv="${esc(x.InvoiceNo)}">View</button>
       <button class="btn-icon" data-act="sale-edit" data-inv="${esc(x.InvoiceNo)}" data-from="dash">Edit</button></div></div>`; }).join('');
   box.innerHTML = h || '<div class="gs-none">Kichu pawa gelo na — onno bhabe likhe dekhun.</div>';
@@ -1618,6 +1632,7 @@ function custChips(sm){
   let h=payChip(sm.state, sm.due);
   if(sm.pre) h+='<span class="pill pre">✅ প্রি-অর্ডার'+(sm.pre>1?' ×'+sm.pre:'')+' · '+(sm.prePending?'Pending':'Delivered')+'</span>';
   if(sm.pending>sm.prePending) h+='<span class="pill amber">Pending'+(sm.pending-sm.prePending>1?' ×'+(sm.pending-sm.prePending):'')+'</span>';
+  if(sm.del) h+=delChip(sm.del);
   return '<div class="chips">'+h+'</div>';
 }
 function renderCustomers(q){
@@ -1710,7 +1725,7 @@ async function customerHistory(id){
     const h=await api('customerHistory',{id});
     const rows=(h.sales||[]).map(s=>`<tr><td>${esc(s.InvoiceNo)}
           <div class="chips" style="margin-top:4px">${s.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার'+(s.PreorderDate?' · '+fdate(s.PreorderDate):'')+'</span>':''}
-            <span class="pill ${(s.Status||'Delivered')==='Pending'?'amber':'pos'}">${esc(s.Status||'Delivered')}</span>${payChip(s.PayState, s.DueAmt)}</div></td>
+            <span class="pill ${(s.Status||'Delivered')==='Pending'?'amber':'pos'}">${esc(s.Status||'Delivered')}</span>${payChip(s.PayState, s.DueAmt)}${delChip(s)}</div>${s.Note?'<div style="margin-top:4px;font-size:12px;color:var(--muted)">📝 '+esc(s.Note)+'</div>':''}</td>
         <td>${fdate(s.Date)}</td><td class="num tnum">${tk(saleNet(s))}</td>
         <td class="num" style="white-space:nowrap"><button class="btn-icon" data-act="sale-view" data-inv="${esc(s.InvoiceNo)}">View</button>
           <button class="btn-icon" data-act="sale-edit" data-inv="${esc(s.InvoiceNo)}" data-from="hist" data-cid="${esc(id)}">Edit</button></td></tr>`).join('')
@@ -1726,6 +1741,7 @@ async function customerHistory(id){
           <tbody>${rows}</tbody></table></div>
       </div>
       <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Close</button></div>`);
+    $('#modal').classList.add('wide');
   }catch(e){ closeModal(); toast(e.message,'err'); }
 }
 
@@ -1763,7 +1779,11 @@ async function saleEditForm(inv, from, cid){
           <div class="field"><label>Order status</label><select id="se-status">${['Delivered','Pending'].map(x=>`<option ${(sl.Status||'Delivered')===x?'selected':''}>${x}</option>`).join('')}</select></div>
           <div class="field"><label>Expected date (pre-order)</label><input id="se-predate" type="date" value="${esc(sl.PreorderDate||'')}"></div>
         </div>
-        <div class="field"><label>Received so far ৳ (delivery chhara)</label><input id="se-recv" type="number" value="${r.received}"></div>
+        <div class="grid2">
+          <div class="field"><label>Delivery after</label><select id="se-delafter">${delOptsHtml(sl.DeliverAfter)}</select></div>
+          <div class="field"><label>Received so far ৳ (delivery chhara)</label><input id="se-recv" type="number" value="${r.received}"></div>
+        </div>
+        <div class="field"><label>Note</label><textarea id="se-note" rows="2" placeholder="e.g. 2 week por nibe…">${esc(sl.Note||'')}</textarea></div>
         <div id="se-tot"></div>
         <p style="font-size:12px;color:var(--muted);margin:10px 0 0">Qty bodlale stock ar profit nijei thik hoye jabe.</p>
       </div>
@@ -1801,7 +1821,8 @@ async function saveSaleEdit(inv){
   const cu=(await api('listCustomers')).find(c=>String(c.ID)===String(cid));
   const patch={ CustomerID:cid, CustomerName:cu?cu.Name:'', Date:$('#se-date').value, Payment:$('#se-pay').value,
     Discount:t.disc, Delivery:t.deliv, Received:t.recv,
-    Preorder:$('#se-pre').checked, PreorderDate:$('#se-predate').value, Status:$('#se-status').value };
+    Preorder:$('#se-pre').checked, PreorderDate:$('#se-predate').value, Status:$('#se-status').value,
+    DeliverAfter:$('#se-delafter').value, Note:$('#se-note').value.trim() };
   try{
     await api('updateSale',{invoiceNo:inv, patch, edits:t.edits});
     closeModal(); toast(inv+' updated','ok');
@@ -1869,6 +1890,11 @@ function renderSales(){
           <div id="s-predate-box" style="display:none"><label class="mini-l">Expected date</label><input id="s-predate" type="date"></div>
           <div><label class="mini-l">Order status</label><select class="fullsel" id="s-status"><option>Delivered</option><option>Pending</option></select></div>
         </div>
+        <div class="mini" style="margin-top:8px">
+          <div><label class="mini-l">Delivery after</label><select class="fullsel" id="s-delafter">${delOptsHtml('')}</select></div>
+          <div style="font-size:11px;color:var(--muted);align-self:end;padding-bottom:6px">Customer pore nile eta select korun — Pending thakbe.</div>
+        </div>
+        <div style="margin-top:8px"><label class="mini-l">Note</label><textarea class="fullsel" id="s-note" rows="2" placeholder="e.g. 2 week por nibe, size, colour…" style="font-family:inherit; resize:vertical"></textarea></div>
         <div style="margin-top:10px"><label class="mini-l">Payment received</label>
           <div class="seg" id="s-paymode">
             <button type="button" class="seg-btn on" data-act="pay-mode" data-m="full">Full paid</button>
@@ -1888,9 +1914,14 @@ function renderSales(){
   const s=$('#pos-search'); if(s){ s.oninput=()=>renderProductList(s.value); }
   const cs=$('#s-cust'); if(cs) cs.onchange=()=>{ state.customerId=cs.value; };
   ['s-disc','s-deliv','s-received'].forEach(id=>{ const el=$('#'+id); if(el) el.oninput=renderCart; });
-  const pre=$('#s-pre'); if(pre) pre.onchange=()=>{ $('#s-predate-box').style.display=pre.checked?'':'none'; $('#s-status').value=pre.checked?'Pending':'Delivered'; if(pre.checked && state.payMode!=='none') setPayMode('adv'); };
+  const pre=$('#s-pre'); if(pre) pre.onchange=()=>{ $('#s-predate-box').style.display=pre.checked?'':'none'; syncStatus(); if(pre.checked && state.payMode!=='none') setPayMode('adv'); };
+  const da=$('#s-delafter'); if(da) da.onchange=syncStatus;
   setPayMode(state.payMode||'full');
   renderCart();
+}
+function syncStatus(){
+  const pre=$('#s-pre'), da=$('#s-delafter'), st=$('#s-status'); if(!st) return;
+  st.value = ((pre&&pre.checked)||(da&&da.value)) ? 'Pending' : 'Delivered';
 }
 function setPayMode(m){
   state.payMode=m;
@@ -1959,6 +1990,7 @@ async function saveSale(){
   const sale={ CustomerID:cid, CustomerName:cust?cust.Name:'', Discount:t.discount, Delivery:t.delivery,
     Payment:$('#s-pay')?$('#s-pay').value:'Cash', Status:$('#s-status')?$('#s-status').value:'Delivered', Note:'',
     Preorder:!!($('#s-pre')&&$('#s-pre').checked), PreorderDate:($('#s-predate')?$('#s-predate').value:''),
+    DeliverAfter:($('#s-delafter')?$('#s-delafter').value:''), Note:($('#s-note')?$('#s-note').value.trim():''),
     Paid: recVal===''? '' : (Number(recVal)||0) };
   const items=state.cart.map(i=>({ ProductID:i.id, ProductName:i.name, Qty:i.qty, SalePrice:i.sale, BuyPrice:i.buy }));
   const btn=document.querySelector('[data-act="sale-save"]'); if(btn){ btn.textContent='Saving…'; btn.disabled=true; }
@@ -1966,7 +1998,7 @@ async function saveSale(){
     const r=await api('createSale',{sale, items});
     toast('Invoice '+r.invoiceNo+' saved'+(r.due>0?' · due '+tk(r.due):''),'ok');
     showInvoice({ InvoiceNo:r.invoiceNo, Date:new Date().toISOString(), CustomerName:sale.CustomerName, CustomerID:sale.CustomerID,
-      Preorder:sale.Preorder, PreorderDate:sale.PreorderDate,
+      Preorder:sale.Preorder, PreorderDate:sale.PreorderDate, Note:sale.Note, DeliverAfter:sale.DeliverAfter, Status:sale.Status,
       Subtotal:r.subtotal, Discount:r.discount, Delivery:r.delivery, Total:r.total, Payment:sale.Payment,
       Received:r.received, Due:r.due },
       state.cart.map(i=>({ProductName:i.name, Qty:i.qty, SalePrice:i.sale, LineTotal:i.qty*i.sale})));
@@ -1975,6 +2007,7 @@ async function saveSale(){
     ['s-received','s-disc','s-deliv'].forEach(function(id){ const el=$('#'+id); if(el) el.value = id==='s-received'?'':'0'; });
     state.payMode='full'; setPayMode('full');
     const cs2=$('#s-cust'); if(cs2) cs2.value='';
+    const dz=$('#s-delafter'); if(dz) dz.value=''; const nz=$('#s-note'); if(nz) nz.value='';
     const pc=$('#s-pre'); if(pc){ pc.checked=false; $('#s-predate-box').style.display='none'; $('#s-predate').value=''; $('#s-status').value='Delivered'; }
     renderProductList($('#pos-search')?$('#pos-search').value:''); renderCart();
   }catch(e){ toast(e.message,'err'); if(btn){ btn.textContent='Save & invoice'; btn.disabled=false; } }
@@ -1999,7 +2032,8 @@ function showInvoice(sale, items){
   while(rows.length<4) rows.push(`<tr><td><span class="og-rowno">${rows.length+1}</span></td><td>&nbsp;</td><td class="r"></td><td class="r"></td><td class="r"></td></tr>`);
   const chip=(grp,v,label,on,radio)=>`<span class="og-chip ${on?'on':''}" data-act="og-chip" data-grp="${grp}" data-v="${v}" ${radio?'data-radio="1"':''}>${label}</span>`;
   const pm=String(sale.Payment||'Cash');
-  const noteDef = sale.Preorder ? ('Pre-order'+(sale.PreorderDate?' · expected '+fdate(sale.PreorderDate):'')) : '';
+  const noteDef = [ sale.Preorder ? ('Pre-order'+(sale.PreorderDate?' · expected '+fdate(sale.PreorderDate):'')) : '',
+    (sale.DeliverAfter && (sale.Status||'Delivered')==='Pending') ? ('Delivery after '+sale.DeliverAfter) : '', sale.Note||'' ].filter(Boolean).join(' · ');
   const web=cfg.shopWeb||'OMMESGALLERY.XYZ', wa=cfg.shopWhatsapp||'01534550063';
   const html=`
     <div class="ogi" id="invnode">
