@@ -419,6 +419,13 @@
   .posview{display:grid; grid-template-columns:1fr 380px; gap:16px; align-items:start}
   .pos-products{padding:16px 18px; max-height:72vh; overflow:auto}
   .plist{display:flex; flex-direction:column; gap:8px; margin-top:12px}
+  .pthumb{width:44px; height:44px; border-radius:8px; object-fit:cover; flex:none; border:1px solid var(--line); background:var(--input-bg); cursor:zoom-in; display:block}
+  .pthumb.nophoto{display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:17px; cursor:default; opacity:.55}
+  .pthumb.big{width:86px; height:86px; border-radius:10px}
+  .pthumb.sm{width:34px; height:34px; border-radius:7px}
+  #lightbox{position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.82); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:20px; cursor:zoom-out}
+  #lightbox img{max-width:94vw; max-height:78vh; border-radius:12px; background:#fff}
+  #lightbox .cap{color:#fff; font-weight:600; font-size:15px; text-align:center}
   .pitem{display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; cursor:pointer; background:var(--input-bg)}
   .pitem:hover{border-color:var(--gold-2); background:var(--hover)}
   .pitem .pn{font-weight:600}
@@ -1468,8 +1475,8 @@ function globalSearch(q){
       <div class="sub">${esc(c.Phone||'')}${c.Address?' · '+esc(c.Address):''}</div><div style="margin-top:5px">${custChips(sum[String(c.ID)])}</div></div>
       <div class="acts"><button class="btn-icon" data-act="customer-hist" data-id="${esc(c.ID)}">History</button>
       <button class="btn-icon" data-act="customer-edit" data-id="${esc(c.ID)}">Edit</button></div></div>`; }).join('');
-  if(pr.length) h+='<div class="gs-h">Dresses</div>'+pr.map(function(p){ return `<div class="gs-row"><div><strong>${esc(p.Name)}</strong>
-      <div class="sub">${esc(p.Brand||'')}${p.SKU?' · SKU '+esc(p.SKU):''} · ${Number(p.Stock)} in stock · Sale ${tk(p.SalePrice)} · Buy ${tk(p.BuyPrice)}</div></div>
+  if(pr.length) h+='<div class="gs-h">Dresses</div>'+pr.map(function(p){ return `<div class="gs-row"><div style="display:flex; gap:10px; align-items:center">${thumbHtml(p,'sm')}<div><strong>${esc(p.Name)}</strong>
+      <div class="sub">${esc(p.Brand||'')}${p.SKU?' · SKU '+esc(p.SKU):''} · ${Number(p.Stock)} in stock · Sale ${tk(p.SalePrice)} · Buy ${tk(p.BuyPrice)}</div></div></div>
       <div class="acts"><button class="btn-icon" data-act="product-edit" data-id="${esc(p.ID)}">Edit</button></div></div>`; }).join('');
   if(sa.length) h+='<div class="gs-h">Invoices</div>'+sa.map(function(x){ const pyi=pi(x); return `<div class="gs-row"><div><strong>${esc(x.InvoiceNo)}</strong>
       <span class="sub"> · ${esc(x.CustomerName||'Walk-in')} · ${fdate(x.Date)} · ${tk(saleNet(x))}</span>
@@ -1528,7 +1535,7 @@ function renderInventory(q){
     const low=Number(p.Stock)<=1;
     const out=Number(p.Stock)<=0;
     return `<tr class="${low?'lowstock':''}">
-      <td><strong>${esc(p.Name)}</strong>${p.Preorder?'<div style="margin-top:3px"><span class="pill pre">✅ প্রি-অর্ডার</span></div>':''}</td>
+      <td><div style="display:flex; align-items:center; gap:10px">${thumbHtml(p)}<div><strong>${esc(p.Name)}</strong>${p.Preorder?'<div style="margin-top:3px"><span class="pill pre">✅ প্রি-অর্ডার</span></div>':''}</div></div></td>
       <td>${p.Brand?'<span class="pill brand">'+esc(p.Brand)+'</span>':''}</td>
       <td>${esc(p.Category||'')}</td>
       <td>${esc(p.Type||'')}</td>
@@ -1556,6 +1563,40 @@ function renderInventory(q){
       <tbody>${rows}</tbody></table></div></div>`;
   const s=$('#inv-search'); if(s) s.oninput=()=>{ const v=s.value; renderInventory(v); const n=$('#inv-search'); if(n){n.focus(); n.value=v;} };
 }
+function thumbHtml(p, cls){
+  cls=cls||'';
+  if(p && p.Photo) return '<img class="pthumb '+cls+'" src="'+p.Photo+'" alt="" data-act="photo-view" data-id="'+esc(p.ID)+'">';
+  return '<div class="pthumb nophoto '+cls+'">👗</div>';
+}
+function showPhoto(id){
+  const p=findProduct(id); if(!p||!p.Photo) return;
+  const old=document.getElementById('lightbox'); if(old) old.remove();
+  const lb=document.createElement('div'); lb.id='lightbox';
+  lb.innerHTML='<img src="'+p.Photo+'" alt=""><div class="cap">'+esc(p.Name||'')+(p.SKU?' · '+esc(p.SKU):'')+'</div>';
+  lb.onclick=function(){ lb.remove(); };
+  document.body.appendChild(lb);
+}
+async function shrinkPhoto(file){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise(function(res,rej){ const i=new Image(); i.onload=function(){ res(i); }; i.onerror=function(){ rej(new Error('Chhobi pora gelo na')); }; i.src=url; });
+    let max=420, q=0.8, out='';
+    for(let a=0;a<10;a++){
+      const sc=Math.min(1, max/Math.max(img.naturalWidth,img.naturalHeight));
+      const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(img.naturalWidth*sc)); c.height=Math.max(1,Math.round(img.naturalHeight*sc));
+      const g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(img,0,0,c.width,c.height);
+      out=c.toDataURL('image/jpeg',q);
+      if(out.length*0.75<=28000) break;
+      if(q>0.5) q-=0.1; else max=Math.round(max*0.85);
+    }
+    return out;
+  } finally { URL.revokeObjectURL(url); }
+}
+function photoBox(src, info){
+  const b=$('#f-photo-box'); if(!b) return;
+  b.innerHTML = src ? '<img class="pthumb big" src="'+src+'" alt="" style="cursor:default">' : '<div class="pthumb nophoto big">👗</div>';
+  const i=$('#f-photo-info'); if(i) i.textContent = info||'';
+}
 function productForm(p){
   p=p||{};
   openModal(`
@@ -1582,10 +1623,27 @@ function productForm(p){
       </div>
       <div class="field"><label>Stock quantity</label><input id="f-stock" type="number" value="${p.Stock!==undefined?p.Stock:''}"></div>
       <div class="field"><label class="chk"><input type="checkbox" id="f-pre" ${p.Preorder?'checked':''}> ✅ প্রি-অর্ডার dress (this is pre-order)</label></div>
+      <div class="field"><label>Photo <span style="font-weight:400;color:var(--muted);font-size:11px">— chhoto preview (auto chhoto hoye jabe)</span></label>
+        <div style="display:flex; gap:14px; align-items:center">
+          <div id="f-photo-box"></div>
+          <div><input type="file" id="f-photo-file" accept="image/*" style="display:none">
+            <button type="button" class="btn btn-ghost btn-sm" data-act="photo-pick">📷 Choose photo</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-act="photo-clear">Remove</button>
+            <div id="f-photo-info" style="font-size:12px;color:var(--muted);margin-top:6px"></div></div>
+        </div></div>
       ${p.ID?`<div class="field"><label>Purchase lots (FIFO — পুরনো lot আগে বিক্রি হয়)</label><div id="lots-box"><div class="hint">Loading…</div></div></div>`:''}
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
       <button class="btn btn-gold" data-act="product-save" data-id="${esc(p.ID||'')}">Save product</button></div>`);
+  window._pPhoto=undefined; photoBox(p.Photo||'', '');
+  const pf=$('#f-photo-file');
+  if(pf) pf.onchange=async function(){
+    const f=pf.files&&pf.files[0]; if(!f) return;
+    $('#f-photo-info').textContent='Chhoto korchi…';
+    try{ const d=await shrinkPhoto(f); window._pPhoto=d; photoBox(d, '≈ '+Math.round(d.length*0.75/1024)+' KB · Save product chaplei save hobe'); }
+    catch(e){ $('#f-photo-info').textContent=e.message; }
+    pf.value='';
+  };
   if(p.ID) loadProductLots(p.ID);
 }
 async function loadProductLots(id){
@@ -1604,6 +1662,7 @@ async function saveProduct(id){
     ShippingCost:$('#f-shipping').value||'0',
     BuyPrice:$('#f-buy').value, SalePrice:$('#f-sale').value, Stock:$('#f-stock').value,
     Preorder:!!($('#f-pre')&&$('#f-pre').checked) };
+  if(window._pPhoto!==undefined) item.Photo=window._pPhoto;
   if(!item.Name){ toast('Name is required','err'); return; }
   try{ await api('saveProduct',{item}); closeModal(); toast('Product saved','ok'); viewInventory(); }
   catch(e){ toast(e.message,'err'); }
@@ -1851,7 +1910,8 @@ function renderProductList(q){
   box.innerHTML=prods.map(p=>{
     const low=Number(p.Stock)<=3;
     return `<div class="pitem" data-act="cart-add" data-id="${esc(p.ID)}">
-      <div><div class="pn">${esc(p.Name)}${p.Preorder?' <span class="pill pre">প্রি-অর্ডার</span>':''}</div>
+      ${thumbHtml(p)}
+      <div style="flex:1; min-width:0"><div class="pn">${esc(p.Name)}${p.Preorder?' <span class="pill pre">প্রি-অর্ডার</span>':''}</div>
         <div class="pd">${esc(p.Brand||'')} ${p.Size?'· '+esc(p.Size):''} ${p.SKU?'· <strong>SKU: '+esc(p.SKU)+'</strong>':''} · <span class="stock-tag ${low?'low':''}">${Number(p.Stock)} in stock</span></div></div>
       <div class="pr"><div class="tnum" style="font-weight:600">${tk(p.SalePrice)}</div></div>
       <div class="add">＋</div></div>`;}).join('') ||
@@ -1939,7 +1999,7 @@ function renderCart(){
   else{
     box.innerHTML=state.cart.map(i=>`
       <div class="cl">
-        <div class="nm">${esc(i.name)}</div>
+        <div class="nm" style="display:flex; align-items:center; gap:8px">${thumbHtml(findProduct(i.id),'sm')}<span>${esc(i.name)}</span></div>
         <div class="lt tnum">${tk(i.qty*i.sale)}</div>
         <div class="qty">
           <button data-act="cart-dec" data-id="${esc(i.id)}">−</button>
@@ -2836,6 +2896,9 @@ document.addEventListener('click', function(e){
     case 'customer-save': saveCustomer(id, window._afterCustSelect); window._afterCustSelect=false; break;
     case 'customer-hist': customerHistory(id); break;
     case 'cart-add': addToCart(id); break;
+    case 'photo-view': showPhoto(id); e.stopPropagation(); break;
+    case 'photo-pick': { const f=$('#f-photo-file'); if(f) f.click(); break; }
+    case 'photo-clear': window._pPhoto=''; photoBox('', 'Save product chaplei chhobi soriye jabe'); break;
     case 'pay-mode': setPayMode(el.getAttribute('data-m')); break;
     case 'cart-inc': cartQty(id,1); break;
     case 'cart-dec': cartQty(id,-1); break;
