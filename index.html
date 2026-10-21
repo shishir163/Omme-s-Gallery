@@ -419,6 +419,13 @@
   .posview{display:grid; grid-template-columns:1fr 380px; gap:16px; align-items:start}
   .pos-products{padding:16px 18px; max-height:72vh; overflow:auto}
   .plist{display:flex; flex-direction:column; gap:8px; margin-top:12px}
+  #inv-sort{border:1px solid var(--line-2); border-radius:9px; background:var(--input-bg); color:var(--charcoal); font:inherit; font-size:13px; font-weight:600; padding:8px 10px; cursor:pointer}
+  #attr-new{border:1px solid var(--line-2); border-radius:9px; background:var(--input-bg); color:var(--charcoal); font:inherit; font-size:16px; padding:9px 12px; min-width:0}
+  .inv-grp td{background:var(--hover); font-weight:700; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); padding:8px 12px !important}
+  .inv-grp td span{font-weight:600; text-transform:none; letter-spacing:0; margin-left:6px}
+  .attr-row{display:flex; align-items:center; gap:8px; padding:9px 2px; border-bottom:1px solid var(--line)}
+  .attr-row .nm{flex:1; font-weight:600; min-width:0; overflow-wrap:anywhere}
+  .attr-row .ct{font-size:12px; color:var(--muted); white-space:nowrap}
   .inv-sub{display:none; font-size:11.5px; color:var(--muted); margin-top:3px; line-height:1.35}
   @media (max-width:760px){
     .inv-tbl .c-det, .inv-tbl .c-sku, .inv-tbl .c-buy{display:none}
@@ -987,7 +994,7 @@ function L_payDue(id, amount){
 
 /* ---------- dispatcher (same interface the UI already uses) ---------- */
 const MUTATIONS = ['saveProduct','deleteProduct','saveCustomer','deleteCustomer','createSale','saveSupplier',
-  'deleteSupplier','saveExpense','deleteExpense','createPurchase','updatePurchasePayment','createReturn','payDue','updateSale'];
+  'deleteSupplier','saveExpense','deleteExpense','createPurchase','updatePurchasePayment','createReturn','payDue','updateSale','renameAttr'];
 
 async function api(action, p){
   p = p || {}; ensureDB(); let out;
@@ -998,6 +1005,11 @@ async function api(action, p){
   switch(action){
     case 'dashboard':       out=L_dashboard(); break;
     case 'listProducts':    out=readAll('Products'); break;
+    case 'renameAttr': {
+      let n=0; const to=String(p.to||'');
+      DB.Products.forEach(function(r){ if(String(r[p.field]||'')===String(p.from)){ r[p.field]=to; n++; } });
+      out={changed:n}; break;
+    }
     case 'saveProduct': {
       const r=saveRow('Products', p.item, 'P');
       if(r.isNew) addLot(r.id, p.item.BuyPrice, p.item.Stock, '');
@@ -1538,14 +1550,110 @@ async function viewInventory(){
   try{ state.products=await api('listProducts'); }catch(e){ if(e.message==='AUTH')return; }
   renderInventory('');
 }
+const ATTR_FIELDS=['Category','Brand','Type','Dupatta'];
+const ATTR_SEED={ Brand:['Cross Stitch','So Kamal','Sapphire','Gul Ahmed','Khaadi','Beechtree','Zellbury','Nishat','Limelight','Asim Jofa'] };
+const cmpTxt=(a,b)=>String(a||'').localeCompare(String(b||''),undefined,{sensitivity:'base',numeric:true});
+function attrUsed(f){ const m={}; (DB.Products||[]).forEach(function(p){ const v=String(p[f]||'').trim(); if(v) m[v]=(m[v]||0)+1; }); return m; }
+function attrList(f){
+  const c=getCfg(), saved=(c.lists&&Array.isArray(c.lists[f]))?c.lists[f]:null;
+  const set=new Set(saved||ATTR_SEED[f]||[]); Object.keys(attrUsed(f)).forEach(function(v){ set.add(v); });
+  return Array.from(set).filter(Boolean).sort(cmpTxt);
+}
+function saveAttrList(f, arr){
+  const c=Object.assign({}, getCfg()); c.lists=Object.assign({}, c.lists||{});
+  c.lists[f]=Array.from(new Set(arr.map(function(x){ return String(x).trim(); }).filter(Boolean))).sort(cmpTxt); setCfg(c);
+}
+function attrSelect(f, id, cur){
+  const list=attrList(f); cur=String(cur||'').trim(); if(cur && list.indexOf(cur)<0) list.push(cur);
+  return '<select id="'+id+'" data-attr="'+f+'" data-prev="'+esc(cur)+'"><option value="">—</option>'+
+    list.map(function(v){ return '<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(v)+'</option>'; }).join('')+
+    '<option value="__new">＋ New '+f.toLowerCase()+'…</option></select>';
+}
+function bindAttrSelects(root){
+  (root||document).querySelectorAll('select[data-attr]').forEach(function(sel){
+    sel.onchange=function(){
+      if(sel.value!=='__new'){ sel.dataset.prev=sel.value; return; }
+      const f=sel.dataset.attr, v=(prompt('New '+f+' name:')||'').trim();
+      if(!v){ sel.value=sel.dataset.prev||''; return; }
+      saveAttrList(f, attrList(f).concat([v]));
+      if(![].some.call(sel.options,function(o){ return o.value===v; })){
+        const o=document.createElement('option'); o.value=v; o.textContent=v; sel.insertBefore(o, sel.lastElementChild); }
+      sel.value=v; sel.dataset.prev=v;
+    };
+  });
+}
+const INV_SORTS=[['name','Name A → Z'],['name-desc','Name Z → A'],['brand','Brand wise'],['cat','Category wise'],['type','Type wise'],
+  ['new','Newest first'],['stock','Stock (low → high)'],['price','Sale price (high → low)']];
+function invSortKey(){ if(!state.invSort){ try{ state.invSort=localStorage.getItem('omme_inv_sort')||'name'; }catch(e){ state.invSort='name'; } } return state.invSort; }
+function sortProducts(list, k){
+  const byName=function(a,b){ return cmpTxt(a.Name,b.Name); };
+  const grpF={brand:'Brand',cat:'Category',type:'Type'}[k];
+  if(grpF) return list.sort(function(a,b){ const x=String(a[grpF]||''), y=String(b[grpF]||'');
+      if(!x!==!y) return x?-1:1; return cmpTxt(x,y)||byName(a,b); });
+  if(k==='name-desc') return list.sort(function(a,b){ return byName(b,a); });
+  if(k==='new') return list.sort(function(a,b){ return String(b.CreatedAt||'').localeCompare(String(a.CreatedAt||''))||byName(a,b); });
+  if(k==='stock') return list.sort(function(a,b){ return (num(a.Stock)-num(b.Stock))||byName(a,b); });
+  if(k==='price') return list.sort(function(a,b){ return (num(b.SalePrice)-num(a.SalePrice))||byName(a,b); });
+  return list.sort(byName);
+}
+function attrManager(f){
+  f=f||state.attrTab||'Category'; state.attrTab=f;
+  const used=attrUsed(f), list=attrList(f); window._attrCur=list;
+  const tabs=ATTR_FIELDS.map(x=>`<button type="button" class="seg-btn ${x===f?'on':''}" data-act="attr-tab" data-f="${x}">${x}</button>`).join('');
+  const rows=list.map((v,i)=>`<div class="attr-row"><div class="nm">${esc(v)}</div><div class="ct">${used[v]?used[v]+' product':'unused'}</div>
+      <button class="btn-icon" data-act="attr-ren" data-i="${i}">Rename</button><button class="btn-icon" data-act="attr-del" data-i="${i}">✕</button></div>`).join('')
+    || '<div class="empty" style="padding:18px 0">Ekhono kichu nei — niche theke add korun.</div>';
+  openModal(`
+    <div class="modal-head"><h3>Categories &amp; brands</h3><button class="x" data-act="modal-close">×</button></div>
+    <div class="modal-body">
+      <div class="seg" style="margin-bottom:12px">${tabs}</div>
+      <div style="display:flex; gap:8px; margin-bottom:10px"><input id="attr-new" placeholder="New ${f.toLowerCase()} name…" style="flex:1">
+        <button class="btn btn-gold btn-sm" data-act="attr-add">＋ Add</button></div>
+      <div>${rows}</div>
+      <p style="font-size:12px;color:var(--muted);margin:12px 0 0">Rename korle shob product e nam bodle jabe. Ekta nam onno ekta ache emon nam e rename korle dutoi mile ek hoye jabe.</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Done</button></div>`);
+  const ni=$('#attr-new'); if(ni) ni.onkeydown=e=>{ if(e.key==='Enter') attrAdd(); };
+}
+function attrAdd(){
+  const f=state.attrTab, v=($('#attr-new').value||'').trim(); if(!v) return;
+  if(attrList(f).some(x=>cmpTxt(x,v)===0)){ toast('"'+v+'" already ache','err'); return; }
+  saveAttrList(f, attrList(f).concat([v])); attrManager(f); window._attrDirty=true; toast('Added','ok');
+}
+async function attrRename(i){
+  const f=state.attrTab, from=(window._attrCur||[])[i]; if(from==null) return;
+  const to=(prompt('"'+from+'" er notun nam:', from)||'').trim(); if(!to || to===from) return;
+  try{
+    const r=await api('renameAttr',{field:f, from, to});
+    saveAttrList(f, attrList(f).filter(x=>x!==from).concat([to])); window._attrDirty=true;
+    state.products=await api('listProducts'); attrManager(f);
+    toast('Renamed'+(r.changed?' · '+r.changed+' product updated':''),'ok');
+  }catch(e){ toast(e.message,'err'); }
+}
+async function attrDelete(i){
+  const f=state.attrTab, v=(window._attrCur||[])[i]; if(v==null) return;
+  const n=attrUsed(f)[v]||0;
+  if(n && !confirm('"'+v+'" '+n+' ta product e ache. Oi product gulo theke '+f+' faka kore dibo?')) return;
+  try{
+    if(n) await api('renameAttr',{field:f, from:v, to:''});
+    saveAttrList(f, attrList(f).filter(x=>x!==v)); window._attrDirty=true;
+    state.products=await api('listProducts'); attrManager(f); toast('Deleted','ok');
+  }catch(e){ toast(e.message,'err'); }
+}
 function renderInventory(q){
   let list=state.products.filter(p=>!q || (String(p.Name)+p.Brand+p.SKU+p.Category).toLowerCase().includes(q.toLowerCase()));
   if(state.hideSoldOut) list=list.filter(p=>Number(p.Stock)>0);
   const soldOutCount=state.products.filter(p=>Number(p.Stock)<=0).length;
+  const sk=invSortKey(), grpF={brand:'Brand',cat:'Category',type:'Type'}[sk];
+  sortProducts(list, sk);
+  const grpCount={}; if(grpF) list.forEach(p=>{ const g=String(p[grpF]||''); grpCount[g]=(grpCount[g]||0)+1; });
+  let lastG=null;
   const rows=list.map(p=>{
+    let head='';
+    if(grpF){ const g=String(p[grpF]||''); if(g!==lastG){ lastG=g; head=`<tr class="inv-grp"><td colspan="7">${g?esc(g):'No '+grpF.toLowerCase()}<span>· ${grpCount[g]} item</span></td></tr>`; } }
     const low=Number(p.Stock)<=1;
     const out=Number(p.Stock)<=0;
-    return `<tr class="${low?'lowstock':''}">
+    return head+`<tr class="${low?'lowstock':''}">
       <td><div style="display:flex; align-items:center; gap:10px">${thumbHtml(p)}<div style="min-width:0"><strong>${esc(p.Name)}</strong>
         <div class="chips" style="margin-top:3px">${p.Brand?'<span class="pill brand">'+esc(p.Brand)+'</span>':''}${p.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার</span>':''}</div>
         <div class="inv-sub">${esc([p.Category,p.Type,p.Dupatta?('Dupatta: '+p.Dupatta):'',p.SKU].filter(Boolean).join(' · '))}</div></div></div></td>
@@ -1565,6 +1673,8 @@ function renderInventory(q){
     <div class="toolbar"><div class="search"><span class="mag">⌕</span>
       <input id="inv-search" placeholder="Search name, brand, SKU…" value="${esc(q)}"></div>
       <button class="btn btn-sm ${state.hideSoldOut?'btn-gold':'btn-ghost'}" data-act="inv-toggle-soldout" title="Show/hide sold-out products">${state.hideSoldOut?'✓ Hiding sold-out':'Hide sold-out'}${soldOutCount?' ('+soldOutCount+')':''}</button>
+      <select id="inv-sort" title="Sort">${INV_SORTS.map(o=>`<option value="${o[0]}" ${o[0]===sk?'selected':''}>⇅ ${o[1]}</option>`).join('')}</select>
+      <button class="btn btn-ghost btn-sm" data-act="attr-manage" title="Edit category, brand, type, dupatta lists">⚙ Categories &amp; brands</button>
       <button class="btn btn-ghost btn-sm" data-act="inv-csv-import" title="Import products from CSV">⭱ CSV Import</button>
       <input id="inv-csv-file" type="file" accept=".csv,text/csv" style="display:none">
       <span style="color:var(--muted); font-size:13px">${list.length} item(s)</span></div>
@@ -1572,6 +1682,7 @@ function renderInventory(q){
       <thead><tr><th>Product</th><th class="c-det">Details</th><th class="c-sku">SKU</th><th class="num c-buy">Buy</th><th class="num">Sale</th><th class="num">Stock</th><th class="num"></th></tr></thead>
       <tbody>${rows}</tbody></table></div></div>`;
   const s=$('#inv-search'); if(s) s.oninput=()=>{ const v=s.value; renderInventory(v); const n=$('#inv-search'); if(n){n.focus(); n.value=v;} };
+  const so=$('#inv-sort'); if(so) so.onchange=()=>{ state.invSort=so.value; try{ localStorage.setItem('omme_inv_sort', so.value); }catch(e){} renderInventory($('#inv-search')?$('#inv-search').value:''); };
 }
 function thumbHtml(p, cls){
   cls=cls||'';
@@ -1614,13 +1725,12 @@ function productForm(p){
     <div class="modal-body">
       <div class="field"><label>Name *</label><input id="f-name" value="${esc(p.Name)}"></div>
       <div class="grid2">
-        <div class="field"><label>Brand</label><input id="f-brand" value="${esc(p.Brand)}" list="brands"></div>
-        <div class="field"><label>Category</label><input id="f-cat" value="${esc(p.Category)}" placeholder="2pc / 3pc / Printed"></div>
+        <div class="field"><label>Brand</label>${attrSelect('Brand','f-brand',p.Brand)}</div>
+        <div class="field"><label>Category</label>${attrSelect('Category','f-cat',p.Category)}</div>
       </div>
-      <datalist id="brands"><option>Cross Stitch</option><option>So Kamal</option><option>Sapphire</option><option>Gul Ahmed</option><option>Khaadi</option><option>Beechtree</option><option>Zellbury</option><option>Nishat</option><option>Limelight</option><option>Asim Jofa</option></datalist>
       <div class="grid2">
-        <div class="field"><label>Type</label><input id="f-type" value="${esc(p.Type||'')}" placeholder="Lawn / Chiffon / Embroidered…"></div>
-        <div class="field"><label>Dupatta</label><input id="f-dupatta" value="${esc(p.Dupatta||'')}" placeholder="আছে / নেই / যা লিখবে"></div>
+        <div class="field"><label>Type</label>${attrSelect('Type','f-type',p.Type)}</div>
+        <div class="field"><label>Dupatta</label>${attrSelect('Dupatta','f-dupatta',p.Dupatta)}</div>
       </div>
       <div class="grid2">
         <div class="field"><label>SKU</label><input id="f-sku" value="${esc(p.SKU)}"></div>
@@ -1645,6 +1755,7 @@ function productForm(p){
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
       <button class="btn btn-gold" data-act="product-save" data-id="${esc(p.ID||'')}">Save product</button></div>`);
+  bindAttrSelects($('#modal'));
   window._pPhoto=undefined; photoBox(p.Photo||'', '');
   const pf=$('#f-photo-file');
   if(pf) pf.onchange=async function(){
@@ -2893,7 +3004,7 @@ document.addEventListener('click', function(e){
   const act=el.dataset.act, id=el.dataset.id;
   switch(act){
     case 'install': doInstall(); break;
-    case 'modal-close': closeModal(); break;
+    case 'modal-close': closeModal(); if(window._attrDirty){ window._attrDirty=false; if(state.view==='inventory') renderInventory($('#inv-search')?$('#inv-search').value:''); } break;
     case 'product-new': productForm(); break;
     case 'inv-csv-import': { const f=$('#inv-csv-file'); if(f){ f.onchange=()=>importProductsCSV(f); f.click(); } break; }
     case 'inv-toggle-soldout': state.hideSoldOut=!state.hideSoldOut; renderInventory($('#inv-search')?$('#inv-search').value:''); break;
@@ -2909,6 +3020,11 @@ document.addEventListener('click', function(e){
     case 'photo-view': showPhoto(id); e.stopPropagation(); break;
     case 'photo-pick': { const f=$('#f-photo-file'); if(f) f.click(); break; }
     case 'photo-clear': window._pPhoto=''; photoBox('', 'Save product chaplei chhobi soriye jabe'); break;
+    case 'attr-manage': attrManager(); break;
+    case 'attr-tab': attrManager(el.dataset.f); break;
+    case 'attr-add': attrAdd(); break;
+    case 'attr-ren': attrRename(Number(el.dataset.i)); break;
+    case 'attr-del': attrDelete(Number(el.dataset.i)); break;
     case 'pay-mode': setPayMode(el.getAttribute('data-m')); break;
     case 'cart-inc': cartQty(id,1); break;
     case 'cart-dec': cartQty(id,-1); break;
