@@ -401,6 +401,21 @@
   .pill.pre{background:rgba(124,92,224,.17); color:#6b47d6}
   .pill.pre{white-space:nowrap}
   .pill.amber{background:rgba(240,170,40,.2); color:#b97800}
+  .pill.defect{background:#c62828; color:#fff; white-space:nowrap}
+  .rc-badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; color:#fff; white-space:nowrap; vertical-align:1px}
+  tr.rc td:first-child{box-shadow:inset 5px 0 0 var(--rc)}
+  .rc-legend{display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:0 0 12px; font-size:12px; color:var(--muted)}
+  .rc-legend .rc-badge{font-size:11.5px; padding:3px 10px}
+  .rc-name{display:inline-block; padding:3px 10px; border-radius:12px; color:#fff; font-weight:700; font-size:12.5px; line-height:1.35}
+  .table-wrap{overflow-x:auto}
+  .cinfo{border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:14px; font-size:13.5px; background:var(--hover)}
+  .cinfo .lbl{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:8px 0 2px}
+  .cinfo .lbl:first-child{margin-top:0}
+  .cinfo .old{color:var(--muted); font-weight:400; font-size:12.5px; margin-top:2px}
+  .rep-tiles{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin-bottom:18px}
+  .rep-tiles.three{grid-template-columns:repeat(3,minmax(0,1fr)); margin-bottom:14px}
+  .rep-tiles .tile .tv{font-size:28px}
+  @media (max-width:900px){ .rep-tiles, .rep-tiles.three{grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px} .rep-tiles .tile{padding:16px 14px} .rep-tiles .tile .tv{font-size:clamp(19px,6vw,26px)} .rep-tiles.three .tile:last-child{grid-column:1/-1} }
   .chips{display:flex; flex-wrap:wrap; gap:5px}
   .chk{display:flex; align-items:center; gap:9px; cursor:pointer; font-size:14px}
   .chk input{width:19px; height:19px; accent-color:var(--gold)}
@@ -837,6 +852,12 @@ function delChip(s){
   const late = s.DeliverBy && s.DeliverBy < ymdLocal(new Date());
   return '<span class="pill '+(late?'warn':'amber')+'">🚚 Delivery after '+esc(s.DeliverAfter)+(s.DeliverBy?(late?' · overdue':' · by '+fdate(s.DeliverBy)):'')+'</span>';
 }
+const CUST_TIERS=[{min:31,c:'#7c3aed',l:'30+'},{min:21,c:'#db2777',l:'21–30'},{min:16,c:'#ea580c',l:'16–20'},
+  {min:11,c:'#ca8a04',l:'11–15'},{min:6,c:'#16a34a',l:'6–10'},{min:2,c:'#0284c7',l:'2–5'}];
+function custTier(n){ n=num(n); for(let i=0;i<CUST_TIERS.length;i++){ if(n>=CUST_TIERS[i].min) return CUST_TIERS[i]; } return null; }
+function hexA(h,a){ const n=parseInt(String(h).slice(1),16); return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')'; }
+function tierLegend(){ return '<div class="rc-legend"><span>Repeat buyer colour:</span>'+CUST_TIERS.slice().reverse().map(function(t){ return '<span class="rc-badge" style="background:'+t.c+'">'+t.l+' orders</span>'; }).join('')+'</div>'; }
+function custPhones(c){ return [c&&c.Phone, c&&c.Phone2, c&&c.Phone3].map(function(x){ return String(x||'').trim(); }).filter(Boolean); }
 function L_customerSummary(){
   const pi=payInfo(), out={};
   DB.Sales.forEach(function(s){
@@ -936,7 +957,10 @@ function L_report(from, to){
   const preDel=[],prePen=[],preAmt=[]; for(let i=0;i<12;i++){ preDel.push(0); prePen.push(0); preAmt.push(0); }
   sales.forEach(function(x){ if(!x.Preorder||!x.Date) return; const d=new Date(x.Date);
     if(d.getFullYear()===thisYear){ const m=d.getMonth(); preAmt[m]+=saleNet(x); if(x.Status==='Pending') prePen[m]++; else preDel[m]++; } });
+  let stQty=0, stCost=0, stSale=0, stItems=0;
+  products.forEach(function(p){ const q=num(p.Stock); if(q>0){ stQty+=q; stItems++; stCost+=q*num(p.BuyPrice); stSale+=q*num(p.SalePrice); } });
   return {
+    stock:{ qty:stQty, items:stItems, cost:stCost, sale:stSale },
     range:{from:from||null,to:to||null},
     summary:{ totalSales:netSales, totalProfit:netProfit, grossSales:totalSales, returns:retAmount, retProfit:retProfit,
       orders:orders, itemsSold:itemsSold, totalDiscount:totalDiscount, totalDelivery:totalDelivery, cogs:cogs, subtotal:subtotal,
@@ -1372,10 +1396,13 @@ async function viewDashboard(){
   const months=[]; const now=new Date(); const yr=d.year||now.getFullYear();
   for(let m=0;m<12;m++){ const key=yr+'-'+('0'+(m+1)).slice(-2); months.push({label:MONTHS[m], val:d.monthly[key]||0}); }
 
+  const _cs=L_customerSummary();
+  const custCell=s=>{ const sm=_cs[String(s.CustomerID||'')], tr=custTier(sm?sm.orders:0), nm=esc(s.CustomerName||'Walk-in');
+    return tr?`<span class="rc-name" style="background:${tr.c}" title="${sm.orders} orders">${nm} · ${sm.orders}</span>`:nm; };
   const recent=(d.recent||[]).map(s=>`
     <tr>
       <td>${esc(s.InvoiceNo)}${(s.Preorder||delChip(s))?'<div class="chips" style="margin-top:3px">'+(s.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার'+(s.Status==='Pending'?' · Pending':'')+'</span>':'')+delChip(s)+'</div>':''}${s.Note?'<div style="margin-top:3px;font-size:11.5px;color:var(--muted)">📝 '+esc(s.Note)+'</div>':''}</td>
-      <td>${esc(s.CustomerName||'Walk-in')}</td>
+      <td>${custCell(s)}</td>
       <td>${fdate(s.Date)}</td>
       <td class="num tnum">${tk(saleNet(s))}</td>
       <td class="num tnum pos">${tk(s.Profit)}</td>
@@ -1488,17 +1515,17 @@ function globalSearch(q){
   const sum=L_customerSummary(), pi=payInfo(), custById={};
   DB.Customers.forEach(function(c){ custById[String(c.ID)]=c; });
   const itemNames={}; DB.SaleItems.forEach(function(i){ const k=String(i.InvoiceNo); itemNames[k]=(itemNames[k]||'')+' '+(i.ProductName||''); });
-  const cu=DB.Customers.filter(function(c){ return match([c.Name,c.Phone,c.Address,c.Email]); }).slice(0,6);
-  const pr=DB.Products.filter(function(p){ return match([p.Name,p.Brand,p.SKU,p.Category,p.Type]); }).slice(0,6);
+  const cu=DB.Customers.filter(function(c){ return match([c.Name,c.Phone,c.Phone2||'',c.Phone3||'',c.Address,c.Email,(c.OldAddresses||[]).map(function(o){ return o.a; }).join(' ')]); }).slice(0,6);
+  const pr=DB.Products.filter(function(p){ return match([p.Name,p.Brand,p.SKU,p.Category,p.Type,p.Defect?'defect '+(p.DefectNote||''):'']); }).slice(0,6);
   const sa=DB.Sales.filter(function(x){ const c=custById[String(x.CustomerID)]||{};
-      return match([x.InvoiceNo,x.CustomerName,c.Phone,c.Address,x.Payment,x.Status,x.Preorder?'preorder pre-order প্রি-অর্ডার':'',x.Note||'',x.DeliverAfter?'delivery after '+x.DeliverAfter:'',itemNames[String(x.InvoiceNo)]||'']); })
+      return match([x.InvoiceNo,x.CustomerName,c.Phone,c.Phone2||'',c.Phone3||'',c.Address,x.Payment,x.Status,x.Preorder?'preorder pre-order প্রি-অর্ডার':'',x.Note||'',x.DeliverAfter?'delivery after '+x.DeliverAfter:'',itemNames[String(x.InvoiceNo)]||'']); })
     .sort(function(a,b){ return new Date(b.Date)-new Date(a.Date); }).slice(0,6);
   let h='';
   if(cu.length) h+='<div class="gs-h">Buyers</div>'+cu.map(function(c){ return `<div class="gs-row"><div><strong>${esc(c.Name)}</strong>
-      <div class="sub">${esc(c.Phone||'')}${c.Address?' · '+esc(c.Address):''}</div><div style="margin-top:5px">${custChips(sum[String(c.ID)])}</div></div>
+      <div class="sub">${esc(custPhones(c).join(' / '))}${c.Address?' · '+esc(c.Address):''}</div><div style="margin-top:5px">${custChips(sum[String(c.ID)])}</div></div>
       <div class="acts"><button class="btn-icon" data-act="customer-hist" data-id="${esc(c.ID)}">History</button>
       <button class="btn-icon" data-act="customer-edit" data-id="${esc(c.ID)}">Edit</button></div></div>`; }).join('');
-  if(pr.length) h+='<div class="gs-h">Dresses</div>'+pr.map(function(p){ return `<div class="gs-row"><div style="display:flex; gap:10px; align-items:center">${thumbHtml(p,'sm')}<div><strong>${esc(p.Name)}</strong>
+  if(pr.length) h+='<div class="gs-h">Dresses</div>'+pr.map(function(p){ return `<div class="gs-row"><div style="display:flex; gap:10px; align-items:center">${thumbHtml(p,'sm')}<div><strong>${esc(p.Name)}</strong>${p.Defect?' <span class="pill defect">⚠️ Defect</span>':''}
       <div class="sub">${esc(p.Brand||'')}${p.SKU?' · SKU '+esc(p.SKU):''} · ${Number(p.Stock)} in stock · Sale ${tk(p.SalePrice)} · Buy ${tk(p.BuyPrice)}</div></div></div>
       <div class="acts"><button class="btn-icon" data-act="product-edit" data-id="${esc(p.ID)}">Edit</button></div></div>`; }).join('');
   if(sa.length) h+='<div class="gs-h">Invoices</div>'+sa.map(function(x){ const pyi=pi(x); return `<div class="gs-row"><div><strong>${esc(x.InvoiceNo)}</strong>
@@ -1655,7 +1682,8 @@ function renderInventory(q){
     const out=Number(p.Stock)<=0;
     return head+`<tr class="${low?'lowstock':''}">
       <td><div style="display:flex; align-items:center; gap:10px">${thumbHtml(p)}<div style="min-width:0"><strong>${esc(p.Name)}</strong>
-        <div class="chips" style="margin-top:3px">${p.Brand?'<span class="pill brand">'+esc(p.Brand)+'</span>':''}${p.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার</span>':''}</div>
+        <div class="chips" style="margin-top:3px">${p.Brand?'<span class="pill brand">'+esc(p.Brand)+'</span>':''}${p.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার</span>':''}${p.Defect?'<span class="pill defect">⚠️ Defect</span>':''}</div>
+        ${p.Defect&&p.DefectNote?'<div style="font-size:12px;color:#c62828;margin-top:3px">⚠️ '+esc(p.DefectNote)+'</div>':''}
         <div class="inv-sub">${esc([p.Category,p.Type,p.Dupatta?('Dupatta: '+p.Dupatta):'',p.SKU].filter(Boolean).join(' · '))}</div></div></div></td>
       <td class="c-det"><div>${esc([p.Category,p.Type].filter(Boolean).join(' · '))}</div>${p.Dupatta?'<div style="font-size:12px;color:var(--muted)">Dupatta: '+esc(p.Dupatta)+'</div>':''}</td>
       <td class="c-sku">${esc(p.SKU||'')}</td>
@@ -1743,6 +1771,8 @@ function productForm(p){
       </div>
       <div class="field"><label>Stock quantity</label><input id="f-stock" type="number" value="${p.Stock!==undefined?p.Stock:''}"></div>
       <div class="field"><label class="chk"><input type="checkbox" id="f-pre" ${p.Preorder?'checked':''}> ✅ প্রি-অর্ডার dress (this is pre-order)</label></div>
+      <div class="field"><label class="chk"><input type="checkbox" id="f-defect" ${p.Defect?'checked':''}> ⚠️ Defect dress</label>
+        <input id="f-defect-note" value="${esc(p.DefectNote||'')}" placeholder="Ki defect? (optional) — e.g. dupatta te daag" style="margin-top:8px;${p.Defect?'':'display:none'}"></div>
       <div class="field"><label>Photo <span style="font-weight:400;color:var(--muted);font-size:11px">— chhoto preview (auto chhoto hoye jabe)</span></label>
         <div style="display:flex; gap:14px; align-items:center">
           <div id="f-photo-box"></div>
@@ -1756,6 +1786,7 @@ function productForm(p){
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
       <button class="btn btn-gold" data-act="product-save" data-id="${esc(p.ID||'')}">Save product</button></div>`);
   bindAttrSelects($('#modal'));
+  const fd=$('#f-defect'); if(fd) fd.onchange=()=>{ $('#f-defect-note').style.display=fd.checked?'':'none'; };
   window._pPhoto=undefined; photoBox(p.Photo||'', '');
   const pf=$('#f-photo-file');
   if(pf) pf.onchange=async function(){
@@ -1782,7 +1813,8 @@ async function saveProduct(id){
     Type:$('#f-type').value.trim(), Dupatta:$('#f-dupatta').value.trim(),
     ShippingCost:$('#f-shipping').value||'0',
     BuyPrice:$('#f-buy').value, SalePrice:$('#f-sale').value, Stock:$('#f-stock').value,
-    Preorder:!!($('#f-pre')&&$('#f-pre').checked) };
+    Preorder:!!($('#f-pre')&&$('#f-pre').checked),
+    Defect:!!($('#f-defect')&&$('#f-defect').checked), DefectNote:($('#f-defect')&&$('#f-defect').checked)?$('#f-defect-note').value.trim():'' };
   if(window._pPhoto!==undefined) item.Photo=window._pPhoto;
   if(!item.Name){ toast('Name is required','err'); return; }
   try{ await api('saveProduct',{item}); closeModal(); toast('Product saved','ok'); viewInventory(); }
@@ -1822,17 +1854,18 @@ function renderCustomers(q){
       ${custTabBar()}<div id="cus-body" class="loading" style="padding:30px"><div class="spin"></div>Loading dues…</div>`;
     loadDues(); return;
   }
-  const list=state.customers.filter(c=>!q || (String(c.Name)+c.Phone+c.Address).toLowerCase().includes(q.toLowerCase()));
+  const list=state.customers.filter(c=>!q || (String(c.Name)+custPhones(c).join(' ')+c.Address+(c.OldAddresses||[]).map(o=>o.a).join(' ')).toLowerCase().includes(q.toLowerCase()));
   const sum=L_customerSummary();
-  const rows=list.map(c=>`<tr>
-      <td><strong>${esc(c.Name)}</strong></td>
-      <td class="tnum">${esc(c.Phone||'')}</td>
+  const rows=list.map(c=>{ const sm=sum[String(c.ID)], tr=custTier(sm?sm.orders:0), ph=custPhones(c);
+    return `<tr${tr?` class="rc" style="--rc:${tr.c}; background:${hexA(tr.c,.12)}"`:''}>
+      <td><strong>${esc(c.Name)}</strong>${tr?`<div style="margin-top:4px"><span class="rc-badge" style="background:${tr.c}">🔁 ${sm.orders} orders</span></div>`:''}</td>
+      <td class="tnum">${ph.length?esc(ph[0])+ph.slice(1).map(x=>'<div style="font-size:12px;color:var(--muted)">'+esc(x)+'</div>').join(''):''}</td>
       <td>${esc(c.Address||'')}</td>
       <td>${custChips(sum[String(c.ID)])}</td>
       <td class="num">
         <button class="btn-icon" data-act="customer-hist" data-id="${esc(c.ID)}">History</button>
         <button class="btn-icon" data-act="customer-edit" data-id="${esc(c.ID)}">Edit</button></td>
-    </tr>`).join('') ||
+    </tr>`; }).join('') ||
     `<tr><td colspan="5" class="empty"><div class="big">No customers yet</div>They'll appear here as you add them.</td></tr>`;
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Customers</div><h2>Buyer directory</h2></div></div>
@@ -1840,6 +1873,7 @@ function renderCustomers(q){
     <div class="toolbar"><div class="search"><span class="mag">⌕</span>
       <input id="cus-search" placeholder="Search name, phone, address…" value="${esc(q)}"></div>
       <span style="color:var(--muted); font-size:13px">${list.length} buyer(s)</span></div>
+    ${tierLegend()}
     <div class="card"><div class="table-wrap"><table>
       <thead><tr><th>Name</th><th>Phone</th><th>Address</th><th>Status</th><th class="num">Actions</th></tr></thead>
       <tbody>${rows}</tbody></table></div></div>`;
@@ -1879,18 +1913,39 @@ function customerForm(c){
     <div class="modal-body">
       <div class="field"><label>Name *</label><input id="c-name" value="${esc(c.Name)}"></div>
       <div class="grid2">
-        <div class="field"><label>Phone</label><input id="c-phone" value="${esc(c.Phone)}"></div>
+        <div class="field"><label>Mobile 1</label><input id="c-phone" type="tel" value="${esc(c.Phone)}"></div>
+        <div class="field"><label>Mobile 2 <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="c-phone2" type="tel" value="${esc(c.Phone2||'')}"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Mobile 3 <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="c-phone3" type="tel" value="${esc(c.Phone3||'')}"></div>
         <div class="field"><label>Email</label><input id="c-email" value="${esc(c.Email)}"></div>
       </div>
-      <div class="field"><label>Address</label><textarea id="c-addr" rows="2">${esc(c.Address)}</textarea></div>
+      <div class="field"><label>Address (current / latest)</label><textarea id="c-addr" rows="2">${esc(c.Address)}</textarea>
+        <div class="hint">Notun address dile ager ta "Old address" e joma thakbe.</div></div>
+      <div class="field" id="c-old-box"></div>
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
       <button class="btn btn-gold" data-act="customer-save" data-id="${esc(c.ID||'')}">Save customer</button></div>`);
+  window._oldAddr=(Array.isArray(c.OldAddresses)?c.OldAddresses:[]).slice(); renderOldAddr();
+}
+function renderOldAddr(){
+  const b=$('#c-old-box'); if(!b) return; const L=window._oldAddr||[];
+  b.innerHTML = L.length ? '<label>Old addresses</label>'+L.map((o,i)=>`<div class="attr-row"><div class="nm" style="font-weight:400">${esc(o.a)}<div style="font-size:11.5px;color:var(--muted)">${o.d?'changed '+fdate(o.d):''}</div></div>
+      <button type="button" class="btn-icon" data-act="addr-old-use" data-i="${i}">Use</button><button type="button" class="btn-icon" data-act="addr-old-del" data-i="${i}">✕</button></div>`).join('') : '';
 }
 async function saveCustomer(id, thenSelect){
   const item={ ID:id||'', Name:$('#c-name').value.trim(), Phone:$('#c-phone').value.trim(),
+    Phone2:$('#c-phone2').value.trim(), Phone3:$('#c-phone3').value.trim(),
     Email:$('#c-email').value.trim(), Address:$('#c-addr').value.trim() };
   if(!item.Name){ toast('Name is required','err'); return; }
+  let olds=(window._oldAddr||[]).slice();
+  const prev=id?state.customers.find(x=>String(x.ID)===String(id)):null, pa=String(prev&&prev.Address||'').trim();
+  if(pa && pa!==item.Address && !olds.some(o=>o.a===pa) &&
+     confirm('Address bodle geche.\n\nOK = ager address ta "Old address" hisebe rekhe dibo\nCancel = shudhu bodle dibo (bhul thik korle)')){
+    olds.unshift({ a:pa, d:dstr(new Date()) });
+  }
+  olds=olds.filter(o=>o.a && o.a!==item.Address);
+  item.OldAddresses=olds;
   try{
     const r=await api('saveCustomer',{item}); closeModal(); toast('Customer saved','ok');
     state.customers=await api('listCustomers');
@@ -1913,6 +1968,12 @@ async function customerHistory(id){
     openModal(`
       <div class="modal-head"><h3>${esc(c.Name||'Customer')}</h3><button class="x" data-act="modal-close">×</button></div>
       <div class="modal-body">
+        ${(()=>{ const ph=custPhones(c), olds=Array.isArray(c.OldAddresses)?c.OldAddresses:[], tr=custTier(h.orders);
+          return `<div class="cinfo">${tr?`<div style="margin-bottom:8px"><span class="rc-badge" style="background:${tr.c}">🔁 Repeat buyer · ${h.orders} orders</span></div>`:''}
+            <div class="lbl">Mobile</div><div>${ph.length?ph.map(esc).join(' &nbsp;·&nbsp; '):'—'}</div>
+            <div class="lbl">Current address</div><div>${esc(c.Address||'—')}</div>
+            ${olds.length?'<div class="lbl">Old addresses</div>'+olds.map(o=>'<div class="old">• '+esc(o.a)+(o.d?' <span style="font-size:11px">(changed '+fdate(o.d)+')</span>':'')+'</div>').join(''):''}
+          </div>`; })()}
         <div class="stat-grid" style="grid-template-columns:1fr 1fr; margin-bottom:16px">
           <div class="card stat"><div class="k">Orders</div><div class="v tnum">${h.orders}</div></div>
           <div class="card stat"><div class="k">Total spent</div><div class="v tnum">${tk(h.totalSpent)}</div></div>
@@ -2032,7 +2093,7 @@ function renderProductList(q){
     const low=Number(p.Stock)<=3;
     return `<div class="pitem" data-act="cart-add" data-id="${esc(p.ID)}">
       ${thumbHtml(p)}
-      <div style="flex:1; min-width:0"><div class="pn">${esc(p.Name)}${p.Preorder?' <span class="pill pre">প্রি-অর্ডার</span>':''}</div>
+      <div style="flex:1; min-width:0"><div class="pn">${esc(p.Name)}${p.Preorder?' <span class="pill pre">প্রি-অর্ডার</span>':''}${p.Defect?' <span class="pill defect">⚠️ Defect</span>':''}</div>
         <div class="pd">${esc(p.Brand||'')} ${p.Size?'· '+esc(p.Size):''} ${p.SKU?'· <strong>SKU: '+esc(p.SKU)+'</strong>':''} · <span class="stock-tag ${low?'low':''}">${Number(p.Stock)} in stock</span></div></div>
       <div class="pr"><div class="tnum" style="font-weight:600">${tk(p.SalePrice)}</div></div>
       <div class="add">＋</div></div>`;}).join('') ||
@@ -2120,7 +2181,7 @@ function renderCart(){
   else{
     box.innerHTML=state.cart.map(i=>`
       <div class="cl">
-        <div class="nm" style="display:flex; align-items:center; gap:8px">${thumbHtml(findProduct(i.id),'sm')}<span>${esc(i.name)}</span></div>
+        <div class="nm" style="display:flex; align-items:center; gap:8px">${thumbHtml(findProduct(i.id),'sm')}<span>${esc(i.name)}${(findProduct(i.id)||{}).Defect?' <span class="pill defect">⚠️ Defect</span>':''}</span></div>
         <div class="lt tnum">${tk(i.qty*i.sale)}</div>
         <div class="qty">
           <button data-act="cart-dec" data-id="${esc(i.id)}">−</button>
@@ -2440,10 +2501,11 @@ function renderReports(d){
       </div>
     </div>
 
-    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
-      <div class="card stat"><div class="k">Total sales</div><div class="v tnum">${tk(s.totalSales)}</div><div class="m">${s.orders} orders · ${s.itemsSold} items</div></div>
-      <div class="card stat green"><div class="k">Net profit</div><div class="v tnum">${tk(s.totalProfit)}</div><div class="m">margin ${pct(s.margin)}</div></div>
-      <div class="card stat"><div class="k">Avg order value</div><div class="v tnum">${tk(s.avgOrder)}</div><div class="m">avg profit ${tk(s.avgProfit)}</div></div>
+    <div class="rep-tiles">
+      <div class="tile emerald"><span class="glyph">৳</span><div class="tk">Total sales</div><div class="tv" data-count="${s.totalSales}">৳0</div><div class="tm">${s.orders} orders · ${s.itemsSold} items</div></div>
+      <div class="tile gold"><span class="glyph">◆</span><div class="tk">Net profit</div><div class="tv" data-count="${s.totalProfit}">৳0</div><div class="tm">margin ${pct(s.margin)}</div></div>
+      <div class="tile indigo"><span class="glyph">▣</span><div class="tk">Avg order value</div><div class="tv" data-count="${s.avgOrder}">৳0</div><div class="tm">avg profit ${tk(s.avgProfit)}</div></div>
+      <div class="tile magenta"><span class="glyph">▤</span><div class="tk">Stock value (buy price)</div><div class="tv" data-count="${d.stock.cost}">৳0</div><div class="tm">${d.stock.qty} pcs in stock · sale value ${tk(d.stock.sale)}</div></div>
     </div>
 
     <div class="card panel" style="margin-bottom:16px">
@@ -2453,11 +2515,10 @@ function renderReports(d){
 
     <div class="card panel" style="margin-bottom:16px">
       <h3>Pre-orders <span class="count">${d.yoy.year} · month by month</span></h3>
-      <div class="stat-grid pre4" style="margin-bottom:14px">
-        <div class="card stat"><div class="k">Pre-orders</div><div class="v tnum">${d.preorder.count}</div><div class="m">in selected dates</div></div>
-        <div class="card stat"><div class="k">Pending</div><div class="v tnum" style="color:#b97800">${d.preorder.pending}</div><div class="m">${d.preorder.delivered} delivered</div></div>
-        <div class="card stat"><div class="k">Pre-order sales</div><div class="v tnum">${tk(d.preorder.amount)}</div><div class="m">after discount</div></div>
-        <div class="card stat"><div class="k">Buy price baki</div><div class="v tnum">${d.preorder.costPending}</div><div class="m">item(s) with Buy ৳ 0</div></div>
+      <div class="rep-tiles three">
+        <div class="tile indigo"><span class="glyph">✅</span><div class="tk">Pre-orders</div><div class="tv" data-count="${d.preorder.count}" data-plain="1">0</div><div class="tm">in selected dates</div></div>
+        <div class="tile gold"><span class="glyph">⏳</span><div class="tk">Pending</div><div class="tv" data-count="${d.preorder.pending}" data-plain="1">0</div><div class="tm">${d.preorder.delivered} delivered</div></div>
+        <div class="tile emerald"><span class="glyph">৳</span><div class="tk">Pre-order sales</div><div class="tv" data-count="${d.preorder.amount}">৳0</div><div class="tm">after discount</div></div>
       </div>
       <canvas id="prechart" height="130"></canvas>
     </div>
@@ -2503,7 +2564,7 @@ function renderReports(d){
         <div>${pays}</div>
       </div>
     </div>`;
-  drawYoY(d); drawPre(d);
+  drawYoY(d); drawPre(d); animateTiles();
 }
 function chartCols(){
   const cs=getComputedStyle(document.documentElement), g=function(n,d){ return (cs.getPropertyValue(n)||'').trim()||d; };
@@ -3025,6 +3086,9 @@ document.addEventListener('click', function(e){
     case 'attr-add': attrAdd(); break;
     case 'attr-ren': attrRename(Number(el.dataset.i)); break;
     case 'attr-del': attrDelete(Number(el.dataset.i)); break;
+    case 'addr-old-del': { const i=Number(el.dataset.i); (window._oldAddr||[]).splice(i,1); renderOldAddr(); break; }
+    case 'addr-old-use': { const L=window._oldAddr||[], i=Number(el.dataset.i), o=L[i]; if(!o) break; const ta=$('#c-addr'), cur=ta.value.trim();
+      L.splice(i,1); if(cur) L.unshift({a:cur, d:dstr(new Date())}); ta.value=o.a; renderOldAddr(); break; }
     case 'pay-mode': setPayMode(el.getAttribute('data-m')); break;
     case 'cart-inc': cartQty(id,1); break;
     case 'cart-dec': cartQty(id,-1); break;
