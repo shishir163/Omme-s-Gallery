@@ -401,6 +401,38 @@
   .pill.pre{background:rgba(124,92,224,.17); color:#6b47d6}
   .pill.pre{white-space:nowrap}
   .pill.amber{background:rgba(240,170,40,.2); color:#b97800}
+  .wa-next{display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:14px; border:none; border-radius:12px;
+    background:#25D366; color:#fff; font-weight:900; font-size:15px; margin:4px 0 14px}
+  .wa-next:disabled{background:var(--line-2); color:var(--muted)}
+  .btn-wa{background:#25D366; color:#fff; border:none; border-radius:8px; padding:7px 11px; font-size:12.5px; font-weight:700; white-space:nowrap}
+  .sent-tag{color:var(--pos); font-weight:700; font-size:12.5px; white-space:nowrap}
+  #wa-text{width:100%; min-height:110px; padding:11px 12px; border:1px solid var(--line-2); border-radius:var(--radius-sm); background:var(--input-bg); color:var(--ink); font:inherit; font-size:15px; resize:vertical}
+  .msum{--m-plum:#3A2340; --m-garnet:#98284B; --m-gold:#B99331; --m-ink:#241726; --m-muted:#7A6E72; --m-line:#E4DCD2;
+    width:760px; background:#FFFDF9; color:var(--m-ink); font-family:'Lato',system-ui,sans-serif; font-weight:400; text-align:left}
+  .msum *{box-sizing:border-box; margin:0; padding:0; font-family:'Lato',system-ui,sans-serif}
+  .msum .mh{background:var(--m-plum); color:#fff; padding:20px 28px; display:flex; align-items:center; gap:16px}
+  .msum .mh img{width:62px; height:62px; border-radius:50%; background:#000}
+  .msum .mh h1{font-size:22px; font-weight:900; letter-spacing:.11em; color:#fff}
+  .msum .mh .sub{font-size:10.5px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; color:var(--m-gold); margin-top:5px}
+  .msum .mh .mon{margin-left:auto; text-align:right}
+  .msum .mh .mon b{display:block; font-size:24px; font-weight:900; letter-spacing:.04em; color:#fff}
+  .msum .mh .mon span{font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:#CBB8CE}
+  .msum .mt{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:18px 28px 6px}
+  .msum .mt div.t{border-radius:12px; padding:13px 14px; color:#fff}
+  .msum .t .k{font-size:10px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; opacity:.92}
+  .msum .t .v{font-size:23px; font-weight:900; margin-top:6px; line-height:1.1}
+  .msum .t .d{font-size:10.5px; font-weight:700; margin-top:5px; opacity:.9}
+  .msum .mrow{display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:14px 28px 4px}
+  .msum h4{font-size:10.5px; font-weight:900; letter-spacing:.18em; text-transform:uppercase; color:var(--m-garnet); margin-bottom:6px}
+  .msum table{width:100%; border-collapse:collapse}
+  .msum td{padding:6px 2px; border-bottom:1px solid var(--m-line); font-size:12.5px; font-weight:700; color:var(--m-ink); height:auto}
+  .msum td.r{text-align:right; white-space:nowrap}
+  .msum td.n{color:var(--m-gold); font-weight:900; width:20px}
+  .msum .mstrip{display:flex; flex-wrap:wrap; gap:8px 22px; padding:12px 28px; margin:12px 28px 0; background:#F8F2E2; border-radius:10px; font-size:12px; font-weight:700; color:var(--m-plum)}
+  .msum .mstrip b{color:var(--m-garnet); font-weight:900}
+  .msum .mfoot{padding:14px 28px 18px; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--m-muted); text-align:center}
+  .pill.st{background:rgba(13,148,136,.16); color:#0f766e; white-space:nowrap}
+  .se-s{padding:6px 8px; border:1px solid var(--line-2); border-radius:7px; background:var(--input-bg); color:var(--ink); width:110px; margin-top:4px; font-size:13px}
   .pill.defect{background:#c62828; color:#fff; white-space:nowrap}
   .rc-badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; color:#fff; white-space:nowrap; vertical-align:1px}
   tr.rc td:first-child{box-shadow:inset 5px 0 0 var(--rc)}
@@ -759,7 +791,8 @@ function L_createSale(sale, items){
     DeliverAfter:sale.DeliverAfter||'', DeliverBy:deliverBy(now.toISOString(), sale.DeliverAfter||'') });
   items.forEach(function(it){
     DB.SaleItems.push({ InvoiceNo:invNo, ProductID:it.ProductID||'', ProductName:it.ProductName||'',
-      Qty:num(it.Qty), SalePrice:num(it.SalePrice), BuyPrice:num(it.BuyPrice), LineTotal:it.LineTotal, LineProfit:it.LineProfit });
+      Qty:num(it.Qty), SalePrice:num(it.SalePrice), BuyPrice:num(it.BuyPrice), LineTotal:it.LineTotal, LineProfit:it.LineProfit,
+      Stitch:it.Stitch||'', Size:it.Size||'' });
   });
   const received = (sale.Paid===''||sale.Paid==null) ? total : num(sale.Paid);
   let due=0;
@@ -803,6 +836,7 @@ function L_updateSale(no, patch, edits){
       if(it.ProductID) addLot(it.ProductID, it.BuyPrice, -d, '');
     }
     if(ed.BuyPrice!==undefined && ed.BuyPrice!==null && ed.BuyPrice!=='' && num(ed.BuyPrice)!==origBP) it.BuyPrice=num(ed.BuyPrice);  // real cost entered after the dress arrived
+    if(ed.Size!==undefined) it.Size=String(ed.Size||'');
     it.Qty=newQty; it.SalePrice=num(ed.SalePrice);
     it.LineTotal=newQty*it.SalePrice; it.LineProfit=newQty*(it.SalePrice-num(it.BuyPrice));
   });
@@ -852,11 +886,46 @@ function delChip(s){
   const late = s.DeliverBy && s.DeliverBy < ymdLocal(new Date());
   return '<span class="pill '+(late?'warn':'amber')+'">🚚 Delivery after '+esc(s.DeliverAfter)+(s.DeliverBy?(late?' · overdue':' · by '+fdate(s.DeliverBy)):'')+'</span>';
 }
-const CUST_TIERS=[{min:31,c:'#7c3aed',l:'30+'},{min:21,c:'#db2777',l:'21–30'},{min:16,c:'#ea580c',l:'16–20'},
+const CUST_TIERS=[{min:101,c:'#b45309',bg:'linear-gradient(135deg,#7c2d12,#d97706 55%,#facc15)',l:'100+ 👑'},{min:81,c:'#be123c',l:'81–100'},
+  {min:51,c:'#0d9488',l:'51–80'},{min:31,c:'#7c3aed',l:'31–50'},{min:21,c:'#db2777',l:'21–30'},{min:16,c:'#ea580c',l:'16–20'},
   {min:11,c:'#ca8a04',l:'11–15'},{min:6,c:'#16a34a',l:'6–10'},{min:2,c:'#0284c7',l:'2–5'}];
+function tierBg(t){ return t.bg||t.c; }
+/* dresses each customer has bought: app sales (minus returns) + dresses typed in from before the app */
+function custDressMap(){
+  const invCust={}, out={};
+  DB.Sales.forEach(function(s){ if(s.CustomerID) invCust[String(s.InvoiceNo)]=String(s.CustomerID); });
+  const g=function(id){ return out[id]||(out[id]={app:0, prev:0, total:0}); };
+  DB.SaleItems.forEach(function(it){ const id=invCust[String(it.InvoiceNo)]; if(id) g(id).app+=num(it.Qty); });
+  const retInv={}; DB.Returns.forEach(function(r){ retInv[String(r.ReturnNo)]=String(r.InvoiceNo||''); });
+  DB.ReturnItems.forEach(function(it){ const id=invCust[retInv[String(it.ReturnNo)]]; if(id) g(id).app-=num(it.Qty); });
+  DB.Customers.forEach(function(c){ const p=num(c.PrevDresses); if(p>0) g(String(c.ID)).prev=p; });
+  Object.keys(out).forEach(function(id){ const o=out[id]; o.app=Math.max(0,o.app); o.total=o.app+o.prev; });
+  return out;
+}
+function dressBadge(dm, big){
+  const tr=custTier(dm?dm.total:0); if(!tr) return '';
+  return '<span class="rc-badge" style="background:'+tierBg(tr)+'">🔁 '+(big?'Repeat buyer · ':'')+dm.total+' dresses'+(big&&dm.prev?' ('+dm.prev+' ager + '+dm.app+' app e)':'')+'</span>';
+}
 function custTier(n){ n=num(n); for(let i=0;i<CUST_TIERS.length;i++){ if(n>=CUST_TIERS[i].min) return CUST_TIERS[i]; } return null; }
 function hexA(h,a){ const n=parseInt(String(h).slice(1),16); return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')'; }
-function tierLegend(){ return '<div class="rc-legend"><span>Repeat buyer colour:</span>'+CUST_TIERS.slice().reverse().map(function(t){ return '<span class="rc-badge" style="background:'+t.c+'">'+t.l+' orders</span>'; }).join('')+'</div>'; }
+function tierLegend(){ return '<div class="rc-legend"><span>Repeat buyer colour:</span>'+CUST_TIERS.slice().reverse().map(function(t){ return '<span class="rc-badge" style="background:'+tierBg(t)+'">'+t.l+'</span>'; }).join('')+'<span>dresses</span></div>'; }
+function stitchLabel(st){ return st==='Stitched'?'🧵 Stitched':(st==='Unstitched'?'✂️ Unstitched':''); }
+function sizeList(txt){ return String(txt||'').split(/[,\/;|]+/).map(function(x){ return x.trim(); }).filter(Boolean); }
+function itemTag(i){ const t=[i&&i.Stitch?stitchLabel(i.Stitch):'', i&&i.Size?'Size '+i.Size:''].filter(Boolean).join(' · '); return t; }
+/* what each customer has bought: stitched / unstitched and which sizes */
+function custStitchMap(){
+  const invCust={}, out={};
+  DB.Sales.forEach(function(s){ if(s.CustomerID) invCust[String(s.InvoiceNo)]=String(s.CustomerID); });
+  DB.SaleItems.forEach(function(it){ const id=invCust[String(it.InvoiceNo)]; if(!id) return;
+    const o=out[id]||(out[id]={st:{}, sz:{}}); if(it.Stitch) o.st[it.Stitch]=1; if(it.Size) o.sz[it.Size]=(o.sz[it.Size]||0)+num(it.Qty||1); });
+  return out;
+}
+function stitchChip(m){
+  if(!m) return ''; const sz=Object.keys(m.sz||{}); let h='';
+  if(m.st.Stitched || sz.length) h+='<span class="pill st">🧵 Stitched'+(sz.length?' · '+sz.map(esc).join(', '):'')+'</span>';
+  if(m.st.Unstitched) h+='<span class="pill st">✂️ Unstitched</span>';
+  return h;
+}
 function custPhones(c){ return [c&&c.Phone, c&&c.Phone2, c&&c.Phone3].map(function(x){ return String(x||'').trim(); }).filter(Boolean); }
 function L_customerSummary(){
   const pi=payInfo(), out={};
@@ -957,10 +1026,20 @@ function L_report(from, to){
   const preDel=[],prePen=[],preAmt=[]; for(let i=0;i<12;i++){ preDel.push(0); prePen.push(0); preAmt.push(0); }
   sales.forEach(function(x){ if(!x.Preorder||!x.Date) return; const d=new Date(x.Date);
     if(d.getFullYear()===thisYear){ const m=d.getMonth(); preAmt[m]+=saleNet(x); if(x.Status==='Pending') prePen[m]++; else preDel[m]++; } });
+  /* dresses sold (returns taken off): selected dates, this month, this year */
+  const retQtyBy={}; DB.ReturnItems.forEach(function(it){ retQtyBy[String(it.ReturnNo)]=(retQtyBy[String(it.ReturnNo)]||0)+num(it.Qty); });
+  const sDate={}; sales.forEach(function(x){ sDate[String(x.InvoiceNo)]=x.Date; });
+  const nowD=new Date(), mKey=ym(nowD), yKey=String(nowD.getFullYear());
+  let dRange=0, dMonth=0, dYear=0;
+  items.forEach(function(it){ const dt=sDate[String(it.InvoiceNo)]; if(!dt) return; const q=num(it.Qty);
+    if(inRange(dt)) dRange+=q; if(ym(dt)===mKey) dMonth+=q; if(yy(dt)===yKey) dYear+=q; });
+  DB.Returns.forEach(function(r){ if(!r.Date) return; const q=retQtyBy[String(r.ReturnNo)]||0;
+    if(inRange(r.Date)) dRange-=q; if(ym(r.Date)===mKey) dMonth-=q; if(yy(r.Date)===yKey) dYear-=q; });
   let stQty=0, stCost=0, stSale=0, stItems=0;
   products.forEach(function(p){ const q=num(p.Stock); if(q>0){ stQty+=q; stItems++; stCost+=q*num(p.BuyPrice); stSale+=q*num(p.SalePrice); } });
   return {
     stock:{ qty:stQty, items:stItems, cost:stCost, sale:stSale },
+    dress:{ range:dRange, month:dMonth, year:dYear },
     range:{from:from||null,to:to||null},
     summary:{ totalSales:netSales, totalProfit:netProfit, grossSales:totalSales, returns:retAmount, retProfit:retProfit,
       orders:orders, itemsSold:itemsSold, totalDiscount:totalDiscount, totalDelivery:totalDelivery, cogs:cogs, subtotal:subtotal,
@@ -1396,9 +1475,9 @@ async function viewDashboard(){
   const months=[]; const now=new Date(); const yr=d.year||now.getFullYear();
   for(let m=0;m<12;m++){ const key=yr+'-'+('0'+(m+1)).slice(-2); months.push({label:MONTHS[m], val:d.monthly[key]||0}); }
 
-  const _cs=L_customerSummary();
-  const custCell=s=>{ const sm=_cs[String(s.CustomerID||'')], tr=custTier(sm?sm.orders:0), nm=esc(s.CustomerName||'Walk-in');
-    return tr?`<span class="rc-name" style="background:${tr.c}" title="${sm.orders} orders">${nm} · ${sm.orders}</span>`:nm; };
+  const _dm=custDressMap();
+  const custCell=s=>{ const dm=_dm[String(s.CustomerID||'')], tr=custTier(dm?dm.total:0), nm=esc(s.CustomerName||'Walk-in');
+    return tr?`<span class="rc-name" style="background:${tierBg(tr)}" title="${dm.total} dresses">${nm} · ${dm.total}</span>`:nm; };
   const recent=(d.recent||[]).map(s=>`
     <tr>
       <td>${esc(s.InvoiceNo)}${(s.Preorder||delChip(s))?'<div class="chips" style="margin-top:3px">'+(s.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার'+(s.Status==='Pending'?' · Pending':'')+'</span>':'')+delChip(s)+'</div>':''}${s.Note?'<div style="margin-top:3px;font-size:11.5px;color:var(--muted)">📝 '+esc(s.Note)+'</div>':''}</td>
@@ -1667,7 +1746,7 @@ async function attrDelete(i){
     state.products=await api('listProducts'); attrManager(f); toast('Deleted','ok');
   }catch(e){ toast(e.message,'err'); }
 }
-function renderInventory(q){
+function renderInventory(q, only){
   let list=state.products.filter(p=>!q || (String(p.Name)+p.Brand+p.SKU+p.Category).toLowerCase().includes(q.toLowerCase()));
   if(state.hideSoldOut) list=list.filter(p=>Number(p.Stock)>0);
   const soldOutCount=state.products.filter(p=>Number(p.Stock)<=0).length;
@@ -1682,7 +1761,8 @@ function renderInventory(q){
     const out=Number(p.Stock)<=0;
     return head+`<tr class="${low?'lowstock':''}">
       <td><div style="display:flex; align-items:center; gap:10px">${thumbHtml(p)}<div style="min-width:0"><strong>${esc(p.Name)}</strong>
-        <div class="chips" style="margin-top:3px">${p.Brand?'<span class="pill brand">'+esc(p.Brand)+'</span>':''}${p.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার</span>':''}${p.Defect?'<span class="pill defect">⚠️ Defect</span>':''}</div>
+        <div class="chips" style="margin-top:3px">${p.Brand?'<span class="pill brand">'+esc(p.Brand)+'</span>':''}${p.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার</span>':''}${p.Defect?'<span class="pill defect">⚠️ Defect</span>':''}${p.Stitch?'<span class="pill st">'+stitchLabel(p.Stitch)+'</span>':''}</div>
+        ${p.Stitch==='Stitched'&&p.Size?'<div style="font-size:12px;color:#0f766e;margin-top:3px">Size: '+esc(p.Size)+'</div>':''}
         ${p.Defect&&p.DefectNote?'<div style="font-size:12px;color:#c62828;margin-top:3px">⚠️ '+esc(p.DefectNote)+'</div>':''}
         <div class="inv-sub">${esc([p.Category,p.Type,p.Dupatta?('Dupatta: '+p.Dupatta):'',p.SKU].filter(Boolean).join(' · '))}</div></div></div></td>
       <td class="c-det"><div>${esc([p.Category,p.Type].filter(Boolean).join(' · '))}</div>${p.Dupatta?'<div style="font-size:12px;color:var(--muted)">Dupatta: '+esc(p.Dupatta)+'</div>':''}</td>
@@ -1695,6 +1775,7 @@ function renderInventory(q){
         <button class="btn-icon" data-act="product-del" data-id="${esc(p.ID)}">✕</button></td>
     </tr>`;}).join('') ||
     `<tr><td colspan="7" class="empty"><div class="big">No products ${state.hideSoldOut?'in stock':'yet'}</div>${state.hideSoldOut?'Turn off the sold-out filter to see all.':'Add your first item to start selling.'}</td></tr>`;
+  if(only && $('#inv-tbody')){ $('#inv-tbody').innerHTML=rows; const ct=$('#inv-count'); if(ct) ct.textContent=list.length+' item(s)'; return; }
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Inventory</div><h2>Products &amp; stock</h2></div>
       <button class="btn btn-gold" data-act="product-new">＋ Add product</button></div>
@@ -1705,11 +1786,11 @@ function renderInventory(q){
       <button class="btn btn-ghost btn-sm" data-act="attr-manage" title="Edit category, brand, type, dupatta lists">⚙ Categories &amp; brands</button>
       <button class="btn btn-ghost btn-sm" data-act="inv-csv-import" title="Import products from CSV">⭱ CSV Import</button>
       <input id="inv-csv-file" type="file" accept=".csv,text/csv" style="display:none">
-      <span style="color:var(--muted); font-size:13px">${list.length} item(s)</span></div>
+      <span id="inv-count" style="color:var(--muted); font-size:13px">${list.length} item(s)</span></div>
     <div class="card"><div class="table-wrap"><table class="inv-tbl">
       <thead><tr><th>Product</th><th class="c-det">Details</th><th class="c-sku">SKU</th><th class="num c-buy">Buy</th><th class="num">Sale</th><th class="num">Stock</th><th class="num"></th></tr></thead>
-      <tbody>${rows}</tbody></table></div></div>`;
-  const s=$('#inv-search'); if(s) s.oninput=()=>{ const v=s.value; renderInventory(v); const n=$('#inv-search'); if(n){n.focus(); n.value=v;} };
+      <tbody id="inv-tbody">${rows}</tbody></table></div></div>`;
+  const s=$('#inv-search'); if(s) s.oninput=()=>renderInventory(s.value, true);
   const so=$('#inv-sort'); if(so) so.onchange=()=>{ state.invSort=so.value; try{ localStorage.setItem('omme_inv_sort', so.value); }catch(e){} renderInventory($('#inv-search')?$('#inv-search').value:''); };
 }
 function thumbHtml(p, cls){
@@ -1770,6 +1851,13 @@ function productForm(p){
         <div class="field"><label>Sale price (৳)</label><input id="f-sale" type="number" value="${p.SalePrice||''}"></div>
       </div>
       <div class="field"><label>Stock quantity</label><input id="f-stock" type="number" value="${p.Stock!==undefined?p.Stock:''}"></div>
+      <div class="field"><label>Stitched / Unstitched</label>
+        <div class="seg" id="f-stitch">
+          <button type="button" class="seg-btn ${p.Stitch==='Unstitched'?'on':''}" data-act="stitch-pick" data-v="Unstitched">✂️ Unstitched</button>
+          <button type="button" class="seg-btn ${p.Stitch==='Stitched'?'on':''}" data-act="stitch-pick" data-v="Stitched">🧵 Stitched</button>
+        </div>
+        <input id="f-size" value="${esc(p.Size||'')}" placeholder="Available size + map — e.g. M (36), L (38), XL (40)" style="margin-top:8px;${p.Stitch==='Stitched'?'':'display:none'}">
+        <div class="hint" id="f-size-hint" style="${p.Stitch==='Stitched'?'':'display:none'}">Koma (,) diye alada korun — sale er somoy ei size gulo theke bachte parben.</div></div>
       <div class="field"><label class="chk"><input type="checkbox" id="f-pre" ${p.Preorder?'checked':''}> ✅ প্রি-অর্ডার dress (this is pre-order)</label></div>
       <div class="field"><label class="chk"><input type="checkbox" id="f-defect" ${p.Defect?'checked':''}> ⚠️ Defect dress</label>
         <input id="f-defect-note" value="${esc(p.DefectNote||'')}" placeholder="Ki defect? (optional) — e.g. dupatta te daag" style="margin-top:8px;${p.Defect?'':'display:none'}"></div>
@@ -1786,6 +1874,7 @@ function productForm(p){
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
       <button class="btn btn-gold" data-act="product-save" data-id="${esc(p.ID||'')}">Save product</button></div>`);
   bindAttrSelects($('#modal'));
+  window._pStitch=p.Stitch||'';
   const fd=$('#f-defect'); if(fd) fd.onchange=()=>{ $('#f-defect-note').style.display=fd.checked?'':'none'; };
   window._pPhoto=undefined; photoBox(p.Photo||'', '');
   const pf=$('#f-photo-file');
@@ -1809,7 +1898,7 @@ async function loadProductLots(id){
 }
 async function saveProduct(id){
   const item={ ID:id||'', Name:$('#f-name').value.trim(), Brand:$('#f-brand').value.trim(),
-    Category:$('#f-cat').value.trim(), Size:'', SKU:$('#f-sku').value.trim(),
+    Category:$('#f-cat').value.trim(), Stitch:window._pStitch||'', Size:(window._pStitch==='Stitched')?$('#f-size').value.trim():'', SKU:$('#f-sku').value.trim(),
     Type:$('#f-type').value.trim(), Dupatta:$('#f-dupatta').value.trim(),
     ShippingCost:$('#f-shipping').value||'0',
     BuyPrice:$('#f-buy').value, SalePrice:$('#f-sale').value, Stock:$('#f-stock').value,
@@ -1831,7 +1920,8 @@ async function viewCustomers(){
 function custTabBar(){
   const t=state.custTab||'list';
   const b=(k,l)=>`<button class="btn btn-sm ${t===k?'btn-gold':'btn-ghost'}" data-act="cus-tab" data-tab="${k}">${l}</button>`;
-  return `<div class="toolbar">${b('list','Customers')}${b('dues','Dues / credit')}<span style="flex:1"></span>
+  return `<div class="toolbar">${b('list','Customers')}${b('dues','Dues / credit')}${b('inactive','💤 Onekdin kenen ni')}${b('wa','📣 WhatsApp')}<span style="flex:1"></span>
+    ${t==='list'?'<button class="btn btn-ghost btn-sm" data-act="cus-export">⤓ Export CSV</button>':''}
     ${t==='list'?'<button class="btn btn-gold btn-sm" data-act="customer-new">＋ Add customer</button>':''}</div>`;
 }
 function payChip(state_, due){
@@ -1847,8 +1937,10 @@ function custChips(sm){
   if(sm.del) h+=delChip(sm.del);
   return '<div class="chips">'+h+'</div>';
 }
-function renderCustomers(q){
+function renderCustomers(q, only){
   const t=state.custTab||'list';
+  if(t==='inactive'){ renderInactive(); return; }
+  if(t==='wa'){ renderWA(); return; }
   if(t==='dues'){
     $('#view').innerHTML=`<div class="view-head"><div><div class="eyebrow">Customers</div><h2>Buyer directory</h2></div></div>
       ${custTabBar()}<div id="cus-body" class="loading" style="padding:30px"><div class="spin"></div>Loading dues…</div>`;
@@ -1856,28 +1948,200 @@ function renderCustomers(q){
   }
   const list=state.customers.filter(c=>!q || (String(c.Name)+custPhones(c).join(' ')+c.Address+(c.OldAddresses||[]).map(o=>o.a).join(' ')).toLowerCase().includes(q.toLowerCase()));
   const sum=L_customerSummary();
-  const rows=list.map(c=>{ const sm=sum[String(c.ID)], tr=custTier(sm?sm.orders:0), ph=custPhones(c);
+  const dmap=custDressMap(), smap=custStitchMap();
+  const rows=list.map(c=>{ const sm=sum[String(c.ID)], dm=dmap[String(c.ID)], tr=custTier(dm?dm.total:0), ph=custPhones(c);
     return `<tr${tr?` class="rc" style="--rc:${tr.c}; background:${hexA(tr.c,.12)}"`:''}>
-      <td><strong>${esc(c.Name)}</strong>${tr?`<div style="margin-top:4px"><span class="rc-badge" style="background:${tr.c}">🔁 ${sm.orders} orders</span></div>`:''}</td>
+      <td><strong>${esc(c.Name)}</strong>${tr?`<div style="margin-top:4px">${dressBadge(dm)}</div>`:''}</td>
       <td class="tnum">${ph.length?esc(ph[0])+ph.slice(1).map(x=>'<div style="font-size:12px;color:var(--muted)">'+esc(x)+'</div>').join(''):''}</td>
       <td>${esc(c.Address||'')}</td>
-      <td>${custChips(sum[String(c.ID)])}</td>
+      <td>${custChips(sum[String(c.ID)])}${(()=>{ const h=stitchChip(smap[String(c.ID)]); return h?'<div class="chips" style="margin-top:5px">'+h+'</div>':''; })()}</td>
       <td class="num">
         <button class="btn-icon" data-act="customer-hist" data-id="${esc(c.ID)}">History</button>
         <button class="btn-icon" data-act="customer-edit" data-id="${esc(c.ID)}">Edit</button></td>
     </tr>`; }).join('') ||
     `<tr><td colspan="5" class="empty"><div class="big">No customers yet</div>They'll appear here as you add them.</td></tr>`;
+  if(only && $('#cus-tbody')){ $('#cus-tbody').innerHTML=rows; const ct=$('#cus-count'); if(ct) ct.textContent=list.length+' buyer(s)'; return; }
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Customers</div><h2>Buyer directory</h2></div></div>
     ${custTabBar()}
     <div class="toolbar"><div class="search"><span class="mag">⌕</span>
       <input id="cus-search" placeholder="Search name, phone, address…" value="${esc(q)}"></div>
-      <span style="color:var(--muted); font-size:13px">${list.length} buyer(s)</span></div>
+      <span id="cus-count" style="color:var(--muted); font-size:13px">${list.length} buyer(s)</span></div>
     ${tierLegend()}
     <div class="card"><div class="table-wrap"><table>
       <thead><tr><th>Name</th><th>Phone</th><th>Address</th><th>Status</th><th class="num">Actions</th></tr></thead>
+      <tbody id="cus-tbody">${rows}</tbody></table></div></div>`;
+  const s=$('#cus-search'); if(s) s.oninput=()=>renderCustomers(s.value, true);
+}
+function customerTable(){
+  const sum=L_customerSummary(), dm=custDressMap(), sm2=custStitchMap(), last={}, spent={};
+  DB.Sales.forEach(function(s){ const id=String(s.CustomerID||''); if(!id) return; spent[id]=(spent[id]||0)+saleNet(s);
+    if(!last[id] || String(s.Date)>last[id]) last[id]=String(s.Date); });
+  const rows=DB.Customers.slice().sort((a,b)=>cmpTxt(a.Name,b.Name)).map(function(c){
+    const id=String(c.ID), sm=sum[id]||{}, d=dm[id]||{app:0,prev:0,total:0}, tr=custTier(d.total);
+    return [c.Name||'', c.Phone||'', c.Phone2||'', c.Phone3||'', c.Email||'', c.Address||'',
+      (c.OldAddresses||[]).map(o=>o.a).join(' | '), sm.orders||0, d.app, d.prev, d.total, tr?tr.l.replace(' 👑',''):'',
+      Math.round(spent[id]||0), Math.round(sm.due||0), last[id]?dstr(last[id]):'',
+      Object.keys((sm2[id]||{}).st||{}).join(' / '), Object.keys((sm2[id]||{}).sz||{}).join(', ') ];
+  });
+  return { head:['Name','Mobile 1','Mobile 2','Mobile 3','Email','Address','Old addresses','Orders (app)',
+    'Dresses (app)','Dresses (before app)','Dresses total','Colour group','Total spent','Due','Last order','Stitched/Unstitched','Sizes bought'], rows:rows };
+}
+function exportCustomers(){ const t=customerTable(); downloadCSV('customers.csv', t.head, t.rows); toast(t.rows.length+' customers exported','ok'); }
+
+/* ===================== EXCEL: everything in one file ===================== */
+function loadScript(src){ return new Promise(function(res,rej){ const x=document.createElement('script'); x.src=src; x.onload=res; x.onerror=function(){ rej(new Error('load failed')); }; document.head.appendChild(x); }); }
+async function exportAllExcel(){
+  toast('Excel file banano hocche…');
+  try{ if(!window.XLSX) await loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'); }
+  catch(e){ toast('Internet lagbe — Excel tool load hoy nai','err'); return; }
+  try{
+    const X=window.XLSX, wb=X.utils.book_new(), pi=payInfo(), cust={}, prod={}, sDate={}, sCust={};
+    DB.Customers.forEach(c=>{ cust[String(c.ID)]=c; }); DB.Products.forEach(p=>{ prod[String(p.ID)]=p; });
+    const add=(name, head, rows)=>{ const ws=X.utils.aoa_to_sheet([head].concat(rows)); ws['!cols']=head.map(h=>({wch:Math.max(10,String(h).length+2)})); X.utils.book_append_sheet(wb, ws, name); };
+    const sales=DB.Sales.slice().sort((a,b)=>String(a.Date).localeCompare(String(b.Date)));
+    add('Sales',['Invoice','Date','Customer','Mobile','Subtotal','Discount','Delivery (invoice only)','Total','Profit','Payment','Status','Pre-order','Pre-order date','Delivery after','Paid status','Due','Note'],
+      sales.map(x=>{ const c=cust[String(x.CustomerID)]||{}, p=pi(x); sDate[String(x.InvoiceNo)]=x.Date; sCust[String(x.InvoiceNo)]=x.CustomerName||'';
+        return [x.InvoiceNo, x.Date?dstr(x.Date):'', x.CustomerName||'Walk-in', c.Phone||'', num(x.Subtotal), num(x.Discount), num(x.Delivery), saleNet(x), num(x.Profit),
+          x.Payment||'', x.Status||'Delivered', x.Preorder?'Yes':'', x.PreorderDate||'', x.DeliverAfter||'', p.state, Math.round(p.due), x.Note||'']; }));
+    add('Sale items',['Invoice','Date','Customer','Product','Brand','Category','Type','Stitched/Unstitched','Size','Qty','Sale price','Buy price','Line total','Line profit'],
+      DB.SaleItems.map(i=>{ const p=prod[String(i.ProductID)]||{}, d=sDate[String(i.InvoiceNo)];
+        return [i.InvoiceNo, d?dstr(d):'', sCust[String(i.InvoiceNo)]||'', i.ProductName||'', p.Brand||'', p.Category||'', p.Type||'', i.Stitch||'', i.Size||'',
+          num(i.Qty), num(i.SalePrice), num(i.BuyPrice), num(i.LineTotal), num(i.LineProfit)]; }));
+    const ct=customerTable(); add('Customers', ct.head, ct.rows);
+    add('Products',['Name','Brand','Category','Type','Dupatta','SKU','Stitched/Unstitched','Sizes','Buy price','Sale price','Stock','Stock value (buy)','Pre-order','Defect','Defect note','Added'],
+      DB.Products.slice().sort((a,b)=>cmpTxt(a.Name,b.Name)).map(p=>[p.Name||'', p.Brand||'', p.Category||'', p.Type||'', p.Dupatta||'', p.SKU||'', p.Stitch||'', p.Size||'',
+        num(p.BuyPrice), num(p.SalePrice), num(p.Stock), Math.max(0,num(p.Stock))*num(p.BuyPrice), p.Preorder?'Yes':'', p.Defect?'Yes':'', p.DefectNote||'', p.CreatedAt?dstr(p.CreatedAt):'']));
+    add('Expenses',['Date','Category','Amount','Note'], DB.Expenses.map(e=>[e.Date?String(e.Date).slice(0,10):'', e.Category||'', num(e.Amount), e.Note||'']));
+    add('Purchases',['PO','Date','Supplier','Total','Paid','Due'], DB.Purchases.map(p=>[p.PurchaseNo, p.Date?dstr(p.Date):'', p.SupplierName||'', num(p.Total), num(p.Paid), num(p.Due)]));
+    add('Dues',['Invoice','Date','Customer','Amount','Paid','Balance'], DB.Dues.map(d=>[d.InvoiceNo||'', d.Date?dstr(d.Date):'', d.CustomerName||'', num(d.Amount), num(d.Paid), num(d.Balance)]));
+    add('Returns',['Return no','Date','Invoice','Customer','Amount','Profit reversed'], DB.Returns.map(r=>[r.ReturnNo, r.Date?dstr(r.Date):'', r.InvoiceNo||'', r.CustomerName||'', num(r.Amount), num(r.ProfitReversed)]));
+    const d=new Date();
+    X.writeFile(wb, 'ommes-gallery-data-'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'.xlsx');
+    toast('Excel downloaded ✦ — Google Drive e rakhte paren','ok');
+  }catch(e){ toast('Excel banano gelo na: '+e.message,'err'); }
+}
+
+/* ===================== MARKETING: inactive buyers + WhatsApp ===================== */
+const WA_DEFAULTS=[
+  {n:'Notun collection', t:"আসসালামু আলাইকুম {name}! 🌸 OMME'S GALLERY তে নতুন collection এসেছে। ছবি আর ভিডিও দেখতে আমাদের Facebook page বা ommesgallery.xyz এ আসুন। পছন্দ হলে এখানেই রিপ্লাই দিন ✦"},
+  {n:'Onekdin dekha nai', t:"আসসালামু আলাইকুম {name}! অনেকদিন আপনার কোনো অর্ডার পাইনি 🥺 আপনার জন্য নতুন কিছু dress রেখেছি। দেখতে চাইলে রিপ্লাই দিন — OMME'S GALLERY ✦"},
+  {n:'Offer', t:"আসসালামু আলাইকুম {name}! 🎉 OMME'S GALLERY তে এখন বিশেষ ছাড় চলছে। আমাদের পুরনো ক্রেতা হিসেবে আপনার জন্য আলাদা সুবিধা আছে। জানতে রিপ্লাই দিন ✦"}];
+function waTemplates(){ const c=getCfg(); return (Array.isArray(c.waTemplates)&&c.waTemplates.length)?c.waTemplates:WA_DEFAULTS.slice(); }
+function saveWaTemplates(L){ const c=Object.assign({}, getCfg()); c.waTemplates=L; setCfg(c); }
+function custLastMap(){ const m={}; DB.Sales.forEach(s=>{ const id=String(s.CustomerID||''); if(!id||!s.Date) return; if(!m[id]||String(s.Date)>m[id]) m[id]=String(s.Date); }); return m; }
+function daysSince(iso){ return Math.floor((Date.now()-new Date(iso).getTime())/86400000); }
+function inactiveList(days){
+  const last=custLastMap(), dm=custDressMap(), out=[];
+  DB.Customers.forEach(c=>{ const id=String(c.ID), l=last[id];
+    if(l){ const d=daysSince(l); if(d>=days) out.push({c:c, last:l, days:d, dm:dm[id]}); }
+    else if(num(c.PrevDresses)>0 || !c.CreatedAt || daysSince(c.CreatedAt)>=days) out.push({c:c, last:'', days:null, dm:dm[id]});
+  });
+  out.sort((a,b)=>((b.dm?b.dm.total:0)-(a.dm?a.dm.total:0)) || ((b.days==null?99999:b.days)-(a.days==null?99999:a.days)));
+  return out;
+}
+function rcRowAttr(dm){ const tr=custTier(dm?dm.total:0); return tr?` class="rc" style="--rc:${tr.c}; background:${hexA(tr.c,.12)}"`:''; }
+function renderInactive(){
+  const days=state.inDays||90, L=inactiveList(days);
+  const opts=[30,60,90,180,365].map(d=>`<button class="btn btn-sm ${d===days?'btn-gold':'btn-ghost'}" data-act="in-days" data-d="${d}">${d} din+</button>`).join('');
+  const rows=L.map(x=>{ const c=x.c, ph=custPhones(c);
+    return `<tr${rcRowAttr(x.dm)}><td><strong>${esc(c.Name)}</strong>${x.dm&&custTier(x.dm.total)?'<div style="margin-top:4px">'+dressBadge(x.dm)+'</div>':''}</td>
+      <td class="tnum">${esc(ph[0]||'—')}</td>
+      <td>${x.last?fdate(x.last)+'<div style="font-size:12px;color:var(--muted)">'+x.days+' din age</div>':'<span style="color:var(--muted)">App e kono order nei</span>'}</td>
+      <td class="num tnum">${x.dm?x.dm.total:0}</td>
+      <td class="num">${ph.length?`<button class="btn-wa" data-act="wa-one" data-id="${esc(c.ID)}">WhatsApp</button>`:''}
+        <button class="btn-icon" data-act="customer-hist" data-id="${esc(c.ID)}">History</button></td></tr>`; }).join('')
+    || `<tr><td colspan="5" class="empty">${days} din er beshi kenen ni emon keu nei ✦</td></tr>`;
+  $('#view').innerHTML=`<div class="view-head"><div><div class="eyebrow">Customers</div><h2>Buyer directory</h2></div></div>
+    ${custTabBar()}
+    <div class="toolbar"><span style="font-size:13px;color:var(--muted)">Shesh order er por koto din:</span>${opts}<span style="flex:1"></span>
+      <button class="btn btn-ghost btn-sm" data-act="in-export">⤓ CSV</button>
+      <button class="btn-wa" style="padding:9px 14px" data-act="wa-from-inactive">📣 Ei ${L.length} jon ke WhatsApp</button></div>
+    <p style="font-size:12.5px;color:var(--muted);margin:-6px 0 12px">Beshi dress newa customer upore. "App e kono order nei" = app shuru korar ager customer.</p>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Mobile</th><th>Last order</th><th class="num">Dresses</th><th class="num"></th></tr></thead>
       <tbody>${rows}</tbody></table></div></div>`;
-  const s=$('#cus-search'); if(s) s.oninput=()=>{ const v=s.value; renderCustomers(v); const n=$('#cus-search'); if(n){n.focus(); n.value=v;} };
+}
+function exportInactive(){
+  const days=state.inDays||90, L=inactiveList(days);
+  downloadCSV('inactive-'+days+'-days.csv',['Name','Mobile 1','Mobile 2','Address','Last order','Days since','Dresses total'],
+    L.map(x=>[x.c.Name||'', x.c.Phone||'', x.c.Phone2||'', x.c.Address||'', x.last?dstr(x.last):'', x.days==null?'':x.days, x.dm?x.dm.total:0]));
+  toast(L.length+' customers exported','ok');
+}
+function waAudience(){
+  const a=state.waAud||'all', dm=custDressMap();
+  let L;
+  if(a==='inactive') L=inactiveList(state.inDays||90).map(x=>x.c);
+  else if(a==='repeat') L=DB.Customers.filter(c=>{ const d=dm[String(c.ID)]; return d&&d.total>=2; });
+  else if(a==='big') L=DB.Customers.filter(c=>{ const d=dm[String(c.ID)]; return d&&d.total>=11; });
+  else L=DB.Customers.slice().sort((x,y)=>cmpTxt(x.Name,y.Name));
+  return L;
+}
+function waSentKey(){ return 'omme_wa_sent_'+(state.waTpl||0)+'_'+(state.waAud||'all'); }
+function waSentSet(){ try{ return new Set(JSON.parse(localStorage.getItem(waSentKey())||'[]')); }catch(e){ return new Set(); } }
+function waMark(id){ const s2=waSentSet(); s2.add(String(id)); try{ localStorage.setItem(waSentKey(), JSON.stringify(Array.from(s2))); }catch(e){} }
+function waText(c){
+  const t=(state.waDraft!=null?state.waDraft:(waTemplates()[state.waTpl||0]||{}).t)||'';
+  return t.replace(/\{name\}/g, String(c.Name||'').trim());
+}
+function waOpen(c){
+  const n=waNumber(c.Phone||c.Phone2||c.Phone3); if(!n){ toast('Ei customer er mobile nei','err'); return false; }
+  window.open('https://wa.me/'+n+'?text='+encodeURIComponent(waText(c)),'_blank'); return true;
+}
+function renderWA(){
+  const T=waTemplates(), ti=Math.min(state.waTpl||0, T.length-1); state.waTpl=ti;
+  if(state.waDraft==null) state.waDraft=T[ti].t;
+  const aud=state.waAud||'all', L=waAudience(), sent=waSentSet(), dm=custDressMap();
+  const withPh=L.filter(c=>custPhones(c).length), next=withPh.find(c=>!sent.has(String(c.ID)));
+  const ab=(k,l)=>`<button class="btn btn-sm ${aud===k?'btn-gold':'btn-ghost'}" data-act="wa-aud" data-a="${k}">${l}</button>`;
+  const rows=L.map(c=>{ const ph=custPhones(c), d=dm[String(c.ID)], done=sent.has(String(c.ID));
+    return `<tr${rcRowAttr(d)}><td><strong>${esc(c.Name)}</strong>${d&&custTier(d.total)?'<div style="margin-top:4px">'+dressBadge(d)+'</div>':''}</td>
+      <td class="tnum">${esc(ph[0]||'—')}</td>
+      <td class="num">${!ph.length?'<span style="color:var(--muted);font-size:12px">mobile nei</span>':(done?'<span class="sent-tag">✓ sent</span> <button class="btn-icon" data-act="wa-send" data-id="'+esc(c.ID)+'">abar</button>':'<button class="btn-wa" data-act="wa-send" data-id="'+esc(c.ID)+'">Send</button>')}</td></tr>`; }).join('')
+    || '<tr><td colspan="3" class="empty">Ei group e keu nei.</td></tr>';
+  $('#view').innerHTML=`<div class="view-head"><div><div class="eyebrow">Customers</div><h2>Buyer directory</h2></div></div>
+    ${custTabBar()}
+    <div class="row2">
+      <div class="card panel">
+        <h3>Message</h3>
+        <div class="toolbar" style="margin-bottom:10px">
+          <select id="wa-tpl" style="flex:1; min-width:0; padding:9px 10px; border:1px solid var(--line-2); border-radius:9px; background:var(--input-bg); color:var(--ink); font:inherit; font-size:14px">
+            ${T.map((x,i)=>`<option value="${i}" ${i===ti?'selected':''}>${esc(x.n)}</option>`).join('')}</select>
+          <button class="btn btn-ghost btn-sm" data-act="wa-tpl-new">＋ New</button>
+          <button class="btn btn-ghost btn-sm" data-act="wa-tpl-del">✕</button></div>
+        <textarea id="wa-text">${esc(state.waDraft)}</textarea>
+        <div style="display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap">
+          <button class="btn btn-gold btn-sm" data-act="wa-tpl-save">Save message</button>
+          <span style="font-size:12px;color:var(--muted)">{name} er jaygay customer er nam boshe jabe</span></div>
+      </div>
+      <div class="card panel">
+        <h3>Kader pathaben</h3>
+        <div class="toolbar" style="margin-bottom:8px">${ab('all','Sobai')}${ab('repeat','Repeat (2+ dress)')}${ab('big','11+ dress')}${ab('inactive','Onekdin kenen ni ('+(state.inDays||90)+' din+)')}</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:6px">${L.length} jon · mobile ache ${withPh.length} · pathano hoyeche ${withPh.filter(c=>sent.has(String(c.ID))).length}</div>
+        <button class="wa-next" data-act="wa-next" ${next?'':'disabled'}>${next?'▶ Porer jon: '+esc(next.Name):'✓ Sobaike pathano hoyeche'}</button>
+        <div style="font-size:12px;color:var(--muted)">Prottek bar WhatsApp khulbe — Send chepe app e fire ashun, tarpor abar "Porer jon". <a href="#" data-act="wa-reset">Notun kore shuru</a></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px"><div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Mobile</th><th class="num"></th></tr></thead>
+      <tbody>${rows}</tbody></table></div></div>`;
+  const ta=$('#wa-text'); if(ta) ta.oninput=()=>{ state.waDraft=ta.value; };
+  const ts=$('#wa-tpl'); if(ts) ts.onchange=()=>{ state.waTpl=Number(ts.value); state.waDraft=null; renderWA(); };
+}
+function waSend(id){ const c=DB.Customers.find(x=>String(x.ID)===String(id)); if(!c) return; if(waOpen(c)){ waMark(c.ID); renderWA(); } }
+function waNext(){ const sent=waSentSet(); const c=waAudience().filter(x=>custPhones(x).length).find(x=>!sent.has(String(x.ID))); if(c) waSend(c.ID); }
+function waTplSave(){
+  const T=waTemplates(), i=state.waTpl||0; const t=($('#wa-text').value||'').trim(); if(!t){ toast('Message faka','err'); return; }
+  T[i]=Object.assign({}, T[i], {t:t}); saveWaTemplates(T); state.waDraft=t; toast('Message saved ✦','ok');
+}
+function waTplNew(){
+  const n=(prompt('Notun message er nam (e.g. Eid offer):')||'').trim(); if(!n) return;
+  const T=waTemplates(); T.push({n:n, t:"আসসালামু আলাইকুম {name}! "}); saveWaTemplates(T); state.waTpl=T.length-1; state.waDraft=null; renderWA();
+}
+function waTplDel(){
+  const T=waTemplates(); if(T.length<=1){ toast('Ontoto ekta message thakte hobe','err'); return; }
+  if(!confirm('"'+T[state.waTpl||0].n+'" message ta muche dibo?')) return;
+  T.splice(state.waTpl||0,1); saveWaTemplates(T); state.waTpl=0; state.waDraft=null; renderWA();
 }
 async function loadDues(){
   try{
@@ -1920,6 +2184,8 @@ function customerForm(c){
         <div class="field"><label>Mobile 3 <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="c-phone3" type="tel" value="${esc(c.Phone3||'')}"></div>
         <div class="field"><label>Email</label><input id="c-email" value="${esc(c.Email)}"></div>
       </div>
+      <div class="field"><label>Ager dress <span style="font-weight:400;color:var(--muted)">(app shuru korar age koyta dress niyeche)</span></label>
+        <input id="c-prev" type="number" min="0" value="${num(c.PrevDresses)||''}" placeholder="0"></div>
       <div class="field"><label>Address (current / latest)</label><textarea id="c-addr" rows="2">${esc(c.Address)}</textarea>
         <div class="hint">Notun address dile ager ta "Old address" e joma thakbe.</div></div>
       <div class="field" id="c-old-box"></div>
@@ -1935,7 +2201,7 @@ function renderOldAddr(){
 }
 async function saveCustomer(id, thenSelect){
   const item={ ID:id||'', Name:$('#c-name').value.trim(), Phone:$('#c-phone').value.trim(),
-    Phone2:$('#c-phone2').value.trim(), Phone3:$('#c-phone3').value.trim(),
+    Phone2:$('#c-phone2').value.trim(), Phone3:$('#c-phone3').value.trim(), PrevDresses:Math.max(0,Number($('#c-prev').value)||0),
     Email:$('#c-email').value.trim(), Address:$('#c-addr').value.trim() };
   if(!item.Name){ toast('Name is required','err'); return; }
   let olds=(window._oldAddr||[]).slice();
@@ -1960,7 +2226,7 @@ async function customerHistory(id){
     const h=await api('customerHistory',{id});
     const rows=(h.sales||[]).map(s=>`<tr><td>${esc(s.InvoiceNo)}
           <div class="chips" style="margin-top:4px">${s.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার'+(s.PreorderDate?' · '+fdate(s.PreorderDate):'')+'</span>':''}
-            <span class="pill ${(s.Status||'Delivered')==='Pending'?'amber':'pos'}">${esc(s.Status||'Delivered')}</span>${payChip(s.PayState, s.DueAmt)}${delChip(s)}</div>${s.Note?'<div style="margin-top:4px;font-size:12px;color:var(--muted)">📝 '+esc(s.Note)+'</div>':''}</td>
+            <span class="pill ${(s.Status||'Delivered')==='Pending'?'amber':'pos'}">${esc(s.Status||'Delivered')}</span>${payChip(s.PayState, s.DueAmt)}${delChip(s)}</div>${(()=>{ const its=DB.SaleItems.filter(x=>String(x.InvoiceNo)===String(s.InvoiceNo)); return its.length?'<div style="margin-top:4px;font-size:12px">'+its.map(x=>'👗 '+esc(x.ProductName)+(num(x.Qty)>1?' ×'+num(x.Qty):'')+(itemTag(x)?' <span class="pill st" style="font-size:10.5px;padding:1px 7px">'+esc(itemTag(x))+'</span>':'')).join('<br>')+'</div>':''; })()}${s.Note?'<div style="margin-top:4px;font-size:12px;color:var(--muted)">📝 '+esc(s.Note)+'</div>':''}</td>
         <td>${fdate(s.Date)}</td><td class="num tnum">${tk(saleNet(s))}</td>
         <td class="num" style="white-space:nowrap"><button class="btn-icon" data-act="sale-view" data-inv="${esc(s.InvoiceNo)}">View</button>
           <button class="btn-icon" data-act="sale-edit" data-inv="${esc(s.InvoiceNo)}" data-from="hist" data-cid="${esc(id)}">Edit</button></td></tr>`).join('')
@@ -1968,8 +2234,8 @@ async function customerHistory(id){
     openModal(`
       <div class="modal-head"><h3>${esc(c.Name||'Customer')}</h3><button class="x" data-act="modal-close">×</button></div>
       <div class="modal-body">
-        ${(()=>{ const ph=custPhones(c), olds=Array.isArray(c.OldAddresses)?c.OldAddresses:[], tr=custTier(h.orders);
-          return `<div class="cinfo">${tr?`<div style="margin-bottom:8px"><span class="rc-badge" style="background:${tr.c}">🔁 Repeat buyer · ${h.orders} orders</span></div>`:''}
+        ${(()=>{ const ph=custPhones(c), olds=Array.isArray(c.OldAddresses)?c.OldAddresses:[], dm=custDressMap()[String(c.ID)], tr=custTier(dm?dm.total:0);
+          return `<div class="cinfo">${tr?`<div style="margin-bottom:8px">${dressBadge(dm,true)}</div>`:''}
             <div class="lbl">Mobile</div><div>${ph.length?ph.map(esc).join(' &nbsp;·&nbsp; '):'—'}</div>
             <div class="lbl">Current address</div><div>${esc(c.Address||'—')}</div>
             ${olds.length?'<div class="lbl">Old addresses</div>'+olds.map(o=>'<div class="old">• '+esc(o.a)+(o.d?' <span style="font-size:11px">(changed '+fdate(o.d)+')</span>':'')+'</div>').join(''):''}
@@ -1997,7 +2263,7 @@ async function saleEditForm(inv, from, cid){
     const sl=r.sale;
     const copts=custs.map(c=>`<option value="${esc(c.ID)}" ${String(sl.CustomerID)===String(c.ID)?'selected':''}>${esc(c.Name)}${c.Phone?' — '+esc(c.Phone):''}</option>`).join('');
     const lines=r.items.map(i=>`<tr>
-        <td>${esc(i.ProductName)}<div style="font-size:11px;color:var(--muted)">qty 0 = remove</div></td>
+        <td>${esc(i.ProductName)}<div style="font-size:11px;color:var(--muted)">qty 0 = remove</div>${(i.Stitch==='Stitched'||i.Size)?`<input class="se-s" data-k="${esc(i._k)}" value="${esc(i.Size||'')}" placeholder="Size">`:''}</td>
         <td class="num"><input class="se-q" data-k="${esc(i._k)}" type="number" min="0" value="${num(i.Qty)}" style="width:56px;text-align:right"></td>
         <td class="num"><input class="se-p" data-k="${esc(i._k)}" type="number" min="0" value="${num(i.SalePrice)}" style="width:76px;text-align:right"></td>
         <td class="num"><input class="se-b" data-k="${esc(i._k)}" type="number" min="0" value="${num(i.BuyPrice)}" style="width:76px;text-align:right"></td></tr>`).join('');
@@ -2038,9 +2304,9 @@ function saleEditRead(){
   const edits={}; let subtotal=0, kept=0, cost=0;
   document.querySelectorAll('.se-q').forEach(q=>{
     const k=q.dataset.k, sel=function(c){ return document.querySelector('.'+c+'[data-k="'+k.replace(/"/g,'\\"')+'"]'); };
-    const p=sel('se-p'), b=sel('se-b');
+    const p=sel('se-p'), b=sel('se-b'), z=sel('se-s');
     const qty=Math.max(0,Number(q.value)||0), price=Math.max(0,Number(p?p.value:0)||0), buy=Math.max(0,Number(b?b.value:0)||0);
-    edits[k]={Qty:qty, SalePrice:price, BuyPrice:buy}; subtotal+=qty*price; cost+=qty*buy; if(qty>0) kept++;
+    edits[k]={Qty:qty, SalePrice:price, BuyPrice:buy}; if(z) edits[k].Size=z.value.trim(); subtotal+=qty*price; cost+=qty*buy; if(qty>0) kept++;
   });
   const disc=Number($('#se-disc').value)||0, deliv=Number($('#se-deliv').value)||0, recv=Number($('#se-recv').value)||0;
   return { edits, kept, subtotal, disc, deliv, recv, net:subtotal-disc, profit:subtotal-cost-disc };
@@ -2094,7 +2360,7 @@ function renderProductList(q){
     return `<div class="pitem" data-act="cart-add" data-id="${esc(p.ID)}">
       ${thumbHtml(p)}
       <div style="flex:1; min-width:0"><div class="pn">${esc(p.Name)}${p.Preorder?' <span class="pill pre">প্রি-অর্ডার</span>':''}${p.Defect?' <span class="pill defect">⚠️ Defect</span>':''}</div>
-        <div class="pd">${esc(p.Brand||'')} ${p.Size?'· '+esc(p.Size):''} ${p.SKU?'· <strong>SKU: '+esc(p.SKU)+'</strong>':''} · <span class="stock-tag ${low?'low':''}">${Number(p.Stock)} in stock</span></div></div>
+        <div class="pd">${esc(p.Brand||'')} ${p.Stitch?'· '+stitchLabel(p.Stitch):''}${p.Stitch==='Stitched'&&p.Size?' ('+esc(p.Size)+')':''} ${p.SKU?'· <strong>SKU: '+esc(p.SKU)+'</strong>':''} · <span class="stock-tag ${low?'low':''}">${Number(p.Stock)} in stock</span></div></div>
       <div class="pr"><div class="tnum" style="font-weight:600">${tk(p.SalePrice)}</div></div>
       <div class="add">＋</div></div>`;}).join('') ||
     `<div class="empty">No products. Add some in Inventory first.</div>`;
@@ -2175,6 +2441,14 @@ function setPayMode(m){
   renderCart();
   if(m==='adv'){ try{ inp.focus(); }catch(e){} }
 }
+function cartSizeHtml(i){
+  const p=findProduct(i.id)||{}; if(p.Stitch!=='Stitched') return '';
+  const L=sizeList(p.Size);
+  if(L.length===1 && !i.size) i.size=L[0];
+  const ctl = L.length ? '<select class="se-s" data-cart-size="'+esc(i.id)+'"><option value="">— size —</option>'+L.map(function(z){ return '<option'+(i.size===z?' selected':'')+'>'+esc(z)+'</option>'; }).join('')+'</select>'
+                       : '<input class="se-s" data-cart-size="'+esc(i.id)+'" value="'+esc(i.size||'')+'" placeholder="Size">';
+  return '<div style="grid-column:1/-1; display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted)">🧵 Size '+ctl+'</div>';
+}
 function renderCart(){
   const box=$('#cart-lines'); if(!box) return;
   if(!state.cart.length){ box.innerHTML='<div class="empty" style="padding:24px 0">Tap a product to add it.</div>'; }
@@ -2189,7 +2463,9 @@ function renderCart(){
           <button data-act="cart-inc" data-id="${esc(i.id)}">+</button>
         </div>
         <div style="text-align:right"><button class="rm" data-act="cart-del" data-id="${esc(i.id)}">✕ remove</button></div>
+        ${cartSizeHtml(i)}
       </div>`).join('');
+    box.querySelectorAll('[data-cart-size]').forEach(function(el){ const f=function(){ const it=state.cart.find(x=>String(x.id)===el.dataset.cartSize); if(it) it.size=el.value.trim(); }; el.onchange=f; el.oninput=f; });
   }
   const t=cartTotals(); const tbox=$('#cart-tot');
   const recv=$('#s-received')?$('#s-received').value:'';
@@ -2234,7 +2510,8 @@ async function saveSale(){
     Preorder:!!($('#s-pre')&&$('#s-pre').checked), PreorderDate:($('#s-predate')?$('#s-predate').value:''),
     DeliverAfter:($('#s-delafter')?$('#s-delafter').value:''), Note:($('#s-note')?$('#s-note').value.trim():''),
     Paid: recVal===''? '' : (Number(recVal)||0) };
-  const items=state.cart.map(i=>({ ProductID:i.id, ProductName:i.name, Qty:i.qty, SalePrice:i.sale, BuyPrice:i.buy }));
+  const items=state.cart.map(i=>{ const pp=findProduct(i.id)||{}; return { ProductID:i.id, ProductName:i.name, Qty:i.qty, SalePrice:i.sale, BuyPrice:i.buy,
+    Stitch:pp.Stitch||'', Size:pp.Stitch==='Stitched'?(i.size||''):'' }; });
   const btn=document.querySelector('[data-act="sale-save"]'); if(btn){ btn.textContent='Saving…'; btn.disabled=true; }
   try{
     const r=await api('createSale',{sale, items});
@@ -2243,7 +2520,7 @@ async function saveSale(){
       Preorder:sale.Preorder, PreorderDate:sale.PreorderDate, Note:sale.Note, DeliverAfter:sale.DeliverAfter, Status:sale.Status,
       Subtotal:r.subtotal, Discount:r.discount, Delivery:r.delivery, Total:r.total, Payment:sale.Payment,
       Received:r.received, Due:r.due },
-      state.cart.map(i=>({ProductName:i.name, Qty:i.qty, SalePrice:i.sale, LineTotal:i.qty*i.sale})));
+      items.map(i=>({ProductName:i.ProductName, Qty:i.Qty, SalePrice:i.SalePrice, LineTotal:i.Qty*i.SalePrice, Stitch:i.Stitch, Size:i.Size})));
     state.cart=[]; state.customerId='';
     state.products=await api('listProducts'); // refresh stock
     ['s-received','s-disc','s-deliv'].forEach(function(id){ const el=$('#'+id); if(el) el.value = id==='s-received'?'':'0'; });
@@ -2269,7 +2546,7 @@ function showInvoice(sale, items){
   const pst = due0<=0 ? 'paid' : (rec<=0 ? 'cod' : 'adv');
   const paidShown = pst==='paid' ? payable : Math.min(rec,payable);
   const dueShown = Math.max(payable-paidShown,0);
-  const rows=(items||[]).map((i,n)=>`<tr><td><span class="og-rowno">${n+1}</span></td><td>${esc(i.ProductName)}</td>
+  const rows=(items||[]).map((i,n)=>`<tr><td><span class="og-rowno">${n+1}</span></td><td>${esc(i.ProductName)}${(i.Stitch||i.Size)?' <span style="color:#7A6E72;font-weight:400">('+esc([i.Stitch||'', i.Size?'Size '+i.Size:''].filter(Boolean).join(' · '))+')</span>':''}</td>
       <td class="r">${num(i.Qty)}</td><td class="r">${tk(i.SalePrice).replace('৳','')}</td><td class="r">${tk(i.LineTotal!==undefined?i.LineTotal:num(i.Qty)*num(i.SalePrice)).replace('৳','')}</td></tr>`);
   while(rows.length<4) rows.push(`<tr><td><span class="og-rowno">${rows.length+1}</span></td><td>&nbsp;</td><td class="r"></td><td class="r"></td><td class="r"></td></tr>`);
   const chip=(grp,v,label,on,radio)=>`<span class="og-chip ${on?'on':''}" data-act="og-chip" data-grp="${grp}" data-v="${v}" ${radio?'data-radio="1"':''}>${label}</span>`;
@@ -2485,7 +2762,8 @@ function renderReports(d){
   const gross=s.subtotal - s.cogs;
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Analytics</div><h2>Reports</h2></div>
-      <button class="btn btn-ghost btn-sm" data-act="rep-export-sales">⤓ Export sales CSV</button></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap"><button class="btn btn-gold btn-sm" data-act="month-sum">🗓 Masher saransho</button>
+      <button class="btn btn-ghost btn-sm" data-act="rep-export-sales">⤓ Export sales CSV</button></div></div>
 
     <div class="card panel" style="margin-bottom:18px">
       <div class="toolbar" style="margin-bottom:0">
@@ -2506,6 +2784,11 @@ function renderReports(d){
       <div class="tile gold"><span class="glyph">◆</span><div class="tk">Net profit</div><div class="tv" data-count="${s.totalProfit}">৳0</div><div class="tm">margin ${pct(s.margin)}</div></div>
       <div class="tile indigo"><span class="glyph">▣</span><div class="tk">Avg order value</div><div class="tv" data-count="${s.avgOrder}">৳0</div><div class="tm">avg profit ${tk(s.avgProfit)}</div></div>
       <div class="tile magenta"><span class="glyph">▤</span><div class="tk">Stock value (buy price)</div><div class="tv" data-count="${d.stock.cost}">৳0</div><div class="tm">${d.stock.qty} pcs in stock · sale value ${tk(d.stock.sale)}</div></div>
+    </div>
+    <div class="rep-tiles three">
+      <div class="tile indigo"><span class="glyph">👗</span><div class="tk">Dress sold · This month</div><div class="tv" data-count="${d.dress.month}" data-plain="1">0</div><div class="tm">${MONTHS[new Date().getMonth()]} ${new Date().getFullYear()} · returns bad diye</div></div>
+      <div class="tile emerald"><span class="glyph">👗</span><div class="tk">Dress sold · This year</div><div class="tv" data-count="${d.dress.year}" data-plain="1">0</div><div class="tm">${new Date().getFullYear()} · returns bad diye</div></div>
+      <div class="tile gold"><span class="glyph">👗</span><div class="tk">Dress sold · Selected dates</div><div class="tv" data-count="${d.dress.range}" data-plain="1">0</div><div class="tm">${r.from?fdate(r.from):'shuru'} → ${r.to?fdate(r.to):'aj'}</div></div>
     </div>
 
     <div class="card panel" style="margin-bottom:16px">
@@ -2565,6 +2848,86 @@ function renderReports(d){
       </div>
     </div>`;
   drawYoY(d); drawPre(d); animateTiles();
+}
+function L_monthSummary(mk){
+  const q=mk.split('-'), y=+q[0], m=+q[1]-1, pk=ym(new Date(y,m-1,1));
+  const calc=function(key){
+    const S=DB.Sales.filter(s=>s.Date&&ym(s.Date)===key), inv={}; S.forEach(s=>{ inv[String(s.InvoiceNo)]=s; });
+    let sales=0, profit=0, pre=0; S.forEach(s=>{ sales+=saleNet(s); profit+=num(s.Profit); if(s.Preorder) pre++; });
+    let dresses=0; const pAgg={};
+    DB.SaleItems.forEach(it=>{ if(!inv[String(it.InvoiceNo)]) return; const qn=num(it.Qty); dresses+=qn;
+      const k=it.ProductName||'—'; (pAgg[k]=pAgg[k]||{name:k,qty:0,rev:0}); pAgg[k].qty+=qn; pAgg[k].rev+=num(it.LineTotal); });
+    const retNo={}; DB.Returns.forEach(r=>{ if(r.Date&&ym(r.Date)===key){ sales-=num(r.Amount); profit-=num(r.ProfitReversed); retNo[String(r.ReturnNo)]=1; } });
+    DB.ReturnItems.forEach(it=>{ if(retNo[String(it.ReturnNo)]) dresses-=num(it.Qty); });
+    return { S:S, sales:sales, profit:profit, orders:S.length, dresses:dresses, pre:pre, pAgg:pAgg };
+  };
+  const a=calc(mk), b=calc(pk);
+  const cAgg={}; a.S.forEach(s=>{ const k=String(s.CustomerID||''); if(!k) return; (cAgg[k]=cAgg[k]||{name:s.CustomerName||'—',orders:0,spent:0}); cAgg[k].orders++; cAgg[k].spent+=saleNet(s); });
+  const first={}; DB.Sales.forEach(s=>{ const k=String(s.CustomerID||''); if(k&&s.Date&&(!first[k]||String(s.Date)<first[k])) first[k]=String(s.Date); });
+  let nNew=0, nRep=0; Object.keys(cAgg).forEach(k=>{ const c=DB.Customers.find(x=>String(x.ID)===k)||{};
+    if(ym(first[k])===mk && !(num(c.PrevDresses)>0)) nNew++; else nRep++; });
+  const pay={}; a.S.forEach(s=>{ const k=s.Payment||'Cash'; pay[k]=(pay[k]||0)+saleNet(s); });
+  return { label:MONTHS[m]+' '+y, prevLabel:MONTHS[(m+11)%12], cur:a, prev:b,
+    top:Object.keys(a.pAgg).map(k=>a.pAgg[k]).sort((x,z)=>z.qty-x.qty||z.rev-x.rev).slice(0,5),
+    topCust:Object.keys(cAgg).map(k=>cAgg[k]).sort((x,z)=>z.spent-x.spent).slice(0,3),
+    nNew:nNew, nRep:nRep, walkin:a.S.filter(s=>!s.CustomerID).length, pay:pay };
+}
+function monthSumHTML(d){
+  const c=d.cur, p=d.prev;
+  const delta=(x,y)=>{ if(!y) return 'gotomas: —'; const ch=Math.round((x-y)/Math.abs(y)*100); return (ch>=0?'▲ ':'▼ ')+Math.abs(ch)+'% vs '+d.prevLabel; };
+  const tile=(bg,k,v,dl)=>`<div class="t" style="background:${bg}"><div class="k">${k}</div><div class="v">${v}</div><div class="d">${dl}</div></div>`;
+  const top=d.top.map((x,i)=>`<tr><td class="n">${i+1}</td><td>${esc(x.name)}</td><td class="r">${x.qty} pcs</td></tr>`).join('')||'<tr><td>—</td></tr>';
+  const tc=d.topCust.map((x,i)=>`<tr><td class="n">${i+1}</td><td>${esc(x.name)}</td><td class="r">${tk(x.spent)}</td></tr>`).join('')||'<tr><td>—</td></tr>';
+  const pays=Object.keys(d.pay).map(k=>`<span>${esc(k)} <b>${tk(d.pay[k])}</b></span>`).join('');
+  return `<div class="msum" id="msnode">
+    <div class="mh"><img src="${OG_LOGO}" alt=""><div><h1>OMME'S GALLERY</h1><div class="sub">Monthly summary</div></div>
+      <div class="mon"><span>Month</span><b>${esc(d.label)}</b></div></div>
+    <div class="mt">
+      ${tile('linear-gradient(150deg,#12b886,#0b7a63)','Total sales',tk(c.sales),delta(c.sales,p.sales))}
+      ${tile('linear-gradient(150deg,#f9b233,#e0592b)','Net profit',tk(c.profit),delta(c.profit,p.profit))}
+      ${tile('linear-gradient(150deg,#7d7bff,#5127c4)','Dress sold',c.dresses+' pcs',delta(c.dresses,p.dresses))}
+      ${tile('linear-gradient(150deg,#ff5c9b,#b12a8f)','Orders',String(c.orders),'avg '+tk(c.orders?c.sales/c.orders:0))}
+    </div>
+    <div class="mrow"><div><h4>Top 5 dress</h4><table>${top}</table></div><div><h4>Top 3 customer</h4><table>${tc}</table></div></div>
+    <div class="mstrip"><span>New customer <b>${d.nNew}</b></span><span>Repeat customer <b>${d.nRep}</b></span>${d.walkin?`<span>Walk-in <b>${d.walkin}</b></span>`:''}<span>Pre-order <b>${c.pre}</b></span>${pays}</div>
+    <div class="mfoot">Buy your happiness ✦ ommesgallery.xyz</div>
+  </div>`;
+}
+let _msFile=null;
+function monthSummary(mk){
+  const now=new Date(); mk=mk||ym(now);
+  const d=L_monthSummary(mk);
+  openModal(`<div class="modal-head"><h3>Masher saransho</h3><button class="x" data-act="modal-close">×</button></div>
+    <div class="modal-body" style="padding:12px">
+      <div class="field" style="max-width:220px"><label>Mash</label><input id="ms-month" type="month" value="${mk}"></div>
+      <div id="mswrap" style="overflow:hidden; border-radius:6px; max-width:100%"><div id="msscale" style="width:760px; transform-origin:0 0">${monthSumHTML(d)}</div></div></div>
+    <div class="modal-foot" style="flex-wrap:wrap"><button class="btn btn-ghost" data-act="modal-close">Close</button>
+      <button class="btn btn-ghost" data-act="ms-jpg" data-m="${mk}">⭳ JPG</button>
+      <button class="btn btn-gold" data-act="ms-share" data-m="${mk}">➤ Share</button></div>`);
+  $('#modal').classList.add('wide');
+  const mi=$('#ms-month'); if(mi) mi.onchange=()=>{ if(mi.value) monthSummary(mi.value); };
+  fitMS(); setTimeout(fitMS,60);
+  _msFile=null; setTimeout(async function(){ try{ const b=await canvasBlob(await msCanvas()); _msFile={blob:b, name:'omme-summary-'+mk+'.jpg'}; }catch(e){} }, 400);
+}
+function fitMS(){
+  const w=$('#mswrap'), sc=$('#msscale'); if(!w||!sc||!w.parentElement) return;
+  const z=Math.min(1,(w.parentElement.clientWidth-24)/760); if(z<=0) return;
+  sc.style.transform='scale('+z+')'; w.style.width=Math.round(760*z)+'px'; w.style.height=Math.round(sc.offsetHeight*z)+'px';
+}
+async function msCanvas(){
+  const src=$('#msnode'); if(!src||!window.html2canvas) throw new Error('nothing to render');
+  const holder=document.createElement('div'); holder.style.cssText='position:fixed;left:-12000px;top:0;width:760px;background:#fff;pointer-events:none';
+  const clone=src.cloneNode(true); clone.removeAttribute('id'); holder.appendChild(clone); document.body.appendChild(holder);
+  try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready; return await html2canvas(clone,{scale:2, backgroundColor:'#ffffff'}); }
+  finally{ holder.remove(); }
+}
+async function msShare(mk, onlySave){
+  try{
+    let f=_msFile; if(!f){ f={blob:await canvasBlob(await msCanvas()), name:'omme-summary-'+mk+'.jpg'}; _msFile=f; }
+    if(!onlySave){ const file=new File([f.blob], f.name, {type:'image/jpeg'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"OMME'S GALLERY — "+mk}); return; } }
+    saveBlob(f.blob, f.name); toast('JPG downloaded ✦','ok');
+  }catch(e){ if(e&&e.name==='AbortError') return; if(e&&e.name==='NotAllowedError'){ toast('Chhobi ready — abar Share e tap korun','ok'); return; } toast('Chhobi banano gelo na','err'); }
 }
 function chartCols(){
   const cs=getComputedStyle(document.documentElement), g=function(n,d){ return (cs.getPropertyValue(n)||'').trim()||d; };
@@ -2631,7 +2994,7 @@ async function viewExpenses(){
   renderExpenses('', '');
 }
 function thisMonthKey(){ const d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2); }
-function renderExpenses(q, cat){
+function renderExpenses(q, cat, only){
   const list=(state.expData||[]).filter(e=>
     (!q || (String(e.Category)+e.Note).toLowerCase().includes(q.toLowerCase())) &&
     (!cat || e.Category===cat))
@@ -2651,6 +3014,7 @@ function renderExpenses(q, cat){
       <td class="num"><button class="btn-icon" data-act="exp-edit" data-id="${esc(e.ID)}">Edit</button>
         <button class="btn-icon" data-act="exp-del" data-id="${esc(e.ID)}">✕</button></td>
     </tr>`).join('')||`<tr><td colspan="5" class="empty"><div class="big">No expenses yet</div>Log packaging, ad spend, rent etc.</td></tr>`;
+  if(only && $('#exp-tbody')){ $('#exp-tbody').innerHTML=rows; return; }
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Expenses</div><h2>Expense ledger</h2></div>
       <button class="btn btn-gold" data-act="exp-new">＋ Add expense</button></div>
@@ -2667,8 +3031,8 @@ function renderExpenses(q, cat){
     </div>
     <div class="card"><div class="table-wrap"><table>
       <thead><tr><th>Date</th><th>Category</th><th>Note</th><th class="num">Amount</th><th class="num">Actions</th></tr></thead>
-      <tbody>${rows}</tbody></table></div></div>`;
-  const s=$('#exp-search'); if(s){ s.oninput=()=>{ const v=s.value; renderExpenses(v, $('#exp-cat').value); const n=$('#exp-search'); if(n){n.focus(); n.value=v;} }; }
+      <tbody id="exp-tbody">${rows}</tbody></table></div></div>`;
+  const s=$('#exp-search'); if(s){ s.oninput=()=>renderExpenses(s.value, $('#exp-cat').value, true); }
   const c=$('#exp-cat'); if(c) c.onchange=()=>renderExpenses($('#exp-search').value, c.value);
 }
 function expenseForm(x){
@@ -3003,6 +3367,9 @@ function viewSettings(){
       <div class="field"><label>Invoice footer note</label><input id="set-note" value="${esc(cfg.invoiceNote||'Thank you for shopping with us. ✦ Buy your happiness.')}"></div>
       <button class="btn btn-gold" data-act="set-save">Save shop info</button></div>
     <div id="legacy-box"></div>
+    <div class="card panel" style="margin-bottom:16px"><h3>Data export (Excel)</h3>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.55">Shob data ek file e: Sales, Sale items, Customers, Products, Expenses, Purchases, Dues, Returns — alada alada sheet e. Google Drive e rakhle Google Sheets e khule analysis korte parben.</p>
+      <button class="btn btn-gold" data-act="export-xlsx">⭳ Sob data Excel e naman</button></div>
     <div class="card panel" style="margin-bottom:16px"><h3>Backup &amp; restore</h3>
       <p style="font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.55">Your data is saved in Firebase and shows on every signed-in device. A backup file is still a good safety copy: export one now and then and keep it on Google Drive. Importing a backup adds its records to the cloud data (same ids are overwritten).</p>
       <div style="display:flex; gap:10px; flex-wrap:wrap">
@@ -3089,6 +3456,25 @@ document.addEventListener('click', function(e){
     case 'addr-old-del': { const i=Number(el.dataset.i); (window._oldAddr||[]).splice(i,1); renderOldAddr(); break; }
     case 'addr-old-use': { const L=window._oldAddr||[], i=Number(el.dataset.i), o=L[i]; if(!o) break; const ta=$('#c-addr'), cur=ta.value.trim();
       L.splice(i,1); if(cur) L.unshift({a:cur, d:dstr(new Date())}); ta.value=o.a; renderOldAddr(); break; }
+    case 'cus-export': exportCustomers(); break;
+    case 'stitch-pick': { const v=el.dataset.v; window._pStitch = (window._pStitch===v)?'':v;
+      document.querySelectorAll('#f-stitch .seg-btn').forEach(b=>b.classList.toggle('on', b.dataset.v===window._pStitch));
+      const on=window._pStitch==='Stitched'; $('#f-size').style.display=on?'':'none'; $('#f-size-hint').style.display=on?'':'none'; break; }
+    case 'export-xlsx': exportAllExcel(); break;
+    case 'in-days': state.inDays=Number(el.dataset.d); renderInactive(); break;
+    case 'in-export': exportInactive(); break;
+    case 'wa-one': { const c=DB.Customers.find(x=>String(x.ID)===String(id)); if(c){ if(state.waDraft==null) state.waDraft=(waTemplates()[state.waTpl||0]||{}).t; waOpen(c); } break; }
+    case 'wa-from-inactive': state.waAud='inactive'; state.custTab='wa'; renderCustomers(''); break;
+    case 'wa-aud': state.waAud=el.dataset.a; renderWA(); break;
+    case 'wa-send': waSend(id); break;
+    case 'wa-next': waNext(); break;
+    case 'wa-reset': e.preventDefault(); try{ localStorage.removeItem(waSentKey()); }catch(x){} renderWA(); break;
+    case 'wa-tpl-save': waTplSave(); break;
+    case 'wa-tpl-new': waTplNew(); break;
+    case 'wa-tpl-del': waTplDel(); break;
+    case 'month-sum': monthSummary(); break;
+    case 'ms-jpg': msShare(el.dataset.m, true); break;
+    case 'ms-share': msShare(el.dataset.m, false); break;
     case 'pay-mode': setPayMode(el.getAttribute('data-m')); break;
     case 'cart-inc': cartQty(id,1); break;
     case 'cart-dec': cartQty(id,-1); break;
