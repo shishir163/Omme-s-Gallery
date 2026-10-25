@@ -466,7 +466,10 @@
   .posview{display:grid; grid-template-columns:1fr 380px; gap:16px; align-items:start}
   .pos-products{padding:16px 18px; max-height:72vh; overflow:auto}
   .plist{display:flex; flex-direction:column; gap:8px; margin-top:12px}
-  #inv-sort{border:1px solid var(--line-2); border-radius:9px; background:var(--input-bg); color:var(--charcoal); font:inherit; font-size:13px; font-weight:600; padding:8px 10px; cursor:pointer}
+  .plist-grp{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:700; margin:10px 2px 0}
+  .plist-grp span{text-transform:none; letter-spacing:0; font-weight:600; margin-left:4px}
+  .pos-tools{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px}
+  #pos-sort, #inv-sort{border:1px solid var(--line-2); border-radius:9px; background:var(--input-bg); color:var(--charcoal); font:inherit; font-size:13px; font-weight:600; padding:8px 10px; cursor:pointer}
   #attr-new{border:1px solid var(--line-2); border-radius:9px; background:var(--input-bg); color:var(--charcoal); font:inherit; font-size:16px; padding:9px 12px; min-width:0}
   .inv-grp td{background:var(--hover); font-weight:700; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); padding:8px 12px !important}
   .inv-grp td span{font-weight:600; text-transform:none; letter-spacing:0; margin-left:6px}
@@ -2423,12 +2426,25 @@ function cartTotals(){
   const delivery=Number($('#s-deliv')?$('#s-deliv').value:0)||0;
   return {subtotal, discount, delivery, total:subtotal-discount, payable:subtotal-discount+delivery};
 }
+function posHide(){ if(state.posHide==null){ try{ state.posHide=localStorage.getItem('omme_pos_hide')!=='0'; }catch(e){ state.posHide=true; } } return state.posHide; }
+function posSortKey(){ if(!state.posSort){ try{ state.posSort=localStorage.getItem('omme_pos_sort')||'name'; }catch(e){ state.posSort='name'; } } return state.posSort; }
 function renderProductList(q){
   const box=$('#plist'); if(!box) return;
-  const prods=state.products.filter(p=>!q || (String(p.Name)+p.Brand+p.SKU).toLowerCase().includes(q.toLowerCase()));
+  const qq=String(q||'').toLowerCase();
+  let prods=state.products.filter(p=>!qq || [p.Name,p.Brand,p.SKU,p.Category,p.Type,p.Size,p.Stitch].join(' ').toLowerCase().includes(qq));
+  const hide=posHide(), soldN=state.products.filter(p=>num(p.Stock)<=0 && !p.Preorder).length;
+  if(hide) prods=prods.filter(p=>num(p.Stock)>0 || p.Preorder);
+  const sk=posSortKey(), grpF={brand:'Brand',cat:'Category',type:'Type'}[sk];
+  sortProducts(prods, sk);
+  const gc={}; if(grpF) prods.forEach(p=>{ const g=String(p[grpF]||''); gc[g]=(gc[g]||0)+1; });
+  let lastG=null;
+  const hb=$('#pos-hide'); if(hb){ hb.className='btn btn-sm '+(hide?'btn-gold':'btn-ghost'); hb.textContent=(hide?'✓ Hiding sold-out':'Hide sold-out')+(soldN?' ('+soldN+')':''); }
+  const pc=$('#pos-count'); if(pc) pc.textContent=prods.length+' item(s)';
   box.innerHTML=prods.map(p=>{
     const low=Number(p.Stock)<=3;
-    return `<div class="pitem" data-act="cart-add" data-id="${esc(p.ID)}">
+    let head='';
+    if(grpF){ const g=String(p[grpF]||''); if(g!==lastG){ lastG=g; head=`<div class="plist-grp">${g?esc(g):'No '+grpF.toLowerCase()}<span>· ${gc[g]}</span></div>`; } }
+    return head+`<div class="pitem" data-act="cart-add" data-id="${esc(p.ID)}">
       ${thumbHtml(p)}
       <div style="flex:1; min-width:0"><div class="pn">${esc(p.Name)}${p.Preorder?' <span class="pill pre">প্রি-অর্ডার</span>':''}${p.Defect?' <span class="pill defect">⚠️ Defect</span>':''}</div>
         <div class="pd">${esc(p.Brand||'')} ${p.Stitch?'· '+stitchLabel(p.Stitch):''}${p.Stitch==='Stitched'&&p.Size?' ('+esc(p.Size)+')':''} ${p.SKU?'· <strong>SKU: '+esc(p.SKU)+'</strong>':''} · <span class="stock-tag ${low?'low':''}">${Number(p.Stock)} in stock</span></div></div>
@@ -2443,7 +2459,11 @@ function renderSales(){
     <div class="view-head"><div><div class="eyebrow">Point of sale</div><h2>New sale</h2></div></div>
     <div class="posview">
       <div class="card pos-products">
-        <div class="search"><span class="mag">⌕</span><input id="pos-search" placeholder="Search product to add…"></div>
+        <div class="search"><span class="mag">⌕</span><input id="pos-search" placeholder="Search name, brand, SKU, category, size…"></div>
+        <div class="pos-tools">
+          <button class="btn btn-sm btn-ghost" id="pos-hide" data-act="pos-hide">Hide sold-out</button>
+          <select id="pos-sort" title="Sort">${INV_SORTS.map(o=>`<option value="${o[0]}" ${o[0]===posSortKey()?'selected':''}>⇅ ${o[1]}</option>`).join('')}</select>
+          <span id="pos-count" style="color:var(--muted); font-size:13px"></span></div>
         <div class="plist" id="plist"></div>
       </div>
       <div class="card cart">
@@ -2491,6 +2511,7 @@ function renderSales(){
     </div>`;
   renderProductList('');
   const s=$('#pos-search'); if(s){ s.oninput=()=>renderProductList(s.value); }
+  const ps=$('#pos-sort'); if(ps) ps.onchange=()=>{ state.posSort=ps.value; try{ localStorage.setItem('omme_pos_sort', ps.value); }catch(e){} renderProductList($('#pos-search')?$('#pos-search').value:''); };
   const cs=$('#s-cust'); if(cs) cs.onchange=()=>{ state.customerId=cs.value; };
   ['s-disc','s-deliv','s-received'].forEach(id=>{ const el=$('#'+id); if(el) el.oninput=renderCart; });
   const pre=$('#s-pre'); if(pre) pre.onchange=()=>{ $('#s-predate-box').style.display=pre.checked?'':'none'; syncStatus(); if(pre.checked && state.payMode!=='none') setPayMode('adv'); };
@@ -3549,6 +3570,7 @@ document.addEventListener('click', function(e){
     case 'cus-merge': mergeForm(id, el.dataset.into); break;
     case 'mg-do': doMerge(id); break;
     case 'cus-del': delCustomer(id); break;
+    case 'pos-hide': state.posHide=!posHide(); try{ localStorage.setItem('omme_pos_hide', state.posHide?'1':'0'); }catch(x){} renderProductList($('#pos-search')?$('#pos-search').value:''); break;
     case 'pay-mode': setPayMode(el.getAttribute('data-m')); break;
     case 'cart-inc': cartQty(id,1); break;
     case 'cart-dec': cartQty(id,-1); break;
