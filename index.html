@@ -939,6 +939,29 @@ function L_customerSummary(){
   Object.keys(out).forEach(function(id){ const o=out[id]; o.state = o.due<=0 ? 'Paid' : (o.due>=o.net ? 'Due' : 'Partial'); });
   return out;
 }
+function phoneKey(p){ const d=String(p||'').replace(/\D/g,''); return d.length>=10?d.slice(-10):''; }
+function addrKey(a){ return String(a||'').toLowerCase().replace(/[^a-z0-9\u0980-\u09ff]/g,''); }
+/* join two customer records that are really one person: orders, dues, numbers and addresses all move to "into" */
+function L_mergeCustomers(fromId, intoId){
+  const a=DB.Customers.find(function(x){ return String(x.ID)===String(fromId); }), b=DB.Customers.find(function(x){ return String(x.ID)===String(intoId); });
+  if(!a||!b||a===b) return { error:'customer not found' };
+  let n=0; const inv={};
+  DB.Sales.forEach(function(s){ if(String(s.CustomerID)===String(a.ID)){ s.CustomerID=b.ID; s.CustomerName=b.Name; inv[String(s.InvoiceNo)]=1; n++; } });
+  DB.Dues.forEach(function(d){ if(String(d.CustomerID)===String(a.ID) || inv[String(d.InvoiceNo)]){ d.CustomerID=b.ID; d.CustomerName=b.Name; } });
+  DB.Returns.forEach(function(r){ if(inv[String(r.InvoiceNo)]) r.CustomerName=b.Name; });
+  const ph=custPhones(b);
+  custPhones(a).forEach(function(x){ if(!ph.some(function(h){ return h===x || (phoneKey(h) && phoneKey(h)===phoneKey(x)); })) ph.push(x); });
+  b.Phone=ph[0]||''; b.Phone2=ph[1]||''; b.Phone3=ph[2]||'';
+  if(!b.Email && a.Email) b.Email=a.Email;
+  const olds=(Array.isArray(b.OldAddresses)?b.OldAddresses:[]).slice(), seen=function(t){ return addrKey(t)===addrKey(b.Address) || olds.some(function(o){ return addrKey(o.a)===addrKey(t); }); };
+  const aa=String(a.Address||'').trim();
+  if(!String(b.Address||'').trim() && aa) b.Address=aa; else if(aa && !seen(aa)) olds.push({ a:aa, d:dstr(new Date()) });
+  (Array.isArray(a.OldAddresses)?a.OldAddresses:[]).forEach(function(o){ if(o&&o.a && !seen(o.a)) olds.push(o); });
+  b.OldAddresses=olds;
+  if(num(a.PrevDresses)) b.PrevDresses=num(b.PrevDresses)+num(a.PrevDresses);
+  deleteRow('Customers', a.ID);
+  return { moved:n, into:b.ID };
+}
 function L_customerHistory(id){
   const sales = readAll('Sales').filter(function(s){ return String(s.CustomerID)===String(id); })
     .sort(function(a,b){ return new Date(b.Date)-new Date(a.Date); });
@@ -1097,7 +1120,7 @@ function L_payDue(id, amount){
 
 /* ---------- dispatcher (same interface the UI already uses) ---------- */
 const MUTATIONS = ['saveProduct','deleteProduct','saveCustomer','deleteCustomer','createSale','saveSupplier',
-  'deleteSupplier','saveExpense','deleteExpense','createPurchase','updatePurchasePayment','createReturn','payDue','updateSale','renameAttr'];
+  'deleteSupplier','saveExpense','deleteExpense','createPurchase','updatePurchasePayment','createReturn','payDue','updateSale','renameAttr','mergeCustomers'];
 
 async function api(action, p){
   p = p || {}; ensureDB(); let out;
@@ -1124,6 +1147,7 @@ async function api(action, p){
     case 'listCustomers':   out=readAll('Customers'); break;
     case 'saveCustomer':    out=saveRow('Customers', p.item, 'C'); break;
     case 'deleteCustomer':  out=deleteRow('Customers', p.id); break;
+    case 'mergeCustomers':  out=L_mergeCustomers(p.from, p.into); break;
     case 'customerHistory': out=L_customerHistory(p.id); break;
     case 'listSales':       out=L_listSales(); break;
     case 'getSale':         out=L_getSale(p.invoiceNo); break;
@@ -1948,10 +1972,10 @@ function renderCustomers(q, only){
   }
   const list=state.customers.filter(c=>!q || (String(c.Name)+custPhones(c).join(' ')+c.Address+(c.OldAddresses||[]).map(o=>o.a).join(' ')).toLowerCase().includes(q.toLowerCase()));
   const sum=L_customerSummary();
-  const dmap=custDressMap(), smap=custStitchMap();
+  const dmap=custDressMap(), smap=custStitchMap(), pdm=phoneDupMap();
   const rows=list.map(c=>{ const sm=sum[String(c.ID)], dm=dmap[String(c.ID)], tr=custTier(dm?dm.total:0), ph=custPhones(c);
     return `<tr${tr?` class="rc" style="--rc:${tr.c}; background:${hexA(tr.c,.12)}"`:''}>
-      <td><strong>${esc(c.Name)}</strong>${tr?`<div style="margin-top:4px">${dressBadge(dm)}</div>`:''}</td>
+      <td><strong>${esc(c.Name)}</strong>${tr?`<div style="margin-top:4px">${dressBadge(dm)}</div>`:''}${(()=>{ const dd=custDupIds(c,pdm); return dd.length?`<div style="margin-top:4px"><button class="pill warn" style="border:none;cursor:pointer" data-act="cus-merge" data-id="${esc(c.ID)}" data-into="${esc(dd[0])}">⚠️ Duplicate? Merge</button></div>`:''; })()}</td>
       <td class="tnum">${ph.length?esc(ph[0])+ph.slice(1).map(x=>'<div style="font-size:12px;color:var(--muted)">'+esc(x)+'</div>').join(''):''}</td>
       <td>${esc(c.Address||'')}</td>
       <td>${custChips(sum[String(c.ID)])}${(()=>{ const h=stitchChip(smap[String(c.ID)]); return h?'<div class="chips" style="margin-top:5px">'+h+'</div>':''; })()}</td>
@@ -2190,9 +2214,51 @@ function customerForm(c){
         <div class="hint">Notun address dile ager ta "Old address" e joma thakbe.</div></div>
       <div class="field" id="c-old-box"></div>
     </div>
-    <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
+    <div class="modal-foot" style="flex-wrap:wrap">
+      ${c.ID?`<button class="btn btn-ghost btn-sm" data-act="cus-merge" data-id="${esc(c.ID)}">🔗 Merge</button>
+        ${DB.Sales.some(s=>String(s.CustomerID)===String(c.ID))?'':`<button class="btn btn-danger btn-sm" data-act="cus-del" data-id="${esc(c.ID)}">Delete</button>`}<span style="flex:1"></span>`:''}
+      <button class="btn btn-ghost" data-act="modal-close">Cancel</button>
       <button class="btn btn-gold" data-act="customer-save" data-id="${esc(c.ID||'')}">Save customer</button></div>`);
   window._oldAddr=(Array.isArray(c.OldAddresses)?c.OldAddresses:[]).slice(); renderOldAddr();
+}
+function custDupIds(c, dmap){
+  const out=new Set(), nm=String(c.Name||'').trim().toLowerCase();
+  custPhones(c).forEach(function(p){ const k=phoneKey(p), set=k&&dmap[k]; if(set) set.forEach(function(x){ if(x!==String(c.ID)) out.add(x); }); });
+  DB.Customers.forEach(function(x){ if(String(x.ID)!==String(c.ID) && nm && String(x.Name||'').trim().toLowerCase()===nm) out.add(String(x.ID)); });
+  return Array.from(out);
+}
+function phoneDupMap(){ const m={}; DB.Customers.forEach(function(c){ custPhones(c).forEach(function(p){ const k=phoneKey(p); if(k) (m[k]=m[k]||new Set()).add(String(c.ID)); }); }); return m; }
+function custLine(c){ const sm=L_customerSummary()[String(c.ID)]||{}, d=custDressMap()[String(c.ID)]; return (sm.orders||0)+' order · '+(d?d.total:0)+' dress'+(custPhones(c).length?' · '+custPhones(c)[0]:''); }
+function mergeForm(fromId, intoId){
+  const a=DB.Customers.find(x=>String(x.ID)===String(fromId)); if(!a) return;
+  const dups=custDupIds(a, phoneDupMap());
+  const others=DB.Customers.filter(x=>String(x.ID)!==String(fromId)).sort((x,y)=>cmpTxt(x.Name,y.Name));
+  const opt=x=>`<option value="${esc(x.ID)}" ${String(x.ID)===String(intoId||dups[0]||'')?'selected':''}>${esc(x.Name)} — ${esc(custLine(x))}</option>`;
+  const dupOpts=others.filter(x=>dups.indexOf(String(x.ID))>-1), rest=others.filter(x=>dups.indexOf(String(x.ID))<0);
+  openModal(`<div class="modal-head"><h3>🔗 Merge customer</h3><button class="x" data-act="modal-close">×</button></div>
+    <div class="modal-body">
+      <div class="cinfo"><div class="lbl">Ei customer ke soriye debo</div><div><strong>${esc(a.Name)}</strong></div><div class="old">${esc(custLine(a))}${a.Address?' · '+esc(a.Address):''}</div></div>
+      <div class="field"><label>Kar sathe ek korben? (je ta rakhte chan)</label>
+        <select id="mg-into">${dupOpts.length?'<optgroup label="Same number / same nam">'+dupOpts.map(opt).join('')+'</optgroup>':''}<optgroup label="Onnora">${rest.map(opt).join('')}</optgroup></select></div>
+      <p style="font-size:12.5px;color:var(--muted);margin:0;line-height:1.6">${esc(a.Name)} er <strong>sob order, baki taka, mobile number ar address</strong> bachai kora customer er kache chole jabe. Kichu harabe na. Tarpor ${esc(a.Name)} list theke soriye deya hobe.</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
+      <button class="btn btn-gold" data-act="mg-do" data-id="${esc(a.ID)}">🔗 Merge</button></div>`);
+}
+async function doMerge(fromId){
+  const into=$('#mg-into')&&$('#mg-into').value; if(!into) return;
+  const b=DB.Customers.find(x=>String(x.ID)===String(into)), a=DB.Customers.find(x=>String(x.ID)===String(fromId));
+  if(!confirm('"'+(a&&a.Name)+'" ke "'+(b&&b.Name)+'" er sathe ek kore dibo?\n\nEta pore ulta kora jabe na.')) return;
+  try{
+    const r=await api('mergeCustomers',{from:fromId, into:into}); if(r&&r.error){ toast(r.error,'err'); return; }
+    closeModal(); state.customers=await api('listCustomers'); toast('Merged ✦ · '+r.moved+' ta order sorano holo','ok');
+    if(state.view==='customers') renderCustomers('');
+  }catch(e){ toast(e.message,'err'); }
+}
+function delCustomer(id){
+  const c=DB.Customers.find(x=>String(x.ID)===String(id)); if(!c) return;
+  if(DB.Sales.some(s=>String(s.CustomerID)===String(id))){ toast('Ei customer er order ache — muchte parben na, Merge korun','err'); return; }
+  confirmDel('"'+c.Name+'" ke muche dibo?', ()=>api('deleteCustomer',{id}).then(async()=>{ state.customers=await api('listCustomers'); toast('Deleted','ok'); if(state.view==='customers') renderCustomers(''); }));
 }
 function renderOldAddr(){
   const b=$('#c-old-box'); if(!b) return; const L=window._oldAddr||[];
@@ -2204,6 +2270,11 @@ async function saveCustomer(id, thenSelect){
     Phone2:$('#c-phone2').value.trim(), Phone3:$('#c-phone3').value.trim(), PrevDresses:Math.max(0,Number($('#c-prev').value)||0),
     Email:$('#c-email').value.trim(), Address:$('#c-addr').value.trim() };
   if(!item.Name){ toast('Name is required','err'); return; }
+  if(!id){
+    const keys=custPhones(item).map(phoneKey).filter(Boolean);
+    const same=DB.Customers.find(x=>custPhones(x).some(p=>keys.indexOf(phoneKey(p))>-1));
+    if(same && !confirm('Ei number e "'+same.Name+'" age thekei ache.\n\nOK = tobuo notun customer banabo\nCancel = banabo na (age-r ta use korun)')) return;
+  }
   let olds=(window._oldAddr||[]).slice();
   const prev=id?state.customers.find(x=>String(x.ID)===String(id)):null, pa=String(prev&&prev.Address||'').trim();
   if(pa && pa!==item.Address && !olds.some(o=>o.a===pa) &&
@@ -3475,6 +3546,9 @@ document.addEventListener('click', function(e){
     case 'month-sum': monthSummary(); break;
     case 'ms-jpg': msShare(el.dataset.m, true); break;
     case 'ms-share': msShare(el.dataset.m, false); break;
+    case 'cus-merge': mergeForm(id, el.dataset.into); break;
+    case 'mg-do': doMerge(id); break;
+    case 'cus-del': delCustomer(id); break;
     case 'pay-mode': setPayMode(el.getAttribute('data-m')); break;
     case 'cart-inc': cartQty(id,1); break;
     case 'cart-dec': cartQty(id,-1); break;
