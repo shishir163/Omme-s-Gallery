@@ -431,6 +431,29 @@
   .msum .mstrip{display:flex; flex-wrap:wrap; gap:8px 22px; padding:12px 28px; margin:12px 28px 0; background:#F8F2E2; border-radius:10px; font-size:12px; font-weight:700; color:var(--m-plum)}
   .msum .mstrip b{color:var(--m-garnet); font-weight:900}
   .msum .mfoot{padding:14px 28px 18px; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--m-muted); text-align:center}
+  .pill.ret{background:#c62828; color:#fff; white-space:nowrap}
+  .se-add{display:flex; gap:8px; align-items:center; margin:-4px 0 12px; flex-wrap:wrap}
+  .se-add select{flex:1; min-width:180px; padding:9px 10px; border:1px solid var(--line-2); border-radius:9px; background:var(--input-bg); color:var(--ink); font:inherit; font-size:14px}
+  .sh-head{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px}
+  .sh-row{border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; background:var(--card)}
+  .sh-row.bad{border-color:#e57373; box-shadow:inset 4px 0 0 #e53935}
+  .sh-grid{display:grid; grid-template-columns:2.6fr 1.3fr 1fr 1fr 1fr 1.1fr 1.3fr; gap:8px; align-items:end}
+  .sh-grid label{display:block; font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:.04em; margin-bottom:3px; white-space:nowrap}
+  .sh-grid select{width:100%; padding:8px 6px; border:1px solid var(--line-2); border-radius:8px; background:var(--input-bg); color:var(--ink); font:inherit; font-size:14px; min-width:0}
+  .sh-ph{display:flex; align-items:center; gap:6px}
+  .sh-grid input{width:100%; padding:8px 8px; border:1px solid var(--line-2); border-radius:8px; background:var(--input-bg); color:var(--ink); font:inherit; font-size:14px; min-width:0}
+  .sh-calc{display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:9px; font-size:12.5px; color:var(--muted); align-items:center}
+  .sh-calc b{color:var(--ink)}
+  .sh-calc .mg{font-weight:800; padding:2px 9px; border-radius:999px}
+  .sh-calc .mg.ok{background:var(--pos-soft); color:var(--pos)}
+  .sh-calc .mg.low{background:#c62828; color:#fff}
+  .sh-bar{position:sticky; bottom:12px; z-index:5; margin-top:6px}
+  @media (max-width:900px){ .sh-bar{position:static} }
+  .sh-tot{display:flex; flex-wrap:wrap; gap:8px 22px; font-size:13.5px}
+  .sh-tot b{font-size:16px}
+  .wcalc{border:1px dashed var(--line-2); border-radius:10px; padding:10px 12px; margin-bottom:14px}
+  .wcalc summary{cursor:pointer; font-weight:700; font-size:13px}
+  @media (max-width:900px){ .sh-head{grid-template-columns:1fr 1fr} .sh-grid{grid-template-columns:1fr 1fr 1fr} .sh-grid .w2{grid-column:span 3} .sh-grid .w15{grid-column:span 2} }
   .pill.st{background:rgba(13,148,136,.16); color:#0f766e; white-space:nowrap}
   .se-s{padding:6px 8px; border:1px solid var(--line-2); border-radius:7px; background:var(--input-bg); color:var(--ink); width:110px; margin-top:4px; font-size:13px}
   .pill.defect{background:#c62828; color:#fff; white-space:nowrap}
@@ -819,8 +842,85 @@ function L_getSale(no){
 }
 /* Edit an existing sale: customer, date, payment, discount, delivery (invoice only), money received,
    and each line's qty / price. Stock and FIFO lots are corrected for qty changes; the due row is rebuilt. */
-function L_updateSale(no, patch, edits){
-  patch = patch || {}; edits = edits || {};
+/* a dress comes back: it returns to stock at the price it was bought for, leaves the customer's order
+   (that order stays in its own month), and the customer gets a red "returned" mark with a short log */
+function L_returnItems(no, qty, opts){
+  qty=qty||{}; opts=opts||{};
+  const sale=DB.Sales.find(function(x){ return String(x.InvoiceNo)===String(no); }); if(!sale) return {error:'Sale not found'};
+  const cur=L_getSale(no), back=[];
+  DB.SaleItems.forEach(function(it){
+    if(String(it.InvoiceNo)!==String(no)) return;
+    const r=Math.min(num(it.Qty), Math.max(0, num(qty[it._k]))); if(!r) return;
+    const p=findProduct(it.ProductID);
+    if(p){ p.Stock=num(p.Stock)+r; if(opts.defect && opts.defect[it._k]){ p.Defect=true; if(opts.reason && !p.DefectNote) p.DefectNote=String(opts.reason); } }
+    if(it.ProductID) addLot(it.ProductID, it.BuyPrice, r, '');
+    it.Qty=num(it.Qty)-r; it.LineTotal=num(it.Qty)*num(it.SalePrice); it.LineProfit=num(it.Qty)*(num(it.SalePrice)-num(it.BuyPrice));
+    back.push((it.ProductName||'')+(r>1?' ×'+r:''));
+  });
+  if(!back.length) return {error:'Kono dress bachai kora hoy nai'};
+  for(let i=DB.SaleItems.length-1;i>=0;i--){ const it=DB.SaleItems[i]; if(String(it.InvoiceNo)===String(no) && num(it.Qty)<=0) DB.SaleItems.splice(i,1); }
+  const left=DB.SaleItems.filter(function(i){ return String(i.InvoiceNo)===String(no); });
+  for(let i=DB.Dues.length-1;i>=0;i--){ if(String(DB.Dues[i].InvoiceNo)===String(no)) DB.Dues.splice(i,1); }
+  let whole=false, refund=0;
+  if(!left.length){ whole=true; refund=cur.received; const si=DB.Sales.indexOf(sale); if(si>-1) DB.Sales.splice(si,1); }
+  else{
+    let sub=0, pf=0; left.forEach(function(it){ sub+=num(it.LineTotal); pf+=num(it.LineProfit); });
+    const disc=Math.min(num(sale.Discount), sub), net=sub-disc;
+    sale.Subtotal=sub; sale.Discount=disc; sale.Total=net; sale.Profit=pf-disc;
+    const bal=net-Math.min(cur.received, net); refund=Math.max(0, cur.received-net);
+    if(bal>0) DB.Dues.push({ ID:newId('D'), Date:sale.Date, InvoiceNo:no, CustomerID:sale.CustomerID||'', CustomerName:sale.CustomerName||'', Amount:bal, Paid:0, Balance:bal, Status:'Due', Note:'' });
+  }
+  const c=DB.Customers.find(function(x){ return String(x.ID)===String(sale.CustomerID); });
+  if(c){ const L=Array.isArray(c.ReturnLog)?c.ReturnLog.slice():[]; L.unshift({ d:dstr(new Date()), inv:no, items:back.join(', '), reason:String(opts.reason||''), whole:whole }); c.ReturnLog=L; }
+  const ch=num(opts.charge);
+  if(ch>0) DB.Expenses.push({ ID:newId('E'), Date:dstr(new Date()), Category:'Delivery', Amount:ch, Note:'Return charge · '+no, CreatedAt:new Date().toISOString() });
+  return { returned:back, whole:whole, refund:refund };
+}
+/* a new shipment: each dress gets its real cost = website price + weight charge + other cost */
+function shipCalc(r, rate, other){
+  const web=num(r.web), w=num(r.w), wc=Math.round(w*num(rate)/1000*100)/100, cost=web+wc+num(other), sell=num(r.sell);
+  const profit=sell-cost, margin=sell?profit/sell*100:0;
+  return { web:web, w:w, wc:wc, cost:cost, sell:sell, profit:profit, margin:margin };
+}
+function L_saveShipment(rows, meta){
+  rows=rows||[]; meta=meta||{}; let added=0, updated=0;
+  const date=meta.date||dstr(new Date());
+  rows.forEach(function(r){
+    const name=String(r.name||'').trim(), qty=Math.max(0,num(r.qty)); if(!name || !qty) return;
+    const c=shipCalc(r, meta.rate, meta.other), cost=Math.round(c.cost);
+    const extra={ WebPrice:c.web, WeightG:c.w, WeightCharge:c.wc, OtherCost:num(meta.other), ShipRate:num(meta.rate), ShipDate:date };
+    if(String(r.pkr||'').trim()) extra.PKR=String(r.pkr).trim();
+    if(r.photo) extra.Photo=r.photo;
+    const more={ Type:String(r.type||'').trim(), Dupatta:String(r.dup||'').trim(), Stitch:r.st||'', Size:r.st==='Stitched'?String(r.size||'').trim():'' };
+    const sku=String(r.sku||'').trim().toLowerCase();
+    let p=r.pid?findProduct(r.pid):null;
+    if(!p && sku) p=DB.Products.find(function(x){ return String(x.SKU||'').trim().toLowerCase()===sku; });
+    if(p){
+      p.Stock=num(p.Stock)+qty; p.BuyPrice=cost; if(c.sell) p.SalePrice=c.sell;
+      if(r.brand && !p.Brand) p.Brand=r.brand; if(r.cat && !p.Category) p.Category=r.cat;
+      Object.keys(more).forEach(function(k){ if(more[k] && !p[k]) p[k]=more[k]; }); if(more.Size) p.Size=more.Size;
+      Object.assign(p, extra);
+      addLot(p.ID, cost, qty, ''); updated++;
+    } else {
+      const item=Object.assign({ Name:name, Brand:String(r.brand||'').trim(), Category:String(r.cat||'').trim(), SKU:String(r.sku||'').trim(),
+        BuyPrice:cost, SalePrice:c.sell, Stock:qty }, more, extra);
+      const res=saveRow('Products', item, 'P'); addLot(res.id, cost, qty, ''); added++;
+    }
+  });
+  return { added:added, updated:updated };
+}
+/* the order is called off before delivery: every dress goes back to stock, no red mark */
+function L_cancelSale(no){
+  const sale=DB.Sales.find(function(x){ return String(x.InvoiceNo)===String(no); }); if(!sale) return {error:'Sale not found'};
+  for(let i=DB.SaleItems.length-1;i>=0;i--){ const it=DB.SaleItems[i]; if(String(it.InvoiceNo)!==String(no)) continue;
+    const p=findProduct(it.ProductID); if(p) p.Stock=num(p.Stock)+num(it.Qty); if(it.ProductID) addLot(it.ProductID, it.BuyPrice, num(it.Qty), '');
+    DB.SaleItems.splice(i,1); }
+  for(let i=DB.Dues.length-1;i>=0;i--){ if(String(DB.Dues[i].InvoiceNo)===String(no)) DB.Dues.splice(i,1); }
+  DB.Sales.splice(DB.Sales.indexOf(sale),1);
+  return { cancelled:no };
+}
+function L_updateSale(no, patch, edits, adds){
+  patch = patch || {}; edits = edits || {}; adds = adds || [];
   const sale = DB.Sales.find(function(x){ return String(x.InvoiceNo)===String(no); });
   if(!sale) return {error:'Sale not found'};
   const cur = L_getSale(no);
@@ -846,6 +946,15 @@ function L_updateSale(no, patch, edits){
   for(let i=DB.SaleItems.length-1;i>=0;i--){
     const it=DB.SaleItems[i]; if(String(it.InvoiceNo)===String(no) && num(it.Qty)<=0) DB.SaleItems.splice(i,1);
   }
+  /* new dresses added to this order (e.g. the customer swapped one dress for another) */
+  adds.forEach(function(ad){
+    const qty=num(ad.Qty); if(qty<=0 || !ad.ProductID) return;
+    const p=findProduct(ad.ProductID); const sp=num(ad.SalePrice);
+    const bp=Math.round(consumeLotsFIFO(ad.ProductID, qty, p?num(p.BuyPrice):num(ad.BuyPrice))*100)/100;
+    if(p) p.Stock=num(p.Stock)-qty;
+    DB.SaleItems.push({ InvoiceNo:no, ProductID:ad.ProductID, ProductName:ad.ProductName||(p&&p.Name)||'', Qty:qty, SalePrice:sp, BuyPrice:bp,
+      LineTotal:qty*sp, LineProfit:qty*(sp-bp), Stitch:(p&&p.Stitch)||'', Size:ad.Size||'' });
+  });
   let subtotal=0, profit=0;
   DB.SaleItems.forEach(function(it){ if(String(it.InvoiceNo)===String(no)){ subtotal+=num(it.LineTotal); profit+=num(it.LineProfit); } });
   const discount=num(patch.Discount), delivery=num(patch.Delivery), net=subtotal-discount;
@@ -905,6 +1014,7 @@ function custDressMap(){
   Object.keys(out).forEach(function(id){ const o=out[id]; o.app=Math.max(0,o.app); o.total=o.app+o.prev; });
   return out;
 }
+function retChip(c, big){ const n=c&&Array.isArray(c.ReturnLog)?c.ReturnLog.length:0; return n?'<span class="pill ret">↩ Returned'+(n>1?' ×'+n:'')+'</span>':''; }
 function dressBadge(dm, big){
   const tr=custTier(dm?dm.total:0); if(!tr) return '';
   return '<span class="rc-badge" style="background:'+tierBg(tr)+'">🔁 '+(big?'Repeat buyer · ':'')+dm.total+' dresses'+(big&&dm.prev?' ('+dm.prev+' ager + '+dm.app+' app e)':'')+'</span>';
@@ -962,6 +1072,7 @@ function L_mergeCustomers(fromId, intoId){
   (Array.isArray(a.OldAddresses)?a.OldAddresses:[]).forEach(function(o){ if(o&&o.a && !seen(o.a)) olds.push(o); });
   b.OldAddresses=olds;
   if(num(a.PrevDresses)) b.PrevDresses=num(b.PrevDresses)+num(a.PrevDresses);
+  if(Array.isArray(a.ReturnLog)&&a.ReturnLog.length) b.ReturnLog=(Array.isArray(b.ReturnLog)?b.ReturnLog:[]).concat(a.ReturnLog);
   deleteRow('Customers', a.ID);
   return { moved:n, into:b.ID };
 }
@@ -1123,7 +1234,7 @@ function L_payDue(id, amount){
 
 /* ---------- dispatcher (same interface the UI already uses) ---------- */
 const MUTATIONS = ['saveProduct','deleteProduct','saveCustomer','deleteCustomer','createSale','saveSupplier',
-  'deleteSupplier','saveExpense','deleteExpense','createPurchase','updatePurchasePayment','createReturn','payDue','updateSale','renameAttr','mergeCustomers'];
+  'deleteSupplier','saveExpense','deleteExpense','createPurchase','updatePurchasePayment','createReturn','payDue','updateSale','renameAttr','mergeCustomers','returnItems','cancelSale','saveShipment'];
 
 async function api(action, p){
   p = p || {}; ensureDB(); let out;
@@ -1155,7 +1266,10 @@ async function api(action, p){
     case 'listSales':       out=L_listSales(); break;
     case 'getSale':         out=L_getSale(p.invoiceNo); break;
     case 'createSale':      out=L_createSale(p.sale, p.items); break;
-    case 'updateSale':      out=L_updateSale(p.invoiceNo, p.patch, p.edits); break;
+    case 'updateSale':      out=L_updateSale(p.invoiceNo, p.patch, p.edits, p.adds); break;
+    case 'returnItems':     out=L_returnItems(p.invoiceNo, p.qty, p.opts); break;
+    case 'cancelSale':      out=L_cancelSale(p.invoiceNo); break;
+    case 'saveShipment':    out=L_saveShipment(p.rows, p.meta); break;
     case 'report':          out=L_report(p.from, p.to); break;
     case 'listSuppliers':   out=readAll('Suppliers'); break;
     case 'saveSupplier':    out=saveRow('Suppliers', p.item, 'S'); break;
@@ -1479,6 +1593,7 @@ function setNav(v){
   if(v==='purchases') viewPurchases();
   if(v==='expenses') viewExpenses();
   if(v==='settings') viewSettings();
+  if(v==='shipment'){ viewShipment(); document.querySelectorAll('[data-nav="inventory"]').forEach(b=>b.classList.add('on')); }
   const mb=document.getElementById('moreBtn');
   if(mb) mb.classList.toggle('on', ['reports','purchases','expenses','settings'].indexOf(v)>-1);
 }
@@ -1504,7 +1619,9 @@ async function viewDashboard(){
 
   const _dm=custDressMap();
   const custCell=s=>{ const dm=_dm[String(s.CustomerID||'')], tr=custTier(dm?dm.total:0), nm=esc(s.CustomerName||'Walk-in');
-    return tr?`<span class="rc-name" style="background:${tierBg(tr)}" title="${dm.total} dresses">${nm} · ${dm.total}</span>`:nm; };
+    const cu=DB.Customers.find(x=>String(x.ID)===String(s.CustomerID||'')), rn=cu&&Array.isArray(cu.ReturnLog)?cu.ReturnLog.length:0;
+    const rt=rn?' <span class="pill ret" title="returned '+rn+'">↩'+(rn>1?rn:'')+'</span>':'';
+    return (tr?`<span class="rc-name" style="background:${tierBg(tr)}" title="${dm.total} dresses">${nm} · ${dm.total}</span>`:nm)+rt; };
   const recent=(d.recent||[]).map(s=>`
     <tr>
       <td>${esc(s.InvoiceNo)}${(s.Preorder||delChip(s))?'<div class="chips" style="margin-top:3px">'+(s.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার'+(s.Status==='Pending'?' · Pending':'')+'</span>':'')+delChip(s)+'</div>':''}${s.Note?'<div style="margin-top:3px;font-size:11.5px;color:var(--muted)">📝 '+esc(s.Note)+'</div>':''}</td>
@@ -1792,7 +1909,7 @@ function renderInventory(q, only){
         ${p.Stitch==='Stitched'&&p.Size?'<div style="font-size:12px;color:#0f766e;margin-top:3px">Size: '+esc(p.Size)+'</div>':''}
         ${p.Defect&&p.DefectNote?'<div style="font-size:12px;color:#c62828;margin-top:3px">⚠️ '+esc(p.DefectNote)+'</div>':''}
         <div class="inv-sub">${esc([p.Category,p.Type,p.Dupatta?('Dupatta: '+p.Dupatta):'',p.SKU].filter(Boolean).join(' · '))}</div></div></div></td>
-      <td class="c-det"><div>${esc([p.Category,p.Type].filter(Boolean).join(' · '))}</div>${p.Dupatta?'<div style="font-size:12px;color:var(--muted)">Dupatta: '+esc(p.Dupatta)+'</div>':''}</td>
+      <td class="c-det"><div>${esc([p.Category,p.Type].filter(Boolean).join(' · '))}</div>${p.WeightG?'<div style="font-size:12px;color:var(--muted)">⚖️ '+num(p.WeightG)+'g · ship '+tk(p.WeightCharge)+'</div>':''}${p.Dupatta?'<div style="font-size:12px;color:var(--muted)">Dupatta: '+esc(p.Dupatta)+'</div>':''}</td>
       <td class="c-sku">${esc(p.SKU||'')}</td>
       <td class="num tnum c-buy">${tk(p.BuyPrice)}</td>
       <td class="num tnum">${tk(p.SalePrice)}<div class="inv-sub">Buy ${tk(p.BuyPrice)}</div></td>
@@ -1805,7 +1922,8 @@ function renderInventory(q, only){
   if(only && $('#inv-tbody')){ $('#inv-tbody').innerHTML=rows; const ct=$('#inv-count'); if(ct) ct.textContent=list.length+' item(s)'; return; }
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Inventory</div><h2>Products &amp; stock</h2></div>
-      <button class="btn btn-gold" data-act="product-new">＋ Add product</button></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap"><button class="btn btn-ghost" data-nav="shipment">📦 Notun chalan</button>
+      <button class="btn btn-gold" data-act="product-new">＋ Add product</button></div></div>
     <div class="toolbar"><div class="search"><span class="mag">⌕</span>
       <input id="inv-search" placeholder="Search name, brand, SKU…" value="${esc(q)}"></div>
       <button class="btn btn-sm ${state.hideSoldOut?'btn-gold':'btn-ghost'}" data-act="inv-toggle-soldout" title="Show/hide sold-out products">${state.hideSoldOut?'✓ Hiding sold-out':'Hide sold-out'}${soldOutCount?' ('+soldOutCount+')':''}</button>
@@ -1819,6 +1937,118 @@ function renderInventory(q, only){
       <tbody id="inv-tbody">${rows}</tbody></table></div></div>`;
   const s=$('#inv-search'); if(s) s.oninput=()=>renderInventory(s.value, true);
   const so=$('#inv-sort'); if(so) so.onchange=()=>{ state.invSort=so.value; try{ localStorage.setItem('omme_inv_sort', so.value); }catch(e){} renderInventory($('#inv-search')?$('#inv-search').value:''); };
+}
+function shipDefaults(){ const c=getCfg(); return { rate:num(c.shipRate)||1650, other:(c.shipOther!=null&&c.shipOther!=='')?num(c.shipOther):50, minMargin:15 }; }
+function shipBlank(prev){ return { name:'', brand:prev?prev.brand:'', cat:prev?prev.cat:'', type:prev?prev.type||'':'', dup:prev?prev.dup||'':'', st:prev?prev.st||'':'', size:'', sku:'', web:'', w:'', qty:1, sell:'', pkr:'', photo:'', pid:'' }; }
+function shipLoad(){
+  if(state.ship) return state.ship;
+  let d=null; try{ d=JSON.parse(localStorage.getItem('omme_ship_draft')||'null'); }catch(e){}
+  const def=shipDefaults();
+  state.ship = d && Array.isArray(d.rows) && d.rows.length ? d : { date:dstr(new Date()), rate:def.rate, other:def.other, rows:[shipBlank()] };
+  return state.ship;
+}
+function shipSave(){ try{ localStorage.setItem('omme_ship_draft', JSON.stringify(state.ship)); }catch(e){} }
+function viewShipment(){ state.products=readAll('Products'); renderShipment(); }
+function renderShipment(){
+  const S=shipLoad();
+  const brands=attrList('Brand'), cats=attrList('Category'), names=DB.Products.map(p=>p.Name).filter(Boolean);
+  const rows=S.rows.map((r,i)=>`<div class="sh-row" id="shr-${i}">
+      <div class="sh-grid">
+        <div class="w2"><label>#${i+1} Dress er nam</label><input data-sh="${i}" data-f="name" list="sh-names" value="${esc(r.name)}" placeholder="e.g. Colourful EMB UF-4178"></div>
+        <div class="w15"><label>Brand</label><input data-sh="${i}" data-f="brand" list="sh-brands" value="${esc(r.brand)}"></div>
+        <div><label>Category</label><input data-sh="${i}" data-f="cat" list="sh-cats" value="${esc(r.cat)}" placeholder="3pc"></div>
+        <div><label>Type</label><input data-sh="${i}" data-f="type" list="sh-types" value="${esc(r.type||'')}" placeholder="Lawn / Emb"></div>
+        <div><label>Dupatta</label><input data-sh="${i}" data-f="dup" list="sh-dups" value="${esc(r.dup||'')}" placeholder="Chiffon"></div>
+        <div><label>Stitched?</label><select data-sh="${i}" data-f="st"><option value="">—</option><option ${r.st==='Unstitched'?'selected':''}>Unstitched</option><option ${r.st==='Stitched'?'selected':''}>Stitched</option></select></div>
+        <div><label>Size ${r.st==='Stitched'?'':'<span style="font-weight:400">(stitched hole)</span>'}</label><input data-sh="${i}" data-f="size" value="${esc(r.size||'')}" placeholder="M (36), L (38)" ${r.st==='Stitched'?'':'disabled'}></div>
+        <div class="w15"><label>SKU</label><input data-sh="${i}" data-f="sku" value="${esc(r.sku)}"></div>
+        <div><label>Website dam ৳</label><input data-sh="${i}" data-f="web" type="number" inputmode="decimal" value="${esc(r.web)}"></div>
+        <div><label>Weight (g)</label><input data-sh="${i}" data-f="w" type="number" inputmode="decimal" value="${esc(r.w)}"></div>
+        <div><label>Koyta</label><input data-sh="${i}" data-f="qty" type="number" inputmode="numeric" value="${esc(r.qty)}"></div>
+        <div><label>Bikri dam ৳</label><input data-sh="${i}" data-f="sell" type="number" inputmode="decimal" value="${esc(r.sell)}"></div>
+        <div><label>PKR (note)</label><input data-sh="${i}" data-f="pkr" value="${esc(r.pkr)}"></div>
+        <div><label>Photo</label><div class="sh-ph">${r.photo?'<img class="pthumb sm" src="'+r.photo+'" alt="" style="cursor:default">':'<div class="pthumb sm nophoto">👗</div>'}
+          <button type="button" class="btn-icon" data-act="sh-photo" data-i="${i}">📷</button>${r.photo?'<button type="button" class="btn-icon" data-act="sh-photo-del" data-i="${i}">✕</button>':''}</div></div>
+      </div>
+      <div class="sh-calc" id="shc-${i}"></div>
+    </div>`).join('');
+  $('#view').innerHTML=`
+    <div class="view-head"><div><div class="eyebrow">Inventory</div><h2>📦 Notun chalan</h2></div>
+      <button class="btn btn-ghost btn-sm" data-nav="inventory">← Inventory</button></div>
+    <div class="card panel" style="margin-bottom:14px">
+      <div class="sh-head">
+        <div class="field" style="margin:0"><label>Tarikh</label><input id="sh-date" type="date" value="${esc(S.date)}"></div>
+        <div class="field" style="margin:0"><label>Weight charge — ৳ per kg</label><input id="sh-rate" type="number" inputmode="decimal" value="${esc(S.rate)}"></div>
+        <div class="field" style="margin:0"><label>Onnanno khoroch ৳ (prottek dress)</label><input id="sh-other" type="number" inputmode="decimal" value="${esc(S.other)}"></div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin:10px 0 0">Weight charge = weight (g) × rate ÷ 1000 · Mot khoroch = website dam + weight charge + onnanno · Margin = labh ÷ bikri dam. ${shipDefaults().minMargin}% er niche gele lal.</p>
+    </div>
+    <datalist id="sh-names">${names.map(n=>'<option value="'+esc(n)+'">').join('')}</datalist>
+    <datalist id="sh-brands">${brands.map(n=>'<option value="'+esc(n)+'">').join('')}</datalist>
+    <datalist id="sh-cats">${cats.map(n=>'<option value="'+esc(n)+'">').join('')}</datalist>
+    <datalist id="sh-types">${attrList('Type').map(n=>'<option value="'+esc(n)+'">').join('')}</datalist>
+    <datalist id="sh-dups">${attrList('Dupatta').map(n=>'<option value="'+esc(n)+'">').join('')}</datalist>
+    <input type="file" id="sh-file" accept="image/*" style="display:none">
+    <div id="sh-rows">${rows}</div>
+    <div class="card panel sh-bar">
+      <div class="sh-tot" id="sh-tot"></div>
+      <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" data-act="sh-add">＋ Arekta dress</button>
+        <button class="btn btn-ghost btn-sm" data-act="sh-clear">Sob muche notun kore</button><span style="flex:1"></span>
+        <button class="btn btn-gold" data-act="sh-save">✓ Stock e tulun</button></div>
+    </div>`;
+  document.querySelectorAll('[data-sh]').forEach(el=>{ el.oninput=()=>shipInput(el); el.onchange=()=>{ shipInput(el, true); if(el.dataset.f==='st') renderShipment(); }; });
+  const sf=$('#sh-file'); if(sf) sf.onchange=async()=>{ const f=sf.files&&sf.files[0], i=window._shPhotoRow; if(!f||i==null) return;
+    try{ toast('Chhobi chhoto korchi…'); const d=await shrinkPhoto(f); state.ship.rows[i].photo=d; shipSave(); renderShipment(); }catch(e){ toast(e.message,'err'); } sf.value=''; };
+  ['sh-date','sh-rate','sh-other'].forEach(id=>{ const el=$('#'+id); el.oninput=()=>{ S.date=$('#sh-date').value; S.rate=$('#sh-rate').value; S.other=$('#sh-other').value; shipSave(); shipCalcAll(); }; });
+  shipCalcAll();
+}
+function shipInput(el, changed){
+  const S=state.ship, i=Number(el.dataset.sh), f=el.dataset.f, r=S.rows[i]; if(!r) return;
+  r[f]=el.value;
+  if(f==='name' || f==='sku'){
+    const p = f==='name' ? DB.Products.find(x=>String(x.Name)===el.value) : (el.value.trim()?DB.Products.find(x=>String(x.SKU||'').trim().toLowerCase()===el.value.trim().toLowerCase()):null);
+    if(p){ r.pid=p.ID; if(f==='name' && changed){ ['brand','cat','type','dup','st','size','sku','sell','web','w'].forEach(k=>{ const v={brand:p.Brand,cat:p.Category,type:p.Type,dup:p.Dupatta,st:p.Stitch,size:p.Size,sku:p.SKU,sell:p.SalePrice,web:p.WebPrice,w:p.WeightG}[k];
+        if(v!=null && v!=='' && (!r[k] || ['brand','cat','type','dup','st','size','sku','sell'].indexOf(k)>-1)){ r[k]=String(v); const inp=document.querySelector('[data-sh="'+i+'"][data-f="'+k+'"]'); if(inp) inp.value=v; } }); } }
+    else if(f==='name') r.pid='';
+  }
+  shipSave(); shipCalcRow(i); shipTotals();
+}
+function shipCalcRow(i){
+  const S=state.ship, r=S.rows[i], box=$('#shc-'+i), rowEl=$('#shr-'+i); if(!r||!box) return;
+  const c=shipCalc(r, S.rate, S.other), min=shipDefaults().minMargin, has=num(r.web)||num(r.w)||num(r.sell);
+  const ex=r.pid?findProduct(r.pid):null;
+  box.innerHTML = !has ? '<span>Website dam, weight ar bikri dam dile hisab dekhabe</span>' :
+    `<span>Weight charge <b>${tk(c.wc)}</b></span><span>Mot khoroch <b>${tk(Math.round(c.cost))}</b></span>`+
+    (c.sell?`<span>Labh <b style="color:${c.profit<0?'var(--neg)':'var(--pos)'}">${tk(Math.round(c.profit))}</b></span><span class="mg ${c.margin<min?'low':'ok'}">${(Math.round(c.margin*100)/100).toFixed(2)}%</span>`:'<span>Bikri dam din</span>')+
+    (ex?`<span class="pill st">✓ Age theke ache — stock ${num(ex.Stock)} → ${num(ex.Stock)+num(r.qty)}</span>`:'')+
+    `<span style="flex:1"></span><button class="btn-icon" data-act="sh-dup" data-i="${i}" title="Copy">⧉</button><button class="btn-icon" data-act="sh-del" data-i="${i}">✕</button>`;
+  if(rowEl) rowEl.classList.toggle('bad', !!(c.sell && c.margin<min));
+}
+function shipCalcAll(){ (state.ship.rows||[]).forEach((_,i)=>shipCalcRow(i)); shipTotals(); }
+function shipTotals(){
+  const S=state.ship, box=$('#sh-tot'); if(!box) return;
+  let n=0, w=0, wc=0, cost=0, sell=0, low=0; const min=shipDefaults().minMargin;
+  S.rows.forEach(r=>{ const q=num(r.qty); if(!String(r.name||'').trim()||!q) return; const c=shipCalc(r,S.rate,S.other);
+    n+=q; w+=c.w*q; wc+=c.wc*q; cost+=c.cost*q; sell+=c.sell*q; if(c.sell && c.margin<min) low++; });
+  const pf=sell-cost;
+  box.innerHTML=`<span>Dress <b>${n}</b></span><span>Mot weight <b>${(Math.round(w/10)/100)} kg</b></span><span>Weight charge <b>${tk(wc)}</b></span>
+    <span>Mot khoroch <b>${tk(Math.round(cost))}</b></span><span>Bikri hole <b>${tk(sell)}</b></span>
+    <span>Shombhabbo labh <b style="color:${pf<0?'var(--neg)':'var(--pos)'}">${tk(Math.round(pf))}</b> ${sell?'('+(Math.round(pf/sell*1000)/10)+'%)':''}</span>
+    ${low?`<span class="pill" style="background:#c62828;color:#fff">⚠️ ${low} ta dress ${min}% er niche</span>`:''}`;
+}
+async function shipCommit(){
+  const S=state.ship; const rows=S.rows.filter(r=>String(r.name||'').trim() && num(r.qty)>0);
+  if(!rows.length){ toast('Kono dress nei','err'); return; }
+  const miss=rows.filter(r=>!num(r.web)||!num(r.w)).length;
+  if(miss && !confirm(miss+' ta dress e website dam ba weight nei — tobuo tulbo?')) return;
+  if(!num(S.rate)){ toast('Weight charge per kg din','err'); return; }
+  try{
+    const r=await api('saveShipment',{ rows:rows, meta:{ date:S.date, rate:num(S.rate), other:num(S.other) } });
+    const c=Object.assign({}, getCfg()); c.shipRate=num(S.rate); c.shipOther=num(S.other); setCfg(c);
+    state.ship=null; try{ localStorage.removeItem('omme_ship_draft'); }catch(e){}
+    toast('Stock e uthlo ✦ · notun '+r.added+' · stock barlo '+r.updated,'ok'); setNav('inventory');
+  }catch(e){ toast(e.message,'err'); }
 }
 function thumbHtml(p, cls){
   cls=cls||'';
@@ -1877,6 +2107,16 @@ function productForm(p){
         <div class="field"><label>Buy price (৳) ${p.ID?'<span style="font-weight:400;color:var(--muted);font-size:11px">— নতুন lot-এর দাম দিতে হলে Purchase করো</span>':''}</label><input id="f-buy" type="number" value="${p.BuyPrice||''}"></div>
         <div class="field"><label>Sale price (৳)</label><input id="f-sale" type="number" value="${p.SalePrice||''}"></div>
       </div>
+      <details class="wcalc" ${p.WeightG?'open':''}><summary>⚖️ Weight diye buy price hisab</summary>
+        <div class="grid2" style="margin-top:10px">
+          <div class="field"><label>Website dam ৳</label><input id="f-web" type="number" value="${p.WebPrice||''}"></div>
+          <div class="field"><label>Weight (g)</label><input id="f-wg" type="number" value="${p.WeightG||''}"></div>
+          <div class="field"><label>Rate ৳/kg</label><input id="f-rate" type="number" value="${p.ShipRate||shipDefaults().rate}"></div>
+          <div class="field"><label>Onnanno ৳</label><input id="f-oth" type="number" value="${p.OtherCost!=null&&p.OtherCost!==''?p.OtherCost:shipDefaults().other}"></div>
+        </div>
+        <div class="field" style="margin-bottom:8px"><label>PKR dam (shudhu note)</label><input id="f-pkr" value="${esc(p.PKR||'')}"></div>
+        <div id="f-wres" style="font-size:13px;margin-bottom:8px"></div>
+        <button type="button" class="btn btn-ghost btn-sm" data-act="f-wapply">↑ Buy price e boshao</button></details>
       <div class="field"><label>Stock quantity</label><input id="f-stock" type="number" value="${p.Stock!==undefined?p.Stock:''}"></div>
       <div class="field"><label>Stitched / Unstitched</label>
         <div class="seg" id="f-stitch">
@@ -1901,6 +2141,9 @@ function productForm(p){
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
       <button class="btn btn-gold" data-act="product-save" data-id="${esc(p.ID||'')}">Save product</button></div>`);
   bindAttrSelects($('#modal'));
+  const wcalc=()=>{ const o=$('#f-wres'); if(!o) return; const c=shipCalc({web:$('#f-web').value,w:$('#f-wg').value,sell:$('#f-sale').value}, $('#f-rate').value, $('#f-oth').value);
+    o.innerHTML=(c.web||c.w)?`Weight charge <b>${tk(c.wc)}</b> · Mot khoroch <b>${tk(Math.round(c.cost))}</b>`+(c.sell?` · Labh <b>${tk(Math.round(c.profit))}</b> <span class="pill ${c.margin<shipDefaults().minMargin?'defect':'pos'}">${c.margin.toFixed(2)}%</span>`:''):''; };
+  ['f-web','f-wg','f-rate','f-oth','f-sale'].forEach(id=>{ const el=$('#'+id); if(el) el.addEventListener('input', wcalc); }); wcalc();
   window._pStitch=p.Stitch||'';
   const fd=$('#f-defect'); if(fd) fd.onchange=()=>{ $('#f-defect-note').style.display=fd.checked?'':'none'; };
   window._pPhoto=undefined; photoBox(p.Photo||'', '');
@@ -1930,6 +2173,9 @@ async function saveProduct(id){
     ShippingCost:$('#f-shipping').value||'0',
     BuyPrice:$('#f-buy').value, SalePrice:$('#f-sale').value, Stock:$('#f-stock').value,
     Preorder:!!($('#f-pre')&&$('#f-pre').checked),
+    WebPrice:$('#f-web')&&$('#f-web').value?num($('#f-web').value):'', WeightG:$('#f-wg')&&$('#f-wg').value?num($('#f-wg').value):'',
+    ShipRate:$('#f-rate')?num($('#f-rate').value):'', OtherCost:$('#f-oth')?num($('#f-oth').value):'', PKR:$('#f-pkr')?$('#f-pkr').value.trim():'',
+    WeightCharge:($('#f-wg')&&$('#f-wg').value)?Math.round(num($('#f-wg').value)*num($('#f-rate').value)/1000*100)/100:'',
     Defect:!!($('#f-defect')&&$('#f-defect').checked), DefectNote:($('#f-defect')&&$('#f-defect').checked)?$('#f-defect-note').value.trim():'' };
   if(window._pPhoto!==undefined) item.Photo=window._pPhoto;
   if(!item.Name){ toast('Name is required','err'); return; }
@@ -1978,7 +2224,7 @@ function renderCustomers(q, only){
   const dmap=custDressMap(), smap=custStitchMap(), pdm=phoneDupMap();
   const rows=list.map(c=>{ const sm=sum[String(c.ID)], dm=dmap[String(c.ID)], tr=custTier(dm?dm.total:0), ph=custPhones(c);
     return `<tr${tr?` class="rc" style="--rc:${tr.c}; background:${hexA(tr.c,.12)}"`:''}>
-      <td><strong>${esc(c.Name)}</strong>${tr?`<div style="margin-top:4px">${dressBadge(dm)}</div>`:''}${(()=>{ const dd=custDupIds(c,pdm); return dd.length?`<div style="margin-top:4px"><button class="pill warn" style="border:none;cursor:pointer" data-act="cus-merge" data-id="${esc(c.ID)}" data-into="${esc(dd[0])}">⚠️ Duplicate? Merge</button></div>`:''; })()}</td>
+      <td><strong>${esc(c.Name)}</strong>${tr?`<div style="margin-top:4px">${dressBadge(dm)}</div>`:''}${retChip(c)?`<div style="margin-top:4px">${retChip(c)}</div>`:''}${(()=>{ const dd=custDupIds(c,pdm); return dd.length?`<div style="margin-top:4px"><button class="pill warn" style="border:none;cursor:pointer" data-act="cus-merge" data-id="${esc(c.ID)}" data-into="${esc(dd[0])}">⚠️ Duplicate? Merge</button></div>`:''; })()}</td>
       <td class="tnum">${ph.length?esc(ph[0])+ph.slice(1).map(x=>'<div style="font-size:12px;color:var(--muted)">'+esc(x)+'</div>').join(''):''}</td>
       <td>${esc(c.Address||'')}</td>
       <td>${custChips(sum[String(c.ID)])}${(()=>{ const h=stitchChip(smap[String(c.ID)]); return h?'<div class="chips" style="margin-top:5px">'+h+'</div>':''; })()}</td>
@@ -2009,10 +2255,10 @@ function customerTable(){
     return [c.Name||'', c.Phone||'', c.Phone2||'', c.Phone3||'', c.Email||'', c.Address||'',
       (c.OldAddresses||[]).map(o=>o.a).join(' | '), sm.orders||0, d.app, d.prev, d.total, tr?tr.l.replace(' 👑',''):'',
       Math.round(spent[id]||0), Math.round(sm.due||0), last[id]?dstr(last[id]):'',
-      Object.keys((sm2[id]||{}).st||{}).join(' / '), Object.keys((sm2[id]||{}).sz||{}).join(', ') ];
+      Object.keys((sm2[id]||{}).st||{}).join(' / '), Object.keys((sm2[id]||{}).sz||{}).join(', '), Array.isArray(c.ReturnLog)?c.ReturnLog.length:0 ];
   });
   return { head:['Name','Mobile 1','Mobile 2','Mobile 3','Email','Address','Old addresses','Orders (app)',
-    'Dresses (app)','Dresses (before app)','Dresses total','Colour group','Total spent','Due','Last order','Stitched/Unstitched','Sizes bought'], rows:rows };
+    'Dresses (app)','Dresses (before app)','Dresses total','Colour group','Total spent','Due','Last order','Stitched/Unstitched','Sizes bought','Returns'], rows:rows };
 }
 function exportCustomers(){ const t=customerTable(); downloadCSV('customers.csv', t.head, t.rows); toast(t.rows.length+' customers exported','ok'); }
 
@@ -2310,6 +2556,7 @@ async function customerHistory(id){
       <div class="modal-body">
         ${(()=>{ const ph=custPhones(c), olds=Array.isArray(c.OldAddresses)?c.OldAddresses:[], dm=custDressMap()[String(c.ID)], tr=custTier(dm?dm.total:0);
           return `<div class="cinfo">${tr?`<div style="margin-bottom:8px">${dressBadge(dm,true)}</div>`:''}
+            ${Array.isArray(c.ReturnLog)&&c.ReturnLog.length?'<div style="margin-bottom:8px">'+retChip(c)+'</div><div class="lbl">Return history</div>'+c.ReturnLog.map(x=>'<div class="old" style="color:#c62828">• '+fdate(x.d)+' · '+esc(x.inv)+' · '+esc(x.items)+(x.whole?' (puro order)':'')+(x.reason?' — '+esc(x.reason):'')+'</div>').join(''):''}
             <div class="lbl">Mobile</div><div>${ph.length?ph.map(esc).join(' &nbsp;·&nbsp; '):'—'}</div>
             <div class="lbl">Current address</div><div>${esc(c.Address||'—')}</div>
             ${olds.length?'<div class="lbl">Old addresses</div>'+olds.map(o=>'<div class="old">• '+esc(o.a)+(o.d?' <span style="font-size:11px">(changed '+fdate(o.d)+')</span>':'')+'</div>').join(''):''}
@@ -2331,7 +2578,7 @@ async function saleEditForm(inv, from, cid){
   window._saleEditFrom={from:from||'', cid:cid||''};
   openModal('<div class="modal-body loading"><div class="spin"></div>Loading…</div>');
   try{
-    const r=await api('getSale',{invoiceNo:inv}); const custs=await api('listCustomers');
+    const r=await api('getSale',{invoiceNo:inv}); const custs=await api('listCustomers'); state.products=await api('listProducts');
     if(!r.sale){ closeModal(); toast('Sale not found','err'); return; }
     window._saleEdit={ sale:r.sale, items:r.items, received:r.received };
     const sl=r.sale;
@@ -2349,7 +2596,9 @@ async function saleEditForm(inv, from, cid){
           <div class="field"><label>Date</label><input id="se-date" type="date" value="${dstr(sl.Date)}"></div>
           <div class="field"><label>Payment</label><select id="se-pay">${['Cash','bKash','Nagad','Bank'].map(x=>`<option ${sl.Payment===x?'selected':''}>${x}</option>`).join('')}</select></div>
         </div>
-        <div class="table-wrap" style="margin-bottom:12px"><table class="se-tbl"><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Sale ৳</th><th class="num">Buy ৳</th></tr></thead><tbody>${lines}</tbody></table></div>
+        <div class="table-wrap" style="margin-bottom:12px"><table class="se-tbl"><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Sale ৳</th><th class="num">Buy ৳</th></tr></thead><tbody id="se-lines">${lines}</tbody></table></div>
+        <div class="se-add"><select id="se-addsel"><option value="">＋ Onno dress jog korun…</option>${state.products.concat().filter(p=>num(p.Stock)>0||p.Preorder).sort((a,b)=>cmpTxt(a.Name,b.Name)).map(p=>`<option value="${esc(p.ID)}">${esc(p.Name)}${p.SKU?' · '+esc(p.SKU):''} · ${tk(p.SalePrice)} · ${num(p.Stock)} stock</option>`).join('')}</select>
+          <button type="button" class="btn btn-ghost btn-sm" data-act="se-add">＋ Add</button></div>
         <p style="font-size:12px;color:var(--muted);margin:-4px 0 12px">Pre-order dress ashle <strong>Buy ৳</strong> boshiye dilei profit nijei thik hoye jabe.</p>
         <div class="grid2">
           <div class="field"><label>Discount ৳</label><input id="se-disc" type="number" value="${num(sl.Discount)}"></div>
@@ -2368,7 +2617,10 @@ async function saleEditForm(inv, from, cid){
         <div id="se-tot"></div>
         <p style="font-size:12px;color:var(--muted);margin:10px 0 0">Qty bodlale stock ar profit nijei thik hoye jabe.</p>
       </div>
-      <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
+      <div class="modal-foot" style="flex-wrap:wrap">
+        <button class="btn btn-danger btn-sm" data-act="sale-return" data-inv="${esc(sl.InvoiceNo)}">↩ Return</button>
+        <button class="btn btn-ghost btn-sm" data-act="sale-cancel" data-inv="${esc(sl.InvoiceNo)}">✕ Order batil</button><span style="flex:1"></span>
+        <button class="btn btn-ghost" data-act="modal-close">Close</button>
         <button class="btn btn-gold" data-act="sale-edit-save" data-inv="${esc(sl.InvoiceNo)}">Save changes</button></div>`);
     $('#modal').querySelectorAll('input').forEach(el=>{ el.oninput=saleEditTotals; el.onchange=saleEditTotals; });
     saleEditTotals();
@@ -2376,14 +2628,18 @@ async function saleEditForm(inv, from, cid){
 }
 function saleEditRead(){
   const edits={}; let subtotal=0, kept=0, cost=0;
-  document.querySelectorAll('.se-q').forEach(q=>{
+  document.querySelectorAll('.se-q:not(.se-nq):not(.rt-q)').forEach(q=>{
     const k=q.dataset.k, sel=function(c){ return document.querySelector('.'+c+'[data-k="'+k.replace(/"/g,'\\"')+'"]'); };
     const p=sel('se-p'), b=sel('se-b'), z=sel('se-s');
     const qty=Math.max(0,Number(q.value)||0), price=Math.max(0,Number(p?p.value:0)||0), buy=Math.max(0,Number(b?b.value:0)||0);
     edits[k]={Qty:qty, SalePrice:price, BuyPrice:buy}; if(z) edits[k].Size=z.value.trim(); subtotal+=qty*price; cost+=qty*buy; if(qty>0) kept++;
   });
   const disc=Number($('#se-disc').value)||0, deliv=Number($('#se-deliv').value)||0, recv=Number($('#se-recv').value)||0;
-  return { edits, kept, subtotal, disc, deliv, recv, net:subtotal-disc, profit:subtotal-cost-disc };
+  const adds=[];
+  document.querySelectorAll('.se-nq').forEach(q=>{ const row=q.closest('tr'), pid=row.dataset.pid, pp=findProduct(pid)||{};
+    const qty=Math.max(0,Number(q.value)||0), price=Math.max(0,Number(row.querySelector('.se-np').value)||0), z=row.querySelector('.se-s');
+    if(qty>0){ adds.push({ProductID:pid, ProductName:pp.Name||'', Qty:qty, SalePrice:price, Size:z?z.value.trim():''}); subtotal+=qty*price; cost+=qty*num(pp.BuyPrice); kept++; } });
+  return { edits, adds, kept, subtotal, disc, deliv, recv, net:subtotal-disc, profit:subtotal-cost-disc };
 }
 function saleEditTotals(){
   const t=saleEditRead(), box=$('#se-tot'); if(!box) return;
@@ -2393,6 +2649,75 @@ function saleEditTotals(){
     <div class="totline"><span>Profit</span><span class="tnum" style="color:${t.profit<0?'var(--neg)':'var(--pos)'};font-weight:700">${tk(t.profit)}</span></div>
     ${t.deliv>0?`<div class="totline" style="color:var(--muted)"><span>Customer pays (invoice)</span><span class="tnum">${tk(t.net+t.deliv)}</span></div>`:''}
     ${due>0?`<div class="totline"><span>Due</span><span class="tnum" style="color:var(--neg);font-weight:600">${tk(due)}</span></div>`:''}`;
+}
+async function afterSaleChange(){
+  const f=window._saleEditFrom||{};
+  if(f.from==='hist' && f.cid && DB.Customers.find(c=>String(c.ID)===String(f.cid))){ customerHistory(f.cid); }
+  if(f.from==='recent'){ recentSales(); }
+  if(state.view==='customers') renderCustomers('');
+  else if(state.view==='dashboard') viewDashboard();
+  else if(state.view==='inventory') viewInventory();
+  else if(state.view==='sales'){ state.products=await api('listProducts'); renderProductList($('#pos-search')?$('#pos-search').value:''); }
+}
+function seAddLine(){
+  const sel=$('#se-addsel'); const p=sel&&findProduct(sel.value); if(!p) return;
+  const tb=$('#se-lines'); const tr=document.createElement('tr'); tr.dataset.pid=p.ID;
+  tr.innerHTML=`<td>${esc(p.Name)} <span class="pill pos" style="font-size:10px">notun</span>${p.Stitch==='Stitched'?`<div><input class="se-s" placeholder="Size" value="${esc(sizeList(p.Size).length===1?sizeList(p.Size)[0]:'')}"></div>`:''}</td>
+    <td class="num"><input class="se-q se-nq" type="number" min="0" value="1" style="width:56px;text-align:right"></td>
+    <td class="num"><input class="se-p se-np" type="number" min="0" value="${num(p.SalePrice)}" style="width:76px;text-align:right"></td>
+    <td class="num" style="color:var(--muted);font-size:12px">${tk(p.BuyPrice)}</td>`;
+  tb.appendChild(tr); tr.querySelectorAll('input').forEach(el=>{ el.oninput=saleEditTotals; el.onchange=saleEditTotals; });
+  sel.value=''; saleEditTotals();
+}
+function returnForm(inv){
+  const r=L_getSale(inv); if(!r.sale){ toast('Sale not found','err'); return; }
+  const c=DB.Customers.find(x=>String(x.ID)===String(r.sale.CustomerID));
+  const rows=r.items.map(i=>`<tr><td>${esc(i.ProductName)}${itemTag(i)?'<div style="font-size:11.5px;color:var(--muted)">'+esc(itemTag(i))+'</div>':''}</td>
+      <td class="num">${num(i.Qty)}</td>
+      <td class="num"><input class="se-q rt-q" data-k="${esc(i._k)}" type="number" min="0" max="${num(i.Qty)}" value="${num(i.Qty)===1?1:0}" style="width:60px;text-align:right"></td>
+      <td class="num"><input type="checkbox" class="rt-d" data-k="${esc(i._k)}" style="width:18px;height:18px"></td></tr>`).join('');
+  openModal(`<div class="modal-head"><h3>↩ Return · ${esc(inv)}</h3><button class="x" data-act="modal-close">×</button></div>
+    <div class="modal-body">
+      <p style="margin:0 0 12px;font-size:13.5px">${esc(r.sale.CustomerName||'Walk-in')} · ${fdate(r.sale.Date)} · ${tk(saleNet(r.sale))}</p>
+      <div class="table-wrap" style="margin-bottom:12px"><table class="se-tbl"><thead><tr><th>Dress</th><th class="num">Nise</th><th class="num">Ferot</th><th class="num">Defect?</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="field"><label>Karon (optional)</label><input id="rt-reason" placeholder="e.g. parcel neyni / size hoyni / colour pochondo hoyni"></div>
+      <div class="field"><label>Courier return charge ৳ (optional — Expenses e jabe)</label><input id="rt-charge" type="number" min="0" placeholder="0"></div>
+      <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.6">Dress stock e ferot ashbe, order theke sore jabe (hisab oi order er mash ei thakbe). Sob dress ferot dile puro order bad hoye jabe.${c?' '+esc(c.Name)+' er nam er pashe lal "↩ Returned" chinho thakbe.':''}</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
+      <button class="btn btn-danger" data-act="rt-do" data-inv="${esc(inv)}">↩ Return korun</button></div>`);
+}
+async function doReturn(inv){
+  const qty={}, defect={}; let n=0;
+  document.querySelectorAll('.rt-q').forEach(q=>{ const v=Math.max(0,Number(q.value)||0); if(v){ qty[q.dataset.k]=v; n+=v; } });
+  document.querySelectorAll('.rt-d').forEach(d=>{ if(d.checked) defect[d.dataset.k]=true; });
+  if(!n){ toast('Koyta dress ferot ashlo seta likhun','err'); return; }
+  try{
+    const r=await api('returnItems',{invoiceNo:inv, qty, opts:{ reason:$('#rt-reason').value.trim(), charge:Number($('#rt-charge').value)||0, defect }});
+    if(r&&r.error){ toast(r.error,'err'); return; }
+    closeModal(); toast((r.whole?'Puro order ':'')+'Return holo · '+n+' ta dress stock e ferot'+(r.refund>0?' · customer ke '+tk(r.refund)+' ferot dite hobe':'')+' ✦','ok'); afterSaleChange();
+  }catch(e){ toast(e.message,'err'); }
+}
+function cancelSale(inv){
+  if(!confirm(inv+' order ta batil korbo?\n\nSob dress stock e ferot jabe, order ta muche jabe. Customer er nam e kono lal chinho thakbe na.\n(Customer pore nile — Edit e "Delivery after" diye rakhte paren.)')) return;
+  api('cancelSale',{invoiceNo:inv}).then(r=>{ if(r&&r.error){ toast(r.error,'err'); return; } closeModal(); toast(inv+' batil holo · dress stock e ferot','ok'); afterSaleChange(); })
+    .catch(e=>toast(e.message,'err'));
+}
+function recentSales(){
+  window._saleEditFrom={from:'recent'};
+  const L=DB.Sales.slice().sort((a,b)=>String(b.Date).localeCompare(String(a.Date))).slice(0,25);
+  const rows=L.map(s=>`<tr><td><strong>${esc(s.InvoiceNo)}</strong><div style="font-size:12px;color:var(--muted)">${esc(s.CustomerName||'Walk-in')} · ${fdate(s.Date)}</div>
+      <div style="font-size:12px">${DB.SaleItems.filter(i=>String(i.InvoiceNo)===String(s.InvoiceNo)).map(i=>esc(i.ProductName)+(num(i.Qty)>1?' ×'+num(i.Qty):'')).join(', ')}</div></td>
+      <td class="num tnum">${tk(saleNet(s))}</td>
+      <td class="num" style="white-space:nowrap"><button class="btn-icon" data-act="sale-view" data-inv="${esc(s.InvoiceNo)}">View</button>
+        <button class="btn-icon" data-act="sale-edit" data-inv="${esc(s.InvoiceNo)}" data-from="recent">Edit</button>
+        <button class="btn-icon" style="color:#c62828" data-act="sale-return" data-inv="${esc(s.InvoiceNo)}">↩</button></td></tr>`).join('')
+    || '<tr><td colspan="3" class="empty">Ekhono kono sale nei.</td></tr>';
+  openModal(`<div class="modal-head"><h3>🧾 Recent sales</h3><button class="x" data-act="modal-close">×</button></div>
+    <div class="modal-body"><p style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Edit e dress bodlano / qty komano / onno dress jog kora jay. ↩ = Return. Puro order batil korte Edit e "Order batil".</p>
+      <div class="table-wrap"><table><tbody>${rows}</tbody></table></div></div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Close</button></div>`);
+  $('#modal').classList.add('wide');
 }
 async function saveSaleEdit(inv){
   const t=saleEditRead();
@@ -2405,11 +2730,8 @@ async function saveSaleEdit(inv){
     Preorder:$('#se-pre').checked, PreorderDate:$('#se-predate').value, Status:$('#se-status').value,
     DeliverAfter:$('#se-delafter').value, Note:$('#se-note').value.trim() };
   try{
-    await api('updateSale',{invoiceNo:inv, patch, edits:t.edits});
-    closeModal(); toast(inv+' updated','ok');
-    const f=window._saleEditFrom||{};
-    if(f.from==='hist' && f.cid){ customerHistory(f.cid); if(state.view==='customers') renderCustomers(''); }
-    else if(state.view==='dashboard') viewDashboard();
+    await api('updateSale',{invoiceNo:inv, patch, edits:t.edits, adds:t.adds});
+    closeModal(); toast(inv+' updated','ok'); afterSaleChange();
   }catch(e){ toast(e.message,'err'); }
 }
 
@@ -2456,7 +2778,8 @@ function renderSales(){
   const custOpts=state.customers.map(c=>`<option value="${esc(c.ID)}" ${state.customerId===c.ID?'selected':''}>${esc(c.Name)}${c.Phone?' — '+esc(c.Phone):''}</option>`).join('');
 
   $('#view').innerHTML=`
-    <div class="view-head"><div><div class="eyebrow">Point of sale</div><h2>New sale</h2></div></div>
+    <div class="view-head"><div><div class="eyebrow">Point of sale</div><h2>New sale</h2></div>
+      <button class="btn btn-ghost btn-sm" data-act="recent-sales">🧾 Recent sales · Edit / Return</button></div>
     <div class="posview">
       <div class="card pos-products">
         <div class="search"><span class="mag">⌕</span><input id="pos-search" placeholder="Search name, brand, SKU, category, size…"></div>
@@ -2705,6 +3028,7 @@ function showInvoice(sale, items){
       <p class="og-desk" style="font-size:12px;color:var(--muted);margin:10px 2px 0">Courier, zone, time, note ar tick gulo ekhane bodlano jay (shudhu invoice chhobi te, save hoy na).</p></div>
     <div class="modal-foot" style="flex-wrap:wrap">
       <button class="btn btn-ghost" data-act="modal-close">Close</button>
+      <button class="btn btn-ghost" data-act="sale-edit" data-inv="${esc(sale.InvoiceNo)}" data-from="${state.view==='sales'?'recent':''}">✎ Edit</button>
       <button class="btn btn-ghost" data-act="inv-jpeg" data-no="${esc(sale.InvoiceNo)}">⭳ JPG</button>
       <button class="btn btn-ghost" data-act="inv-pdf" data-no="${esc(sale.InvoiceNo)}">⭳ PDF</button>
       <button class="btn btn-ghost" data-act="inv-wa" data-no="${esc(sale.InvoiceNo)}" data-pay="${payable}">WhatsApp chat</button>
@@ -3571,6 +3895,20 @@ document.addEventListener('click', function(e){
     case 'mg-do': doMerge(id); break;
     case 'cus-del': delCustomer(id); break;
     case 'pos-hide': state.posHide=!posHide(); try{ localStorage.setItem('omme_pos_hide', state.posHide?'1':'0'); }catch(x){} renderProductList($('#pos-search')?$('#pos-search').value:''); break;
+    case 'se-add': seAddLine(); break;
+    case 'sale-return': returnForm(el.dataset.inv); break;
+    case 'rt-do': doReturn(el.dataset.inv); break;
+    case 'sale-cancel': cancelSale(el.dataset.inv); break;
+    case 'recent-sales': recentSales(); break;
+    case 'sh-add': { const S=shipLoad(); S.rows.push(shipBlank(S.rows[S.rows.length-1])); shipSave(); renderShipment();
+      const L=document.querySelectorAll('[data-f="name"]'); if(L.length) L[L.length-1].focus(); break; }
+    case 'sh-dup': { const S=shipLoad(), i=Number(el.dataset.i); S.rows.splice(i+1,0,Object.assign({},S.rows[i])); shipSave(); renderShipment(); break; }
+    case 'sh-del': { const S=shipLoad(), i=Number(el.dataset.i); S.rows.splice(i,1); if(!S.rows.length) S.rows.push(shipBlank()); shipSave(); renderShipment(); break; }
+    case 'sh-clear': if(confirm('Ei chalan er sob lekha muche dibo?')){ state.ship=null; try{ localStorage.removeItem('omme_ship_draft'); }catch(x){} renderShipment(); } break;
+    case 'sh-save': shipCommit(); break;
+    case 'sh-photo': { window._shPhotoRow=Number(el.dataset.i); const f=$('#sh-file'); if(f) f.click(); break; }
+    case 'sh-photo-del': { const S=shipLoad(); const r=S.rows[Number(el.dataset.i)]; if(r){ r.photo=''; shipSave(); renderShipment(); } break; }
+    case 'f-wapply': { const c=shipCalc({web:$('#f-web').value,w:$('#f-wg').value}, $('#f-rate').value, $('#f-oth').value); if(c.cost){ $('#f-buy').value=Math.round(c.cost); toast('Buy price '+tk(Math.round(c.cost)),'ok'); } break; }
     case 'pay-mode': setPayMode(el.getAttribute('data-m')); break;
     case 'cart-inc': cartQty(id,1); break;
     case 'cart-dec': cartQty(id,-1); break;
