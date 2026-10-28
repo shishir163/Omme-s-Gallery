@@ -217,7 +217,7 @@
   .stat{padding:18px 18px 16px; position:relative; overflow:hidden}
   .stat::before{content:""; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--gold),var(--gold-2))}
   .stat .k{font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600}
-  .stat .v{font-family:var(--serif); font-weight:600; font-size:30px; margin-top:6px; line-height:1}
+  .stat .v{font-family:var(--sans); font-weight:900; font-size:28px; margin-top:6px; line-height:1.05; font-variant-numeric:tabular-nums; letter-spacing:-.01em}
   .stat .m{font-size:12px; color:var(--muted); margin-top:6px}
   .stat.green .v{color:var(--pos)} .stat.green::before{background:linear-gradient(90deg,var(--pos),#57a97c)}
 
@@ -463,6 +463,12 @@
   .wcalc{border:1px dashed var(--line-2); border-radius:10px; padding:10px 12px; margin-bottom:14px}
   .wcalc summary{cursor:pointer; font-weight:700; font-size:13px}
   @media (max-width:900px){ .sh-head{grid-template-columns:1fr 1fr} .sh-grid{grid-template-columns:1fr 1fr 1fr} .sh-grid .w2{grid-column:span 3} .sh-grid .w15{grid-column:span 2} }
+  .qlinks{display:flex; flex-wrap:wrap; gap:8px; margin:-6px 0 16px; position:relative; z-index:1}
+  .qlink{display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:999px; background:var(--d-card); border:1px solid var(--d-line); color:var(--d-ink); text-decoration:none; font-weight:700; font-size:13px}
+  .qlink:hover{border-color:var(--gold-2)}
+  .ln-row{display:grid; grid-template-columns:120px 1.1fr 2fr auto; gap:8px; align-items:center; margin-bottom:8px}
+  .ln-row input{width:100%; padding:9px 10px; border:1px solid var(--line-2); border-radius:8px; background:var(--input-bg); color:var(--ink); font:inherit; font-size:14px; min-width:0}
+  @media (max-width:760px){ .ln-row{grid-template-columns:1fr 1fr auto} .ln-row .ln-url{grid-column:1/-1; order:5} }
   .pill.st{background:rgba(13,148,136,.16); color:#0f766e; white-space:nowrap}
   .se-s{padding:6px 8px; border:1px solid var(--line-2); border-radius:7px; background:var(--input-bg); color:var(--ink); width:110px; margin-top:4px; font-size:13px}
   .pill.defect{background:#c62828; color:#fff; white-space:nowrap}
@@ -549,7 +555,7 @@
   .cl .rm:hover{color:var(--neg)}
   .totline{display:flex; justify-content:space-between; padding:5px 0; font-size:13.5px; color:var(--charcoal)}
   .totline.grand{border-top:1px solid var(--line-2); margin-top:6px; padding-top:10px; font-size:16px; font-weight:700}
-  .totline.grand .v{font-family:var(--serif); font-size:22px}
+  .totline.grand .v{font-family:var(--sans); font-weight:900; font-size:21px; font-variant-numeric:tabular-nums}
   .cart .mini{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0}
   .cart .mini input, .cart select, .cart .fullsel{width:100%; padding:9px 10px; border:1px solid var(--line-2); border-radius:8px; background:var(--input-bg)}
   .cart label.mini-l{font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px}
@@ -1049,13 +1055,14 @@ function stitchChip(m){
   return h;
 }
 function custPhones(c){ return [c&&c.Phone, c&&c.Phone2, c&&c.Phone3].map(function(x){ return String(x||'').trim(); }).filter(Boolean); }
+function invQtyMap(){ const m={}; DB.SaleItems.forEach(function(i){ const k=String(i.InvoiceNo); m[k]=(m[k]||0)+num(i.Qty); }); return m; }
 function L_customerSummary(){
-  const pi=payInfo(), out={};
+  const pi=payInfo(), out={}, qm=invQtyMap();
   DB.Sales.forEach(function(s){
     const id=String(s.CustomerID||''); if(!id) return;
     const o=out[id]||(out[id]={orders:0,net:0,due:0,pre:0,prePending:0,pending:0}); const x=pi(s);
     o.orders++; o.net+=x.net; o.due+=x.due;
-    if(s.Preorder){ o.pre++; if(s.Status==='Pending') o.prePending++; }
+    if(s.Preorder){ const q=qm[String(s.InvoiceNo)]||1; o.pre+=q; if(s.Status==='Pending') o.prePending+=q; }
     if(s.Status==='Pending'){ o.pending++; if(s.DeliverAfter && (!o.del || (s.DeliverBy||'9')<(o.del.DeliverBy||'9'))) o.del={DeliverAfter:s.DeliverAfter, DeliverBy:s.DeliverBy||'', Status:'Pending'}; }
   });
   Object.keys(out).forEach(function(id){ const o=out[id]; o.state = o.due<=0 ? 'Paid' : (o.due>=o.net ? 'Due' : 'Partial'); });
@@ -1101,9 +1108,9 @@ function L_dashboard(){
   const todayStr=dstr(new Date()), yr=String(new Date().getFullYear());
   let tSales=0,tProfit=0,tOrders=0,allSales=0,allProfit=0; const monthly={};
   const curMK=ym(new Date()); const _pd=new Date(); const prevMK=ym(new Date(_pd.getFullYear(),_pd.getMonth()-1,1));
-  let monProfit=0, prevMonProfit=0; const preMonth={count:0,pending:0,delivered:0,amount:0};
+  let monProfit=0, prevMonProfit=0; const preMonth={count:0,pending:0,delivered:0,amount:0}, qmD=invQtyMap();
   sales.forEach(function(s){
-    if(s.Preorder && ym(s.Date)===curMK){ preMonth.count++; preMonth.amount+=saleNet(s); if(s.Status==='Pending') preMonth.pending++; else preMonth.delivered++; }
+    if(s.Preorder && ym(s.Date)===curMK){ const q=qmD[String(s.InvoiceNo)]||1; preMonth.count+=q; preMonth.amount+=saleNet(s); if(s.Status==='Pending') preMonth.pending+=q; else preMonth.delivered+=q; }
     const total=saleNet(s), pf=num(s.Profit);
     allSales+=total; allProfit+=pf;
     if(dstr(s.Date)===todayStr){ tSales+=total; tProfit+=pf; tOrders++; }
@@ -1167,11 +1174,12 @@ function L_report(from, to){
     if(y===thisYear){ cur[m]-=num(r.Amount); prof[m]-=num(r.ProfitReversed); } else if(y===thisYear-1){ prev[m]-=num(r.Amount); } });
   /* pre-orders: totals for the chosen range + a month-by-month count for this year */
   const preInv={}; let preCount=0, prePending=0, preAmount=0, costPending=0;
-  S.forEach(function(x){ if(x.Preorder){ preInv[x.InvoiceNo]=true; preCount++; preAmount+=saleNet(x); if(x.Status==='Pending') prePending++; } });
+  const qmR=invQtyMap();
+  S.forEach(function(x){ if(x.Preorder){ const q=qmR[String(x.InvoiceNo)]||1; preInv[x.InvoiceNo]=true; preCount+=q; preAmount+=saleNet(x); if(x.Status==='Pending') prePending+=q; } });
   I.forEach(function(it){ if(preInv[it.InvoiceNo] && num(it.BuyPrice)<=0) costPending++; });
   const preDel=[],prePen=[],preAmt=[]; for(let i=0;i<12;i++){ preDel.push(0); prePen.push(0); preAmt.push(0); }
   sales.forEach(function(x){ if(!x.Preorder||!x.Date) return; const d=new Date(x.Date);
-    if(d.getFullYear()===thisYear){ const m=d.getMonth(); preAmt[m]+=saleNet(x); if(x.Status==='Pending') prePen[m]++; else preDel[m]++; } });
+    if(d.getFullYear()===thisYear){ const m=d.getMonth(); preAmt[m]+=saleNet(x); const q=qmR[String(x.InvoiceNo)]||1; if(x.Status==='Pending') prePen[m]+=q; else preDel[m]+=q; } });
   /* dresses sold (returns taken off): selected dates, this month, this year */
   const retQtyBy={}; DB.ReturnItems.forEach(function(it){ retQtyBy[String(it.ReturnNo)]=(retQtyBy[String(it.ReturnNo)]||0)+num(it.Qty); });
   const sDate={}; sales.forEach(function(x){ sDate[String(x.InvoiceNo)]=x.Date; });
@@ -1660,6 +1668,7 @@ async function viewDashboard(){
         <button class="dash-new" data-nav="sales">＋ New sale</button>
       </div>
 
+      ${linksBar()}
       <div class="gs"><span class="gs-mag">⌕</span>
         <input id="gs-input" type="search" autocomplete="off" placeholder="Search customer, mobile, address, dress name, SKU, invoice…"></div>
       <div id="gs-res"></div>
@@ -1699,7 +1708,7 @@ async function viewDashboard(){
           <span class="glyph">✅</span>
           <div class="tk">Pre-orders · This Month</div>
           <div class="tv" data-count="${d.preMonth.count}" data-plain="1">0</div>
-          <div class="tm">${d.preMonth.pending} pending · ${d.preMonth.delivered} delivered</div>
+          <div class="tm">dress · ${d.preMonth.pending} pending · ${d.preMonth.delivered} delivered</div>
         </div>
       </div>
 
@@ -1922,7 +1931,7 @@ function renderInventory(q, only){
       <td class="c-sku">${esc(p.SKU||'')}</td>
       <td class="num tnum c-buy">${tk(p.BuyPrice)}</td>
       <td class="num tnum">${tk(p.SalePrice)}<div class="inv-sub">Buy ${tk(p.BuyPrice)}</div></td>
-      <td class="num tnum">${Number(p.Stock)}${out?'<div><span class="pill warn">sold out</span></div>':(low?'<div><span class="pill warn">low</span></div>':'')}${p.Preorder&&out?'<div style="margin-top:3px"><span class="pill pre">প্রি-অর্ডার dress</span></div>':''}</td>
+      <td class="num tnum">${Number(p.Stock)}${out?'<div><span class="pill warn">sold out</span></div>':(low?'<div><span class="pill warn">low</span></div>':'')}</td>
       <td class="num" style="white-space:nowrap">
         <button class="btn-icon" data-act="product-edit" data-id="${esc(p.ID)}">Edit</button>
         <button class="btn-icon" data-act="product-del" data-id="${esc(p.ID)}">✕</button></td>
@@ -2059,6 +2068,20 @@ async function shipCommit(){
     toast('Stock e uthlo ✦ · notun '+r.added+' · stock barlo '+r.updated,'ok'); setNav('inventory');
   }catch(e){ toast(e.message,'err'); }
 }
+const LINK_DEFAULTS=[{i:'🌐',n:'Website',u:'https://ommesgallery.xyz'},{i:'📘',n:'Facebook page',u:''},{i:'👥',n:'Facebook group',u:''},{i:'📸',n:'Instagram',u:''}];
+function shopLinks(){ const c=getCfg(); return Array.isArray(c.links)?c.links:LINK_DEFAULTS; }
+function linkHref(u){ u=String(u||'').trim(); if(!u) return ''; return /^[a-z]+:\/\//i.test(u)?u:'https://'+u; }
+function linksBar(){ const L=shopLinks().filter(x=>String(x.u||'').trim()); if(!L.length) return '';
+  return '<div class="qlinks">'+L.map(x=>'<a class="qlink" href="'+esc(linkHref(x.u))+'" target="_blank" rel="noopener">'+esc(x.i||'🔗')+' '+esc(x.n||x.u)+'</a>').join('')+'</div>'; }
+function linksEditor(L){
+  L=L||shopLinks();
+  return L.map((x,i)=>`<div class="ln-row"><input class="ln-i" data-i="${i}" value="${esc(x.i||'')}" placeholder="Icon" style="text-align:center">
+      <input class="ln-n" data-i="${i}" value="${esc(x.n||'')}" placeholder="Nam (e.g. Facebook page)">
+      <input class="ln-u ln-url" data-i="${i}" value="${esc(x.u||'')}" placeholder="https://…">
+      <button type="button" class="btn-icon" data-act="ln-del" data-i="${i}">✕</button></div>`).join('') || '<p style="color:var(--muted);font-size:13px">Kono link nei.</p>';
+}
+function linksRead(){ const out=[]; document.querySelectorAll('.ln-n').forEach(el=>{ const i=el.dataset.i; out.push({ i:(document.querySelector('.ln-i[data-i="'+i+'"]')||{}).value||'🔗', n:el.value.trim(), u:((document.querySelector('.ln-u[data-i="'+i+'"]')||{}).value||'').trim() }); }); return out; }
+function linksSave(L){ const c=Object.assign({}, getCfg()); c.links=L; setCfg(c); }
 function thumbHtml(p, cls){
   cls=cls||'';
   if(p && p.Photo) return '<img class="pthumb '+cls+'" src="'+p.Photo+'" alt="" data-act="photo-view" data-id="'+esc(p.ID)+'">';
@@ -3226,7 +3249,7 @@ function renderReports(d){
   const gross=s.subtotal - s.cogs;
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Analytics</div><h2>Reports</h2></div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap"><button class="btn btn-gold btn-sm" data-act="month-sum">🗓 Masher saransho</button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap"><button class="btn btn-gold btn-sm" data-act="month-sum">🗓 Monthly Report</button>
       <button class="btn btn-ghost btn-sm" data-act="rep-export-sales">⤓ Export sales CSV</button></div></div>
 
     <div class="card panel" style="margin-bottom:18px">
@@ -3263,8 +3286,8 @@ function renderReports(d){
     <div class="card panel" style="margin-bottom:16px">
       <h3>Pre-orders <span class="count">${d.yoy.year} · month by month</span></h3>
       <div class="rep-tiles three">
-        <div class="tile indigo"><span class="glyph">✅</span><div class="tk">Pre-orders</div><div class="tv" data-count="${d.preorder.count}" data-plain="1">0</div><div class="tm">in selected dates</div></div>
-        <div class="tile gold"><span class="glyph">⏳</span><div class="tk">Pending</div><div class="tv" data-count="${d.preorder.pending}" data-plain="1">0</div><div class="tm">${d.preorder.delivered} delivered</div></div>
+        <div class="tile indigo"><span class="glyph">✅</span><div class="tk">Pre-order dress</div><div class="tv" data-count="${d.preorder.count}" data-plain="1">0</div><div class="tm">in selected dates</div></div>
+        <div class="tile gold"><span class="glyph">⏳</span><div class="tk">Pending dress</div><div class="tv" data-count="${d.preorder.pending}" data-plain="1">0</div><div class="tm">${d.preorder.delivered} dress delivered</div></div>
         <div class="tile emerald"><span class="glyph">৳</span><div class="tk">Pre-order sales</div><div class="tv" data-count="${d.preorder.amount}">৳0</div><div class="tm">after discount</div></div>
       </div>
       <canvas id="prechart" height="130"></canvas>
@@ -3344,7 +3367,7 @@ function monthSumHTML(d){
   const tc=d.topCust.map((x,i)=>`<tr><td class="n">${i+1}</td><td>${esc(x.name)}</td><td class="r">${tk(x.spent)}</td></tr>`).join('')||'<tr><td>—</td></tr>';
   const pays=Object.keys(d.pay).map(k=>`<span>${esc(k)} <b>${tk(d.pay[k])}</b></span>`).join('');
   return `<div class="msum" id="msnode">
-    <div class="mh"><img src="${OG_LOGO}" alt=""><div><h1>OMME'S GALLERY</h1><div class="sub">Monthly summary</div></div>
+    <div class="mh"><img src="${OG_LOGO}" alt=""><div><h1>OMME'S GALLERY</h1><div class="sub">Monthly Report</div></div>
       <div class="mon"><span>Month</span><b>${esc(d.label)}</b></div></div>
     <div class="mt">
       ${tile('linear-gradient(150deg,#12b886,#0b7a63)','Total sales',tk(c.sales),delta(c.sales,p.sales))}
@@ -3361,7 +3384,7 @@ let _msFile=null;
 function monthSummary(mk){
   const now=new Date(); mk=mk||ym(now);
   const d=L_monthSummary(mk);
-  openModal(`<div class="modal-head"><h3>Masher saransho</h3><button class="x" data-act="modal-close">×</button></div>
+  openModal(`<div class="modal-head"><h3>Monthly Report</h3><button class="x" data-act="modal-close">×</button></div>
     <div class="modal-body" style="padding:12px">
       <div class="field" style="max-width:220px"><label>Mash</label><input id="ms-month" type="month" value="${mk}"></div>
       <div id="mswrap" style="overflow:hidden; border-radius:6px; max-width:100%"><div id="msscale" style="width:760px; transform-origin:0 0">${monthSumHTML(d)}</div></div></div>
@@ -3371,7 +3394,7 @@ function monthSummary(mk){
   $('#modal').classList.add('wide');
   const mi=$('#ms-month'); if(mi) mi.onchange=()=>{ if(mi.value) monthSummary(mi.value); };
   fitMS(); setTimeout(fitMS,60);
-  _msFile=null; setTimeout(async function(){ try{ const b=await canvasBlob(await msCanvas()); _msFile={blob:b, name:'omme-summary-'+mk+'.jpg'}; }catch(e){} }, 400);
+  _msFile=null; setTimeout(async function(){ try{ const b=await canvasBlob(await msCanvas()); _msFile={blob:b, name:'omme-monthly-report-'+mk+'.jpg'}; }catch(e){} }, 400);
 }
 function fitMS(){
   const w=$('#mswrap'), sc=$('#msscale'); if(!w||!sc||!w.parentElement) return;
@@ -3387,7 +3410,7 @@ async function msCanvas(){
 }
 async function msShare(mk, onlySave){
   try{
-    let f=_msFile; if(!f){ f={blob:await canvasBlob(await msCanvas()), name:'omme-summary-'+mk+'.jpg'}; _msFile=f; }
+    let f=_msFile; if(!f){ f={blob:await canvasBlob(await msCanvas()), name:'omme-monthly-report-'+mk+'.jpg'}; _msFile=f; }
     if(!onlySave){ const file=new File([f.blob], f.name, {type:'image/jpeg'});
       if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"OMME'S GALLERY — "+mk}); return; } }
     saveBlob(f.blob, f.name); toast('JPG downloaded ✦','ok');
@@ -3830,6 +3853,12 @@ function viewSettings(){
       <div class="field"><label>Address</label><input id="set-addr" value="${esc(cfg.shopAddress||'')}"></div>
       <div class="field"><label>Invoice footer note</label><input id="set-note" value="${esc(cfg.invoiceNote||'Thank you for shopping with us. ✦ Buy your happiness.')}"></div>
       <button class="btn btn-gold" data-act="set-save">Save shop info</button></div>
+    <div class="card panel" style="margin-bottom:16px"><h3>Links (website, Facebook, Instagram…)</h3>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Ekhane deya link gulo Dashboard er upore button hoye thakbe — ek chape khulbe. Faka link dekhabe na.</p>
+      <div id="ln-box">${linksEditor()}</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px">
+        <button class="btn btn-ghost btn-sm" data-act="ln-add">＋ Notun link</button>
+        <button class="btn btn-gold btn-sm" data-act="ln-save">Save links</button></div></div>
     <div id="legacy-box"></div>
     <div class="card panel" style="margin-bottom:16px"><h3>Data export (Excel)</h3>
       <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.55">Shob data ek file e: Sales, Sale items, Customers, Products, Expenses, Purchases, Dues, Returns — alada alada sheet e. Google Drive e rakhle Google Sheets e khule analysis korte parben.</p>
@@ -3957,6 +3986,9 @@ document.addEventListener('click', function(e){
     case 'sh-photo': { window._shPhotoRow=Number(el.dataset.i); const f=$('#sh-file'); if(f) f.click(); break; }
     case 'sh-photo-del': { const S=shipLoad(); const r=S.rows[Number(el.dataset.i)]; if(r){ r.photo=''; shipSave(); renderShipment(); } break; }
     case 'f-wapply': { const c=shipCalc({web:$('#f-web').value,w:$('#f-wg').value}, $('#f-rate').value, $('#f-oth').value); if(c.cost){ $('#f-buy').value=Math.round(c.cost); toast('Buy price '+tk(Math.round(c.cost)),'ok'); } break; }
+    case 'ln-add': { const L=linksRead(); L.push({i:'🔗',n:'',u:''}); $('#ln-box').innerHTML=linksEditor(L); const ins=document.querySelectorAll('.ln-n'); if(ins.length) ins[ins.length-1].focus(); break; }
+    case 'ln-del': { const L=linksRead(); L.splice(Number(el.dataset.i),1); linksSave(L); $('#ln-box').innerHTML=linksEditor(); toast('Link muche gelo','ok'); break; }
+    case 'ln-save': { const L=linksRead().filter(x=>x.n||x.u); linksSave(L); $('#ln-box').innerHTML=linksEditor(); toast('Links saved ✦','ok'); break; }
     case 'pay-mode': setPayMode(el.getAttribute('data-m')); break;
     case 'cart-inc': cartQty(id,1); break;
     case 'cart-dec': cartQty(id,-1); break;
