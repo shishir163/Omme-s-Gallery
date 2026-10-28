@@ -317,6 +317,15 @@
   .ogi .og-contact{margin-top:14px; background:var(--o-gold-soft); border-radius:3px; padding:9px 14px; display:flex; flex-wrap:wrap; gap:5px 20px;
     justify-content:center; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--o-plum)}
   .ogi .og-contact b{font-weight:900; color:var(--o-garnet)}
+  .ogi .og-preorder{padding:6px 30px 0}
+  .ogi .og-shipfields{display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; margin-top:9px; padding:10px 12px; border:1px dashed var(--o-peacock); border-radius:6px; background:#F3FAF9}
+  .ogi .og-shipfields .og-field{margin-bottom:0; min-width:118px}
+  .ogi .og-shipfields .og-field label{min-width:48px}
+  .ogi .og-shipfields .og-field input{max-width:92px}
+  .ogi .og-shipout{margin-left:auto; font-size:10px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; color:var(--o-peacock)}
+  .ogi .og-shipout strong{color:var(--o-garnet); font-size:13px; margin-left:4px}
+  .ogi .og-reason{padding:1px 0 6px; border-bottom:1px solid var(--o-line)}
+  .ogi .og-reason input{border:none; height:22px; font-size:10.5px; font-style:italic; font-weight:400; color:var(--o-muted); padding:1px 0}
   .ogi .og-terms{margin-top:10px; font-size:9px; font-weight:400; line-height:1.7; color:var(--o-muted); text-align:center; letter-spacing:.02em}
   .ogi .og-terms b{font-weight:900; color:var(--o-ink)}
 
@@ -2966,6 +2975,9 @@ function showInvoice(sale, items){
   while(rows.length<4) rows.push(`<tr><td><span class="og-rowno">${rows.length+1}</span></td><td>&nbsp;</td><td class="r"></td><td class="r"></td><td class="r"></td></tr>`);
   const chip=(grp,v,label,on,radio)=>`<span class="og-chip ${on?'on':''}" data-act="og-chip" data-grp="${grp}" data-v="${v}" ${radio?'data-radio="1"':''}>${label}</span>`;
   const pm=String(sale.Payment||'Cash');
+  let wtG=0; (items||[]).forEach(i=>{ const pp=findProduct(i.ProductID)||DB.Products.find(x=>x.Name===i.ProductName)||{}; wtG+=num(pp.WeightG)*num(i.Qty||1); });
+  const shipRateDef=num(cfg.shipRate)||1650;
+  window._invBase={ sub:num(sale.Subtotal), deliv:deliv, disc:num(sale.Discount), paid:paidShown }; window._invPst=pst;
   const noteDef = [ sale.Preorder ? ('Pre-order'+(sale.PreorderDate?' · expected '+fdate(sale.PreorderDate):'')) : '',
     (sale.DeliverAfter && (sale.Status||'Delivered')==='Pending') ? ('Delivery after '+sale.DeliverAfter) : '', sale.Note||'' ].filter(Boolean).join(' · ');
   const web=cfg.shopWeb||'OMMESGALLERY.XYZ', wa=cfg.shopWhatsapp||'01534550063';
@@ -2990,29 +3002,36 @@ function showInvoice(sale, items){
       </div>
       <table><thead><tr><th>#</th><th>Item Description</th><th class="r" style="width:58px">Qty</th><th class="r" style="width:92px">Price Tk</th><th class="r" style="width:110px">Total Tk</th></tr></thead>
         <tbody>${rows.join('')}</tbody></table>
+      <div class="og-preorder"><span class="og-chip" id="og-shipchip" data-act="og-ship">Pre-Order Shipping (By Weight)</span>
+        <div class="og-shipfields" id="og-shiprow" style="display:none">
+          <div class="og-field"><label>Rate</label><input id="og-shiprate" type="number" value="${shipRateDef}" placeholder="Tk / kg"></div>
+          <div class="og-field"><label>Weight</label><input id="og-shipwt" type="number" value="${wtG||''}" placeholder="0"></div>
+          <div class="og-chips">${chip('su','kg','KG',!wtG,1)}${chip('su','g','Gram',!!wtG,1)}</div>
+          <div class="og-shipout">Shipping <strong id="og-shipcalc">Tk 0</strong></div></div></div>
       <div class="og-totals">
         <div class="og-note"><div class="og-eyebrow">Note</div><textarea id="og-note" placeholder="Size, colour, or any special instruction…">${esc(noteDef)}</textarea></div>
         <div class="og-sums">
           <div class="og-sumrow"><span>Subtotal</span><strong>${tk(sale.Subtotal)}</strong></div>
           <div class="og-sumrow"><span>Delivery Charge</span><strong>${tk(deliv)}</strong></div>
+          <div class="og-sumrow" id="og-shipsum" style="display:none"><span>Shipping (Pre-Order)</span><strong id="og-shipamt">${tk(0)}</strong></div>
           <div class="og-sumrow"><span>Discount (−)</span><strong>${tk(sale.Discount)}</strong></div>
-          <div class="og-grand"><span>Total Payable</span><strong>${tk(payable)}</strong></div>
+          <div class="og-reason"><input id="og-discreason" placeholder="Reason for discount…"></div>
+          <div class="og-grand"><span>Total Payable</span><strong id="og-grand">${tk(payable)}</strong></div>
           <div class="og-sumrow"><span>Advance / Paid</span><strong>${tk(paidShown)}</strong></div>
-          <div class="og-due"><span>Due</span><strong>${tk(dueShown)}</strong></div>
+          <div class="og-due"><span>Due</span><strong id="og-due">${tk(dueShown)}</strong></div>
         </div>
       </div>
       <div class="og-pay">
         <div>
           <div class="og-grp"><div class="og-eyebrow">Order Type</div><div class="og-chips">${chip('ot','stock','Stock Dress',!sale.Preorder,1)}${chip('ot','pre','Pre-Ordered Dress',!!sale.Preorder,1)}</div></div>
-          <div class="og-grp"><div class="og-eyebrow">Payment Method</div><div class="og-chips">${chip('pm','bkash','bKash',pm==='bKash')}${chip('pm','nagad','Nagad',pm==='Nagad')}${chip('pm','bank','Bank',pm==='Bank')}${chip('pm','cash','Cash',pm==='Cash')}</div></div>
+          <div class="og-grp"><div class="og-eyebrow">Payment Method</div><div class="og-chips">${chip('pm','bkash','bKash',pm==='bKash')}${pm==='Nagad'?chip('pm','nagad','Nagad',true):''}${chip('pm','bank','Bank',pm==='Bank')}${chip('pm','cash','Cash',pm==='Cash')}</div></div>
         </div>
         <div><div class="og-grp"><div class="og-eyebrow">Payment Status</div><div class="og-chips">${chip('ps','cod','Cash On Delivery',pst==='cod',1)}${chip('ps','adv','Advance Paid',pst==='adv',1)}${chip('ps','paid','Full Paid',pst==='paid',1)}</div></div></div>
       </div>
       <div class="og-foot">
         <div class="og-sign"><div class="og-thanks">Thank You For Your Order!<small>We hope this piece brings you happiness — see you again.</small></div>
-          <div class="og-signbox"><input id="og-sign" value=""><p>Authorised Signature</p></div></div>
+          <div class="og-signbox"><input id="og-sign" value="" placeholder="Name"><p>Authorised Signature</p></div></div>
         <div class="og-contact"><span>🌐 <b>${esc(web)}</b></span><span>💬 WhatsApp <b>${esc(wa)}</b></span><span>🎥 Real Video Of Every Dress On Our Facebook Page</span></div>
-        <div class="og-terms"><b>TERMS:</b> Please record a video while opening the parcel — complaints without it cannot be accepted. Report any defect within 24 hours of delivery. Used, cut or stitched items are not exchangeable.</div>
       </div>
     </div>`;
   openModal(`
@@ -3022,6 +3041,12 @@ function showInvoice(sale, items){
         <div class="grid2"><div class="field"><label>Zone</label><input id="m-zone" placeholder="Inside / Outside Dhaka"></div>
           <div class="field"><label>Time</label><input id="m-time" placeholder="1–2 Days / 2–3 Days"></div></div>
         <div class="field"><label>Note</label><input id="m-note" value="${esc(noteDef)}" placeholder="Size, colour, special instruction…"></div>
+        <div class="field"><label>Discount er karon</label><input id="m-discreason" placeholder="Reason for discount…"></div>
+        <div class="field"><label class="chk"><input type="checkbox" id="m-shipon"> Pre-Order Shipping (By Weight)</label></div>
+        <div class="grid2" id="m-shipbox" style="display:none">
+          <div class="field"><label>Rate ৳/kg</label><input id="m-shiprate" type="number" value="${shipRateDef}"></div>
+          <div class="field"><label>Weight</label><div style="display:flex;gap:6px"><input id="m-shipwt" type="number" value="${wtG||''}" style="flex:1;min-width:0">
+            <select id="m-shipunit" style="width:84px"><option value="kg" ${wtG?'':'selected'}>KG</option><option value="g" ${wtG?'selected':''}>Gram</option></select></div></div></div>
         <p style="font-size:12px;color:var(--muted);margin:0">Courier, Order type ar Payment e invoice er upor tap korun. Ei gulo shudhu chhobi te jay, save hoy na.</p>
       </div>
       <div class="ogi-wrap" id="ogiwrap"><div class="ogi-scale" id="ogiscale">${html}</div></div>
@@ -3036,11 +3061,34 @@ function showInvoice(sale, items){
   $('#modal').classList.add('wide');
   window._invNo=sale.InvoiceNo; window._invHTML=html;
   const nd=document.getElementById('invnode'); if(nd){ nd.addEventListener('input', function(){ invPrepare(); }); }
-  [['m-zone','og-zone'],['m-time','og-time'],['m-note','og-note']].forEach(function(p){
+  if(nd){ nd.addEventListener('input', function(){ invRecalc(); }); }
+  [['m-zone','og-zone'],['m-time','og-time'],['m-note','og-note'],['m-discreason','og-discreason'],['m-shiprate','og-shiprate'],['m-shipwt','og-shipwt']].forEach(function(p){
     const a=document.getElementById(p[0]), b=document.getElementById(p[1]); if(!a||!b) return;
-    a.oninput=function(){ b.value=a.value; invPrepare(); };
+    a.oninput=function(){ b.value=a.value; invRecalc(); invPrepare(); };
   });
-  fitInvoice(); setTimeout(fitInvoice,60); invPrepare();
+  const mo=$('#m-shipon'); if(mo) mo.onchange=function(){ invShip(mo.checked); };
+  const mu=$('#m-shipunit'); if(mu) mu.onchange=function(){ document.querySelectorAll('.og-chip[data-grp="su"]').forEach(x=>x.classList.toggle('on', x.dataset.v===mu.value)); invRecalc(); invPrepare(); };
+  invRecalc(); fitInvoice(); setTimeout(fitInvoice,60); invPrepare();
+}
+/* pre-order shipping by weight: shown on the invoice only (like delivery), not in the accounts */
+function invShip(on){
+  const c=$('#og-shipchip'), r=$('#og-shiprow'), m=$('#m-shipon'), mb=$('#m-shipbox');
+  if(c) c.classList.toggle('on', !!on); if(r) r.style.display=on?'':'none'; if(m) m.checked=!!on; if(mb) mb.style.display=on?'':'none';
+  invRecalc(); fitInvoice(); invPrepare();
+}
+function invRecalc(){
+  const b=window._invBase; if(!b||!$('#og-grand')) return;
+  const on=$('#og-shipchip')&&$('#og-shipchip').classList.contains('on');
+  const u=document.querySelector('.og-chip[data-grp="su"].on'), unit=u?u.dataset.v:'kg';
+  const rate=num($('#og-shiprate')&&$('#og-shiprate').value), wt=num($('#og-shipwt')&&$('#og-shipwt').value);
+  const ship=on?Math.round(rate*wt/(unit==='g'?1000:1)):0;
+  const payable=b.sub-b.disc+b.deliv+ship, due=Math.max(payable-b.paid,0);
+  $('#og-shipcalc').textContent='Tk '+ship.toLocaleString('en-US');
+  $('#og-shipamt').textContent=tk(ship); $('#og-shipsum').style.display=on?'':'none';
+  $('#og-grand').textContent=tk(payable); $('#og-due').textContent=tk(due);
+  window._invPayable=payable;
+  const st = due<=0 ? 'paid' : (b.paid<=0 ? 'cod' : 'adv');
+  if(st!==window._invPst){ window._invPst=st; document.querySelectorAll('.og-chip[data-grp="ps"]').forEach(x=>x.classList.toggle('on', x.dataset.v===st)); }
 }
 function fitInvoice(){
   const w=document.getElementById('ogiwrap'), sc=document.getElementById('ogiscale'); if(!w||!sc||!w.parentElement) return;
@@ -3920,12 +3968,14 @@ document.addEventListener('click', function(e){
     case 'sale-edit-save': saveSaleEdit(el.dataset.inv); break;
     case 'inv-jpeg': downloadInvoiceJPEG(el.dataset.no); break;
     case 'inv-share': shareInvoice(el.dataset.no); break;
-    case 'inv-wa': whatsappChat(el.dataset.no, el.dataset.pay); break;
+    case 'inv-wa': whatsappChat(el.dataset.no, window._invPayable||el.dataset.pay); break;
     case 'og-chip': {
       const grp=el.dataset.grp;
       if(el.dataset.radio){ document.querySelectorAll('.og-chip[data-grp="'+grp+'"]').forEach(x=>x.classList.remove('on')); el.classList.add('on'); }
       else el.classList.toggle('on');
+      if(grp==='su'){ const mu=$('#m-shipunit'); if(mu) mu.value=el.dataset.v; invRecalc(); }
       invPrepare(); break; }
+    case 'og-ship': invShip(!el.classList.contains('on')); break;
     case 'inv-pdf': downloadInvoicePDF(el.dataset.no); break;
     case 'rep-preset': repSetPreset(el.dataset.preset); break;
     case 'rep-apply': repApply(); break;
