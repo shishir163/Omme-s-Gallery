@@ -469,6 +469,11 @@
   .ln-row{display:grid; grid-template-columns:120px 1.1fr 2fr auto; gap:8px; align-items:center; margin-bottom:8px}
   .ln-row input{width:100%; padding:9px 10px; border:1px solid var(--line-2); border-radius:8px; background:var(--input-bg); color:var(--ink); font:inherit; font-size:14px; min-width:0}
   @media (max-width:760px){ .ln-row{grid-template-columns:1fr 1fr auto} .ln-row .ln-url{grid-column:1/-1; order:5} }
+  body.staff [data-act="product-del"], body.staff [data-act="cus-del"], body.staff [data-act="cus-merge"],
+  body.staff [data-act="exp-del"], body.staff [data-act="sup-del"], body.staff [data-act="attr-del"], body.staff [data-act="wa-tpl-del"],
+  body.staff [data-act="cus-export"], body.staff [data-act="in-export"], body.staff [data-act^="rep-export"],
+  body.staff [data-act="export-xlsx"], body.staff [data-act^="backup-"], body.staff [data-act="inv-csv-import"],
+  body.staff [data-act="show-logs"], body.staff .adm-only{display:none !important}
   #lock{position:fixed; inset:0; z-index:10000; display:none; align-items:center; justify-content:center; padding:24px;
     background:radial-gradient(120% 90% at 50% -10%, var(--glow) 0%, var(--paper) 60%)}
   #lock.on{display:flex}
@@ -1081,6 +1086,13 @@ function stitchChip(m){
 }
 function custPhones(c){ return [c&&c.Phone, c&&c.Phone2, c&&c.Phone3].map(function(x){ return String(x||'').trim(); }).filter(Boolean); }
 function invQtyMap(){ const m={}; DB.SaleItems.forEach(function(i){ const k=String(i.InvoiceNo); m[k]=(m[k]||0)+num(i.Qty); }); return m; }
+var ADMIN_EMAILS = ['shishir.mmc163@gmail.com'];   // only these accounts can delete, export, back up and change shop settings
+function isAdmin(){ return ADMIN_EMAILS.indexOf(meEmail()) > -1; }
+const ADMIN_ACTS = ['product-del','cus-del','cus-merge','exp-del','sup-del','attr-del','wa-tpl-del','cus-export','in-export',
+  'rep-export-sales','rep-export-products','rep-export-brands','export-xlsx','backup-export','backup-import','inv-csv-import',
+  'show-logs','set-save','ln-add','ln-del','ln-save'];
+const ADMIN_API = ['deleteProduct','deleteCustomer','mergeCustomers','deleteExpense','deleteSupplier'];
+function applyRole(){ try{ document.body.classList.toggle('staff', !isAdmin()); }catch(e){} }
 function meEmail(){ return String((fauth&&fauth.currentUser&&fauth.currentUser.email)||'').toLowerCase(); }
 function userName(email){ email=String(email||'').toLowerCase(); const m=(getCfg().userNames)||{}; return m[email] || (email?email.split('@')[0]:''); }
 function L_customerSummary(){
@@ -1282,6 +1294,7 @@ const MUTATIONS = ['saveProduct','deleteProduct','saveCustomer','deleteCustomer'
 
 async function api(action, p){
   p = p || {}; ensureDB(); let out;
+  if(ADMIN_API.indexOf(action)>-1 && !isAdmin()) throw new Error('Eta shudhu admin korte paren');
   const pre = (action==='deleteProduct') ? ((findProduct(p.id)||{}).Name||'')
     : (action==='deleteCustomer') ? ((DB.Customers.find(function(c){ return String(c.ID)===String(p.id); })||{}).Name||'')
     : (action==='mergeCustomers') ? [p.from,p.into].map(function(id){ return (DB.Customers.find(function(c){ return String(c.ID)===String(id); })||{}).Name||''; }).join(' → ')
@@ -1577,6 +1590,7 @@ async function runMigration(){
 }
 async function offerMigration(){
   try{
+    if(!isAdmin()) return;
     if(localStorage.getItem('omme_migrated') === '1') return;
     const old = await findLegacyData(); if(!old) return;
     for(let i = 0; i < 25 && !SERVER_SEEN; i++) await new Promise(function(r){ setTimeout(r, 200); });
@@ -1714,6 +1728,7 @@ async function onAuth(user){
   }
   clearTimeout(slow);
   BOOTED = true;
+  applyRole();
   boot();
   try{ lockStart(); }catch(e){ console.warn('lock', e); }
   offerMigration();
@@ -3983,7 +3998,7 @@ function viewSettings(){
         <select id="set-font" class="fullsel" style="width:100%; padding:11px 12px; border:1px solid var(--line-2); border-radius:var(--radius-sm); background:var(--input-bg); color:var(--ink)">
           ${fonts.map(f=>`<option value="${f[0]}" ${curFont===f[0]?'selected':''}>${f[1]}</option>`).join('')}</select></div>
     </div>
-    <div class="card panel" style="margin-bottom:16px"><h3>Shop info (shown on invoice)</h3>
+    <div class="card panel adm-only" style="margin-bottom:16px"><h3>Shop info (shown on invoice)</h3>
       <div class="grid2">
         <div class="field"><label>Shop name</label><input id="set-name" value="${esc(cfg.shopName||"OMME'S GALLERY")}"></div>
         <div class="field"><label>Phone</label><input id="set-phone" value="${esc(cfg.shopPhone||'')}"></div></div>
@@ -3998,17 +4013,17 @@ function viewSettings(){
         <label style="font-size:13px;color:var(--muted)">Lock hobe</label><select id="pin-mins" style="padding:7px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--input-bg);color:var(--ink);font:inherit;font-size:13px">${[1,5,15,30].map(m=>`<option value="${m}" ${p.mins===m?'selected':''}>${m} min por</option>`).join('')}</select>`:''}
         <button class="btn btn-ghost btn-sm" data-act="show-logs">📜 Activity log</button></div>`; })()}
     </div>
-    <div class="card panel" style="margin-bottom:16px"><h3>Links (website, Facebook, Instagram…)</h3>
+    <div class="card panel adm-only" style="margin-bottom:16px"><h3>Links (website, Facebook, Instagram…)</h3>
       <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Ekhane deya link gulo Dashboard er upore button hoye thakbe — ek chape khulbe. Faka link dekhabe na.</p>
       <div id="ln-box">${linksEditor()}</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px">
         <button class="btn btn-ghost btn-sm" data-act="ln-add">＋ Notun link</button>
         <button class="btn btn-gold btn-sm" data-act="ln-save">Save links</button></div></div>
     <div id="legacy-box"></div>
-    <div class="card panel" style="margin-bottom:16px"><h3>Data export (Excel)</h3>
+    <div class="card panel adm-only" style="margin-bottom:16px"><h3>Data export (Excel)</h3>
       <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.55">Shob data ek file e: Sales, Sale items, Customers, Products, Expenses, Purchases, Dues, Returns — alada alada sheet e. Google Drive e rakhle Google Sheets e khule analysis korte parben.</p>
       <button class="btn btn-gold" data-act="export-xlsx">⭳ Sob data Excel e naman</button></div>
-    <div class="card panel" style="margin-bottom:16px"><h3>Backup &amp; restore</h3>
+    <div class="card panel adm-only" style="margin-bottom:16px"><h3>Backup &amp; restore</h3>
       <p style="font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.55">Your data is saved in Firebase and shows on every signed-in device. A backup file is still a good safety copy: export one now and then and keep it on Google Drive. Importing a backup adds its records to the cloud data (same ids are overwritten).</p>
       <div style="display:flex; gap:10px; flex-wrap:wrap">
         <button class="btn btn-gold" data-act="backup-export">⭳ Export backup</button>
@@ -4016,7 +4031,7 @@ function viewSettings(){
       </div>
       <input id="backup-file" type="file" accept="application/json,.json" style="display:none"></div>
     <div class="card panel"><h3>Account &amp; app</h3>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Signed in as <strong>${esc((fauth&&fauth.currentUser&&fauth.currentUser.email)||'')}</strong></p>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Signed in as <strong>${esc((fauth&&fauth.currentUser&&fauth.currentUser.email)||'')}</strong> · ${isAdmin()?'<span style="color:var(--pos);font-weight:800">Admin</span>':'<span style="font-weight:800">Staff</span> — delete, export, backup, shop info ar link shudhu admin bodlate paren'}</p>
       <div class="field" style="max-width:420px"><label>Apnar nam (sale ar activity log e dekhabe)</label>
         <div style="display:flex;gap:8px"><input id="set-myname" value="${esc(userName(meEmail()))}" style="flex:1"><button class="btn btn-ghost btn-sm" data-act="set-myname">Save</button></div></div>
       <div style="display:flex; gap:10px; flex-wrap:wrap">
@@ -4031,13 +4046,15 @@ function viewSettings(){
   const pm=$('#pin-mins'); if(pm) pm.onchange=()=>{ const p=pinGet(); if(p){ p.mins=Number(pm.value); pinPut(p); toast('Lock '+p.mins+' minute por','ok'); viewSettings(); } };
 }
 function saveShopInfo(){
+  if(!isAdmin()) return;
   const cfg=getCfg()||{};
   cfg.shopName=$('#set-name').value.trim(); cfg.shopPhone=$('#set-phone').value.trim();
   cfg.shopAddress=$('#set-addr').value.trim(); cfg.invoiceNote=$('#set-note').value.trim();
   setCfg(cfg); toast('Saved','ok');
 }
-function markBackup(){ const c=Object.assign({}, getCfg()); c.lastBackup=new Date().toISOString(); setCfg(c); }
+function markBackup(){ if(!isAdmin()) return; const c=Object.assign({}, getCfg()); c.lastBackup=new Date().toISOString(); setCfg(c); }
 function backupBanner(){
+  if(!isAdmin()) return '';
   const lb=getCfg().lastBackup, days=lb?Math.floor((Date.now()-new Date(lb).getTime())/86400000):null;
   let snooze=0; try{ snooze=Number(localStorage.getItem('omme_bk_snooze')||0); }catch(e){}
   if((days!=null && days<30) || Date.now()<snooze) return '';
@@ -4079,6 +4096,7 @@ document.addEventListener('click', function(e){
   const nav=e.target.closest('[data-nav]'); if(nav){ closeModal(); setNav(nav.dataset.nav); return; }
   const el=e.target.closest('[data-act]'); if(!el) return;
   const act=el.dataset.act, id=el.dataset.id;
+  if(ADMIN_ACTS.indexOf(act)>-1 && !isAdmin()){ toast('Eta shudhu admin korte paren','err'); return; }
   switch(act){
     case 'install': doInstall(); break;
     case 'modal-close': closeModal(); if(window._attrDirty){ window._attrDirty=false; if(state.view==='inventory') renderInventory($('#inv-search')?$('#inv-search').value:''); } break;
