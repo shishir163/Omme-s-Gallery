@@ -469,6 +469,19 @@
   .ln-row{display:grid; grid-template-columns:120px 1.1fr 2fr auto; gap:8px; align-items:center; margin-bottom:8px}
   .ln-row input{width:100%; padding:9px 10px; border:1px solid var(--line-2); border-radius:8px; background:var(--input-bg); color:var(--ink); font:inherit; font-size:14px; min-width:0}
   @media (max-width:760px){ .ln-row{grid-template-columns:1fr 1fr auto} .ln-row .ln-url{grid-column:1/-1; order:5} }
+  #lock{position:fixed; inset:0; z-index:10000; display:none; align-items:center; justify-content:center; padding:24px;
+    background:radial-gradient(120% 90% at 50% -10%, var(--glow) 0%, var(--paper) 60%)}
+  #lock.on{display:flex}
+  #lock .box{width:100%; max-width:360px; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:26px 24px; text-align:center}
+  #lock h2{font-family:var(--sans); font-weight:900; font-size:20px; margin:14px 0 4px}
+  #lock p{color:var(--muted); font-size:13px; margin:0 0 14px}
+  #lock input{width:100%; text-align:center; font-size:26px; letter-spacing:.5em; padding:12px; border:1px solid var(--line-2); border-radius:12px; background:var(--input-bg); color:var(--ink)}
+  #lock .msg{color:var(--neg); font-size:13px; font-weight:700; min-height:18px; margin:8px 0}
+  #lock .lnk{background:none; border:none; color:var(--muted); font-size:12.5px; text-decoration:underline; margin-top:12px}
+  .bk-warn{display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; padding:11px 14px; border-radius:12px; margin:-8px 0 16px; position:relative; z-index:1;
+    background:rgba(240,170,40,.18); border:1px solid rgba(240,170,40,.45); color:var(--d-ink); font-size:13.5px; font-weight:700}
+  .lg-or{display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px; margin:14px 0 12px}
+  .lg-or::before, .lg-or::after{content:""; flex:1; height:1px; background:var(--line)}
   .pill.st{background:rgba(13,148,136,.16); color:#0f766e; white-space:nowrap}
   .se-s{padding:6px 8px; border:1px solid var(--line-2); border-radius:7px; background:var(--input-bg); color:var(--ink); width:110px; margin-top:4px; font-size:13px}
   .pill.defect{background:#c62828; color:#fff; white-space:nowrap}
@@ -648,6 +661,8 @@
     <div class="field"><label>Password</label><input id="lg-pass" type="password" autocomplete="current-password"></div>
     <div id="lg-err"></div>
     <button class="btn btn-gold btn-block" id="lg-btn" type="submit">Sign in</button>
+    <div class="lg-or">othoba</div>
+    <button class="btn btn-ghost btn-block" type="button" id="lg-google"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.2l7.9 6.1C12.4 13.7 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C1 16.5 0 20.1 0 24s1 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.6-4.2-13.5-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg> Sign in with Google</button>
   </form>
 </div>
 
@@ -690,6 +705,15 @@
   </nav>
 </div>
 
+<div id="lock"><div class="box">
+  <div class="brand" style="align-items:center"><span class="name">OMME'S</span><span class="sub">GALLERY</span></div>
+  <h2 id="lk-title">🔒 PIN din</h2><p id="lk-sub"></p>
+  <input id="lk-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off">
+  <div class="msg" id="lk-msg"></div>
+  <button class="btn btn-gold btn-block" id="lk-ok">Unlock</button>
+  <button class="lnk" id="lk-skip" style="display:none">Pore korbo</button>
+  <div><button class="lnk" id="lk-out">PIN bhule gechi — Sign out</button></div>
+</div></div>
 <div class="backdrop" id="backdrop"><div class="modal" id="modal"></div></div>
 <div id="toast"></div>
 <div id="printroot"></div>
@@ -827,7 +851,7 @@ function L_createSale(sale, items){
   const netProfit=profit-discount;
   DB.Sales.push({ InvoiceNo:invNo, Date:now.toISOString(), CustomerID:sale.CustomerID||'', CustomerName:sale.CustomerName||'',
     Subtotal:subtotal, Discount:discount, Delivery:delivery, Total:total, Profit:netProfit,
-    Payment:sale.Payment||'Cash', Status:sale.Status||'Delivered', Note:sale.Note||'',
+    Payment:sale.Payment||'Cash', Status:sale.Status||'Delivered', Note:sale.Note||'', By:meEmail(),
     Preorder:!!sale.Preorder, PreorderDate:sale.PreorderDate||'',
     DeliverAfter:sale.DeliverAfter||'', DeliverBy:deliverBy(now.toISOString(), sale.DeliverAfter||'') });
   items.forEach(function(it){
@@ -975,6 +999,7 @@ function L_updateSale(no, patch, edits, adds){
   const discount=num(patch.Discount), delivery=num(patch.Delivery), net=subtotal-discount;
   sale.Subtotal=subtotal; sale.Discount=discount; sale.Delivery=delivery; sale.Total=net; sale.Profit=profit-discount;
   if(patch.Payment) sale.Payment=patch.Payment;
+  sale.EditedBy=meEmail(); sale.EditedAt=new Date().toISOString();
   if(patch.Preorder!==undefined) sale.Preorder=!!patch.Preorder;
   if(patch.PreorderDate!==undefined) sale.PreorderDate=patch.PreorderDate||'';
   if(patch.Status) sale.Status=patch.Status;
@@ -1056,6 +1081,8 @@ function stitchChip(m){
 }
 function custPhones(c){ return [c&&c.Phone, c&&c.Phone2, c&&c.Phone3].map(function(x){ return String(x||'').trim(); }).filter(Boolean); }
 function invQtyMap(){ const m={}; DB.SaleItems.forEach(function(i){ const k=String(i.InvoiceNo); m[k]=(m[k]||0)+num(i.Qty); }); return m; }
+function meEmail(){ return String((fauth&&fauth.currentUser&&fauth.currentUser.email)||'').toLowerCase(); }
+function userName(email){ email=String(email||'').toLowerCase(); const m=(getCfg().userNames)||{}; return m[email] || (email?email.split('@')[0]:''); }
 function L_customerSummary(){
   const pi=payInfo(), out={}, qm=invQtyMap();
   DB.Sales.forEach(function(s){
@@ -1255,6 +1282,10 @@ const MUTATIONS = ['saveProduct','deleteProduct','saveCustomer','deleteCustomer'
 
 async function api(action, p){
   p = p || {}; ensureDB(); let out;
+  const pre = (action==='deleteProduct') ? ((findProduct(p.id)||{}).Name||'')
+    : (action==='deleteCustomer') ? ((DB.Customers.find(function(c){ return String(c.ID)===String(p.id); })||{}).Name||'')
+    : (action==='mergeCustomers') ? [p.from,p.into].map(function(id){ return (DB.Customers.find(function(c){ return String(c.ID)===String(id); })||{}).Name||''; }).join(' → ')
+    : (action==='deleteExpense') ? (function(){ const x=DB.Expenses.find(function(e){ return String(e.ID)===String(p.id); })||{}; return (x.Category||'')+' '+tk(x.Amount); })() : '';
   if(SEQ_ACTION[action]){
     const tb = SEQ_ACTION[action], n = await claimSeq(tb);
     if(n != null) CLAIM[tb] = n; else toast('Offline: number taken on this device, it will sync when you are back online');
@@ -1304,7 +1335,7 @@ async function api(action, p){
     case 'payDue':          out=L_payDue(p.id, p.amount); break;
     default: throw new Error('Unknown action: '+action);
   }
-  if(MUTATIONS.indexOf(action)>-1) await persist();
+  if(MUTATIONS.indexOf(action)>-1){ await persist(); logAct(action, p, out, pre); }
   return out;
 }
 
@@ -1355,6 +1386,48 @@ function makeShadow(t, rows){
 
 /* Compare DB with what Firestore holds and send only the differences. Runs synchronously up to the
    commit, so a second change made right after the first is diffed against the updated shadow. */
+function logDesc(a, p, out, pre){
+  p=p||{}; out=out||{};
+  switch(a){
+    case 'createSale': return 'Notun sale '+out.invoiceNo+' · '+((p.sale&&p.sale.CustomerName)||'Walk-in')+' · '+tk(out.total);
+    case 'updateSale': return 'Sale edit '+p.invoiceNo;
+    case 'returnItems': return 'Return '+p.invoiceNo+' · '+((out.returned||[]).join(', '));
+    case 'cancelSale': return 'Order batil '+p.invoiceNo;
+    case 'saveProduct': return (out.isNew?'Notun dress · ':'Dress edit · ')+((p.item&&p.item.Name)||'');
+    case 'deleteProduct': return 'Dress muche fela · '+pre;
+    case 'saveCustomer': return (out.isNew?'Notun customer · ':'Customer edit · ')+((p.item&&p.item.Name)||'');
+    case 'deleteCustomer': return 'Customer muche fela · '+pre;
+    case 'mergeCustomers': return 'Customer merge · '+pre;
+    case 'saveExpense': return 'Khoroch · '+((p.item&&p.item.Category)||'')+' · '+tk(p.item&&p.item.Amount);
+    case 'deleteExpense': return 'Khoroch muche fela · '+pre;
+    case 'createPurchase': return 'Purchase '+out.purchaseNo+' · '+tk(out.total);
+    case 'updatePurchasePayment': return 'Purchase payment '+p.purchaseNo+' · '+tk(p.paid);
+    case 'payDue': return 'Baki taka pawa gelo · '+tk(p.amount);
+    case 'saveShipment': return 'Notun chalan · '+out.added+' notun dress, '+out.updated+' ta te stock barlo';
+    case 'renameAttr': return p.field+': "'+p.from+'" → "'+(p.to||'(faka)')+'"';
+    case 'saveSupplier': return 'Supplier · '+((p.item&&p.item.Name)||'');
+    case 'deleteSupplier': return 'Supplier muche fela';
+    case 'createReturn': return 'Return';
+  }
+  return a;
+}
+function logAct(a, p, out, pre){
+  try{ if(!fdb) return; const t=logDesc(a,p,out,pre); if(!t) return;
+    fdb.collection('logs').add({ ts:new Date().toISOString(), by:meEmail(), action:a, text:t }).catch(function(){}); }catch(e){}
+}
+async function showLogs(){
+  openModal('<div class="modal-body loading"><div class="spin"></div>Loading…</div>');
+  try{
+    const snap=await fdb.collection('logs').orderBy('ts','desc').limit(200).get();
+    const rows=snap.docs.map(d=>d.data()).map(x=>`<tr><td style="white-space:nowrap">${fdate(x.ts)}<div style="font-size:11.5px;color:var(--muted)">${new Date(x.ts).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div></td>
+      <td><strong>${esc(userName(x.by))}</strong></td><td>${esc(x.text||x.action)}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">Ekhono kichu nei.</td></tr>';
+    openModal(`<div class="modal-head"><h3>Activity log</h3><button class="x" data-act="modal-close">×</button></div>
+      <div class="modal-body"><p style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Shesh 200 ta kaj — ke, kokhon, ki korlo.</p>
+        <div class="table-wrap"><table><thead><tr><th>Kokhon</th><th>Ke</th><th>Ki</th></tr></thead><tbody>${rows}</tbody></table></div></div>
+      <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Close</button></div>`);
+    $('#modal').classList.add('wide');
+  }catch(e){ closeModal(); toast('Log pora gelo na: '+e.message,'err'); }
+}
 async function persist(){
   if(!fdb) return;
   assignChildKeys(DB);
@@ -1549,6 +1622,8 @@ function authErrorText(e){
   if(c === 'auth/too-many-requests') return 'Too many attempts. Wait a few minutes and try again.';
   if(c === 'auth/network-request-failed') return 'No internet connection.';
   if(c === 'auth/user-disabled') return 'This account has been disabled.';
+  if(c === 'auth/unauthorized-domain') return 'Firebase e ei website allow kora nai — Authentication > Settings > Authorized domains e shishir163.github.io jog korun.';
+  if(c === 'auth/operation-not-allowed') return 'Google sign-in Firebase e chalu kora nai — Authentication > Sign-in method > Google chalu korun.';
   return 'Could not sign in: ' + ((e && e.message) || e);
 }
 function doLogin(){
@@ -1557,6 +1632,66 @@ function doLogin(){
   const btn = $('#lg-btn'); btn.disabled = true; btn.textContent = 'Signing in…'; loginMsg('');
   fauth.signInWithEmailAndPassword(email, pass).catch(function(e){ loginMsg(authErrorText(e)); })
     .then(function(){ btn.disabled = false; btn.textContent = 'Sign in'; });
+}
+function doGoogle(){
+  if(!fauth || !firebase.auth.GoogleAuthProvider){ loginMsg('Google sign-in load hoy nai — internet check korun.'); return; }
+  const prov=new firebase.auth.GoogleAuthProvider(); prov.setCustomParameters({ prompt:'select_account' });
+  const btn=$('#lg-google'); btn.disabled=true; loginMsg('');
+  fauth.signInWithPopup(prov).catch(function(e){
+    const c=(e&&e.code)||'';
+    if(c==='auth/popup-blocked' || c==='auth/operation-not-supported-in-this-environment') return fauth.signInWithRedirect(prov);
+    if(c==='auth/popup-closed-by-user' || c==='auth/cancelled-popup-request') return;
+    loginMsg(authErrorText(e));
+  }).then(function(){ btn.disabled=false; }, function(){ btn.disabled=false; });
+}
+/* ---------- app lock: a PIN per device (and per account), stored only as a hash on this device ---------- */
+const LOCK={ on:false, last:Date.now(), hiddenAt:0, tries:0, mode:'', step1:'', cb:null };
+function pinKey(){ return 'omme_pin_'+meEmail(); }
+function pinGet(){ try{ return JSON.parse(localStorage.getItem(pinKey())||'null'); }catch(e){ return null; } }
+function pinPut(o){ try{ if(o) localStorage.setItem(pinKey(), JSON.stringify(o)); else localStorage.removeItem(pinKey()); }catch(e){} }
+async function pinHash(pin){
+  const data=new TextEncoder().encode('omme|'+meEmail()+'|'+pin);
+  const h=await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(h)).map(function(b){ return ('0'+b.toString(16)).slice(-2); }).join('');
+}
+function lockShow(mode, cb){
+  LOCK.mode=mode; LOCK.cb=cb||null; LOCK.step1=''; LOCK.on=true;
+  const t={ unlock:['🔒 PIN din','App khulte apnar PIN din'], set:['🔐 Notun PIN','4–6 shongkhar PIN din (ei phone/laptop er jonno)'], verify:['🔒 Bortoman PIN','Age bortoman PIN din'] }[mode];
+  $('#lk-title').textContent=t[0]; $('#lk-sub').textContent=t[1]; $('#lk-msg').textContent=''; $('#lk-pin').value='';
+  $('#lk-ok').textContent = mode==='unlock'?'Unlock':(mode==='verify'?'Next':'Set PIN');
+  $('#lk-skip').style.display = (mode==='set' && !pinGet() && !cb) ? '' : (mode!=='unlock'?'':'none');
+  $('#lk-skip').textContent = (mode==='set' && !cb) ? 'Pore korbo' : 'Cancel';
+  $('#lk-out').style.display = mode==='unlock' ? '' : 'none';
+  $('#lock').classList.add('on'); setTimeout(function(){ try{ $('#lk-pin').focus(); }catch(e){} }, 50);
+}
+function lockHide(){ LOCK.on=false; LOCK.last=Date.now(); $('#lock').classList.remove('on'); }
+async function lockOk(){
+  const v=$('#lk-pin').value.trim(), m=$('#lk-msg');
+  if(!/^\d{4,6}$/.test(v)){ m.textContent='4 theke 6 ta shongkha din'; return; }
+  if(LOCK.mode==='unlock' || LOCK.mode==='verify'){
+    const p=pinGet(); if(!p){ lockHide(); return; }
+    if(await pinHash(v)===p.h){ LOCK.tries=0; const cb=LOCK.cb; lockHide(); if(cb) cb(); return; }
+    LOCK.tries++; $('#lk-pin').value='';
+    if(LOCK.tries>=5){ m.textContent='5 bar bhul — sign out hocche'; setTimeout(doSignOut, 900); return; }
+    m.textContent='Bhul PIN ('+(5-LOCK.tries)+' bar baki)'; return;
+  }
+  if(!LOCK.step1){ LOCK.step1=v; $('#lk-pin').value=''; $('#lk-sub').textContent='Abar ekই PIN din (nishchit korte)'.replace('ekই','ek'); m.textContent=''; return; }
+  if(v!==LOCK.step1){ LOCK.step1=''; $('#lk-pin').value=''; m.textContent='Duto PIN mile nai — abar shuru korun'; $('#lk-sub').textContent='4–6 shongkhar PIN din'; return; }
+  const old=pinGet()||{}; pinPut({ h:await pinHash(v), mins:old.mins||5 }); lockHide(); toast('PIN set holo ✦','ok');
+  if(state.view==='settings') viewSettings();
+}
+function lockSkip(){ if(LOCK.mode==='set' && !LOCK.cb){ try{ localStorage.setItem('omme_pin_skip_'+meEmail(),'1'); }catch(e){} } lockHide(); }
+function lockStart(){
+  const p=pinGet();
+  if(p) lockShow('unlock');
+  else{ let sk=null; try{ sk=localStorage.getItem('omme_pin_skip_'+meEmail()); }catch(e){} if(!sk) lockShow('set'); }
+  ['pointerdown','keydown','touchstart','scroll'].forEach(function(ev){ document.addEventListener(ev, function(){ if(!LOCK.on) LOCK.last=Date.now(); }, {passive:true, capture:true}); });
+  document.addEventListener('visibilitychange', function(){
+    const p2=pinGet(); if(!p2) return;
+    if(document.hidden) LOCK.hiddenAt=Date.now();
+    else if(!LOCK.on && LOCK.hiddenAt && Date.now()-LOCK.hiddenAt > p2.mins*60000) lockShow('unlock');
+  });
+  setInterval(function(){ const p2=pinGet(); if(p2 && !LOCK.on && Date.now()-LOCK.last > p2.mins*60000) lockShow('unlock'); }, 20000);
 }
 function doSignOut(){ if(fauth) fauth.signOut().then(function(){ location.reload(); }); }
 
@@ -1580,6 +1715,7 @@ async function onAuth(user){
   clearTimeout(slow);
   BOOTED = true;
   boot();
+  try{ lockStart(); }catch(e){ console.warn('lock', e); }
   offerMigration();
 }
 
@@ -1643,7 +1779,7 @@ async function viewDashboard(){
     <tr>
       <td>${esc(s.InvoiceNo)}${(s.Preorder||delChip(s))?'<div class="chips" style="margin-top:3px">'+(s.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার'+(s.Status==='Pending'?' · Pending':'')+'</span>':'')+delChip(s)+'</div>':''}${s.Note?'<div style="margin-top:3px;font-size:11.5px;color:var(--muted)">📝 '+esc(s.Note)+'</div>':''}</td>
       <td>${custCell(s)}</td>
-      <td>${fdate(s.Date)}</td>
+      <td>${fdate(s.Date)}${s.By?'<div style="font-size:11px;color:var(--d-muted)">by '+esc(userName(s.By))+'</div>':''}</td>
       <td class="num tnum">${tk(saleNet(s))}</td>
       <td class="num tnum pos">${tk(s.Profit)}</td>
       <td class="num" style="white-space:nowrap"><button class="btn-icon" data-act="sale-view" data-inv="${esc(s.InvoiceNo)}">View</button>
@@ -1668,6 +1804,7 @@ async function viewDashboard(){
         <button class="dash-new" data-nav="sales">＋ New sale</button>
       </div>
 
+      ${backupBanner()}
       ${linksBar()}
       <div class="gs"><span class="gs-mag">⌕</span>
         <input id="gs-input" type="search" autocomplete="off" placeholder="Search customer, mobile, address, dress name, SKU, invoice…"></div>
@@ -2323,7 +2460,7 @@ async function exportAllExcel(){
     add('Returns',['Return no','Date','Invoice','Customer','Amount','Profit reversed'], DB.Returns.map(r=>[r.ReturnNo, r.Date?dstr(r.Date):'', r.InvoiceNo||'', r.CustomerName||'', num(r.Amount), num(r.ProfitReversed)]));
     const d=new Date();
     X.writeFile(wb, 'ommes-gallery-data-'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'.xlsx');
-    toast('Excel downloaded ✦ — Google Drive e rakhte paren','ok');
+    toast('Excel downloaded ✦ — Google Drive e rakhte paren','ok'); markBackup();
   }catch(e){ toast('Excel banano gelo na: '+e.message,'err'); }
 }
 
@@ -2579,7 +2716,7 @@ async function customerHistory(id){
     const rows=(h.sales||[]).map(s=>`<tr><td>${esc(s.InvoiceNo)}
           <div class="chips" style="margin-top:4px">${s.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার'+(s.PreorderDate?' · '+fdate(s.PreorderDate):'')+'</span>':''}
             <span class="pill ${(s.Status||'Delivered')==='Pending'?'amber':'pos'}">${esc(s.Status||'Delivered')}</span>${payChip(s.PayState, s.DueAmt)}${delChip(s)}</div>${(()=>{ const its=DB.SaleItems.filter(x=>String(x.InvoiceNo)===String(s.InvoiceNo)); return its.length?'<div style="margin-top:4px;font-size:12px">'+its.map(x=>'👗 '+esc(x.ProductName)+(num(x.Qty)>1?' ×'+num(x.Qty):'')+(itemTag(x)?' <span class="pill st" style="font-size:10.5px;padding:1px 7px">'+esc(itemTag(x))+'</span>':'')).join('<br>')+'</div>':''; })()}${s.Note?'<div style="margin-top:4px;font-size:12px;color:var(--muted)">📝 '+esc(s.Note)+'</div>':''}</td>
-        <td>${fdate(s.Date)}</td><td class="num tnum">${tk(saleNet(s))}</td>
+        <td>${fdate(s.Date)}${s.By?'<div style="font-size:11px;color:var(--muted)">by '+esc(userName(s.By))+'</div>':''}</td><td class="num tnum">${tk(saleNet(s))}</td>
         <td class="num" style="white-space:nowrap"><button class="btn-icon" data-act="sale-view" data-inv="${esc(s.InvoiceNo)}">View</button>
           <button class="btn-icon" data-act="sale-edit" data-inv="${esc(s.InvoiceNo)}" data-from="hist" data-cid="${esc(id)}">Edit</button></td></tr>`).join('')
       || `<tr><td colspan="4" class="empty">No purchases yet.</td></tr>`;
@@ -3853,6 +3990,14 @@ function viewSettings(){
       <div class="field"><label>Address</label><input id="set-addr" value="${esc(cfg.shopAddress||'')}"></div>
       <div class="field"><label>Invoice footer note</label><input id="set-note" value="${esc(cfg.invoiceNote||'Thank you for shopping with us. ✦ Buy your happiness.')}"></div>
       <button class="btn btn-gold" data-act="set-save">Save shop info</button></div>
+    <div class="card panel" style="margin-bottom:16px"><h3>🔒 Nirapotta <span class="count">ei phone/laptop</span></h3>
+      ${(()=>{ const p=pinGet(); return `<p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.55">${p?'App lock <strong style="color:var(--pos)">chalu</strong> — app khulte ar '+p.mins+' minute kichu na korle PIN chaibe.':'App lock <strong>bondho</strong>. PIN dile app khulte PIN lagbe — onno keu phone hate pele hisab dekhte parbe na.'} PIN shudhu ei device e thake; apnar stri tar phone e nijer PIN deben.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+        <button class="btn btn-gold btn-sm" data-act="pin-set">${p?'PIN bodlan':'PIN set korun'}</button>
+        ${p?`<button class="btn btn-ghost btn-sm" data-act="pin-off">PIN bondho</button>
+        <label style="font-size:13px;color:var(--muted)">Lock hobe</label><select id="pin-mins" style="padding:7px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--input-bg);color:var(--ink);font:inherit;font-size:13px">${[1,5,15,30].map(m=>`<option value="${m}" ${p.mins===m?'selected':''}>${m} min por</option>`).join('')}</select>`:''}
+        <button class="btn btn-ghost btn-sm" data-act="show-logs">📜 Activity log</button></div>`; })()}
+    </div>
     <div class="card panel" style="margin-bottom:16px"><h3>Links (website, Facebook, Instagram…)</h3>
       <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Ekhane deya link gulo Dashboard er upore button hoye thakbe — ek chape khulbe. Faka link dekhabe na.</p>
       <div id="ln-box">${linksEditor()}</div>
@@ -3872,6 +4017,8 @@ function viewSettings(){
       <input id="backup-file" type="file" accept="application/json,.json" style="display:none"></div>
     <div class="card panel"><h3>Account &amp; app</h3>
       <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Signed in as <strong>${esc((fauth&&fauth.currentUser&&fauth.currentUser.email)||'')}</strong></p>
+      <div class="field" style="max-width:420px"><label>Apnar nam (sale ar activity log e dekhabe)</label>
+        <div style="display:flex;gap:8px"><input id="set-myname" value="${esc(userName(meEmail()))}" style="flex:1"><button class="btn btn-ghost btn-sm" data-act="set-myname">Save</button></div></div>
       <div style="display:flex; gap:10px; flex-wrap:wrap">
         <button class="btn btn-ghost" data-act="signout">⎋ Sign out</button>
         <button class="btn btn-ghost install-btn" data-act="install" style="display:none">⤓ Install to home screen</button>
@@ -3881,12 +4028,21 @@ function viewSettings(){
   if(deferredPrompt) showInstall(true);
   const bf=$('#backup-file'); if(bf) bf.onchange=()=>doImportBackup(bf);
   const ff=$('#set-font'); if(ff) ff.onchange=()=>applyFont(ff.value);
+  const pm=$('#pin-mins'); if(pm) pm.onchange=()=>{ const p=pinGet(); if(p){ p.mins=Number(pm.value); pinPut(p); toast('Lock '+p.mins+' minute por','ok'); viewSettings(); } };
 }
 function saveShopInfo(){
   const cfg=getCfg()||{};
   cfg.shopName=$('#set-name').value.trim(); cfg.shopPhone=$('#set-phone').value.trim();
   cfg.shopAddress=$('#set-addr').value.trim(); cfg.invoiceNote=$('#set-note').value.trim();
   setCfg(cfg); toast('Saved','ok');
+}
+function markBackup(){ const c=Object.assign({}, getCfg()); c.lastBackup=new Date().toISOString(); setCfg(c); }
+function backupBanner(){
+  const lb=getCfg().lastBackup, days=lb?Math.floor((Date.now()-new Date(lb).getTime())/86400000):null;
+  let snooze=0; try{ snooze=Number(localStorage.getItem('omme_bk_snooze')||0); }catch(e){}
+  if((days!=null && days<30) || Date.now()<snooze) return '';
+  return `<div class="bk-warn">💾 ${days==null?'Ekhono kono backup neya hoyni':days+' din backup neya hoyni'} — Settings theke backup / Excel naman
+    <span style="flex:1"></span><button class="btn btn-gold btn-sm" data-nav="settings">Backup nin</button><button class="btn btn-ghost btn-sm" data-act="bk-snooze">Pore</button></div>`;
 }
 function doExportBackup(){
   try{
@@ -3897,7 +4053,7 @@ function doExportBackup(){
     const d=new Date(); const p=n=>('0'+n).slice(-2);
     a.href=url; a.download='ommes-backup-'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'.json';
     document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-    toast('Backup downloaded ✦','ok');
+    toast('Backup downloaded ✦','ok'); markBackup();
   }catch(e){ toast('Export failed: '+e.message,'err'); }
 }
 function doImportBackup(input){
@@ -3989,6 +4145,11 @@ document.addEventListener('click', function(e){
     case 'ln-add': { const L=linksRead(); L.push({i:'🔗',n:'',u:''}); $('#ln-box').innerHTML=linksEditor(L); const ins=document.querySelectorAll('.ln-n'); if(ins.length) ins[ins.length-1].focus(); break; }
     case 'ln-del': { const L=linksRead(); L.splice(Number(el.dataset.i),1); linksSave(L); $('#ln-box').innerHTML=linksEditor(); toast('Link muche gelo','ok'); break; }
     case 'ln-save': { const L=linksRead().filter(x=>x.n||x.u); linksSave(L); $('#ln-box').innerHTML=linksEditor(); toast('Links saved ✦','ok'); break; }
+    case 'pin-set': { const go=()=>lockShow('set', function(){}); if(pinGet()) lockShow('verify', go); else go(); break; }
+    case 'pin-off': lockShow('verify', function(){ pinPut(null); try{ localStorage.setItem('omme_pin_skip_'+meEmail(),'1'); }catch(x){} toast('App lock bondho','ok'); viewSettings(); }); break;
+    case 'show-logs': showLogs(); break;
+    case 'set-myname': { const v=$('#set-myname').value.trim(); const c=Object.assign({}, getCfg()); c.userNames=Object.assign({}, c.userNames||{}); c.userNames[meEmail()]=v; setCfg(c); toast('Nam saved','ok'); break; }
+    case 'bk-snooze': try{ localStorage.setItem('omme_bk_snooze', String(Date.now()+3*86400000)); }catch(x){} const bw=document.querySelector('.bk-warn'); if(bw) bw.remove(); break;
     case 'pay-mode': setPayMode(el.getAttribute('data-m')); break;
     case 'cart-inc': cartQty(id,1); break;
     case 'cart-dec': cartQty(id,-1); break;
@@ -4103,6 +4264,11 @@ if('serviceWorker' in navigator){
 (function init(){
   ensureDB();
   $('#lg-form').addEventListener('submit', function(e){ e.preventDefault(); doLogin(); });
+  const gb=$('#lg-google'); if(gb) gb.addEventListener('click', doGoogle);
+  $('#lk-ok').addEventListener('click', lockOk);
+  $('#lk-pin').addEventListener('keydown', function(e){ if(e.key==='Enter') lockOk(); });
+  $('#lk-skip').addEventListener('click', lockSkip);
+  $('#lk-out').addEventListener('click', function(){ pinPut(null); doSignOut(); });
   startFirebase();
 })();
 </script>
