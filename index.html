@@ -409,6 +409,37 @@
   .pill.brand{background:var(--gold-soft); color:var(--gold-2)}
   .pill.pre{background:rgba(124,92,224,.17); color:#6b47d6}
   .pill.pre{white-space:nowrap}
+  .pill.gift{background:linear-gradient(135deg,#c2185b,#f59e0b); color:#fff; white-space:nowrap}
+  .rc-legend .rc-badge.pick{cursor:pointer; border:none; font:inherit; font-size:inherit; font-weight:inherit}
+  .rc-legend .rc-badge.dim{opacity:.35}
+  .rc-legend .rc-badge.sel{outline:3px solid var(--ink); outline-offset:1px}
+  tr.letter-row td{background:var(--paper) !important; font-weight:900; font-size:13px; letter-spacing:.12em; color:var(--gold); padding:7px 14px !important; border-top:1px solid var(--line)}
+  .cus-filters{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:-4px 0 12px}
+  .cus-filters select{padding:8px 10px; border:1px solid var(--line-2); border-radius:9px; background:var(--input-bg); color:var(--ink); font:inherit; font-size:13px}
+  .gcard{position:relative; width:640px; height:360px; border-radius:22px; overflow:hidden; color:#fff; font-family:'Lato',system-ui,sans-serif;
+    background:linear-gradient(135deg,#4a1450 0%,#a3195b 40%,#e0457b 70%,#f7a440 100%)}
+  .gcard *{box-sizing:border-box; margin:0; padding:0}
+  .gcard .b1{position:absolute; width:320px; height:320px; border-radius:50%; right:-100px; top:-130px; background:rgba(255,255,255,.13)}
+  .gcard .b2{position:absolute; width:260px; height:260px; border-radius:50%; left:-80px; bottom:-140px; background:rgba(255,214,102,.20)}
+  .gcard .b3{position:absolute; width:90px; height:90px; border-radius:50%; left:300px; top:-40px; background:rgba(255,255,255,.08)}
+  .gcard .top{position:absolute; left:28px; top:24px; display:flex; gap:12px; align-items:center}
+  .gcard .logo{width:54px; height:54px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,.18)}
+  .gcard .logo img{width:48px; height:48px; object-fit:contain}
+  .gcard .brand{font-family:'Cormorant Garamond',Georgia,serif; font-weight:700; font-size:29px; letter-spacing:.14em; line-height:1}
+  .gcard .tag{font-size:11.5px; letter-spacing:.05em; opacity:.95; margin-top:5px}
+  .gcard .kind{position:absolute; right:26px; top:30px; background:rgba(255,255,255,.96); color:#a3195b; font-weight:900; font-size:12px; letter-spacing:.24em; padding:7px 14px; border-radius:999px}
+  .gcard .for{position:absolute; left:30px; top:110px; font-size:11.5px; letter-spacing:.2em; text-transform:uppercase; opacity:.92}
+  .gcard .nm{position:absolute; left:28px; top:128px; width:330px; font-family:'Cormorant Garamond',Georgia,serif; font-weight:700; font-size:34px; line-height:1.05}
+  .gcard .off{position:absolute; right:30px; top:88px; text-align:right}
+  .gcard .off .p{font-size:94px; font-weight:900; line-height:.92; letter-spacing:-2px; text-shadow:0 4px 18px rgba(0,0,0,.20)}
+  .gcard .off .o{font-size:22px; font-weight:900; letter-spacing:.32em; margin-top:2px}
+  .gcard .code{position:absolute; left:28px; bottom:64px; background:rgba(255,255,255,.97); color:#3a1240; border-radius:12px; padding:8px 16px 9px; border:2px dashed #e0457b}
+  .gcard .code .l{font-size:9.5px; letter-spacing:.22em; color:#a3195b; font-weight:900}
+  .gcard .code .v{font-family:'Courier New',monospace; font-weight:700; font-size:23px; letter-spacing:.08em; margin-top:2px}
+  .gcard .valid{position:absolute; right:30px; bottom:68px; text-align:right; font-size:12.5px; line-height:1.55}
+  .gcard .valid strong{font-size:14.5px; font-weight:900}
+  .gcard .foot{position:absolute; left:0; right:0; bottom:0; padding:11px 28px; background:rgba(40,6,40,.30); font-size:12px; display:flex; gap:18px; justify-content:space-between; align-items:center}
+  body.staff [data-act="gift-new"], body.staff [data-act="gift-for"], body.staff [data-act="gift-cancel"]{display:none !important}
   .pill.amber{background:rgba(240,170,40,.2); color:#b97800}
   .wa-next{display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:14px; border:none; border-radius:12px;
     background:#25D366; color:#fff; font-weight:900; font-size:15px; margin:4px 0 14px}
@@ -474,6 +505,8 @@
   body.staff [data-act="cus-export"], body.staff [data-act="in-export"], body.staff [data-act^="rep-export"],
   body.staff [data-act="export-xlsx"], body.staff [data-act^="backup-"], body.staff [data-act="inv-csv-import"],
   body.staff [data-act="show-logs"], body.staff .adm-only{display:none !important}
+  input[type=search]{-webkit-appearance:none; appearance:none}
+  input[type=search]::-webkit-search-decoration{-webkit-appearance:none}
   #lock{position:fixed; inset:0; z-index:10000; display:none; align-items:center; justify-content:center; padding:24px;
     background:radial-gradient(120% 90% at 50% -10%, var(--glow) 0%, var(--paper) 60%)}
   #lock.on{display:flex}
@@ -713,7 +746,7 @@
 <div id="lock"><div class="box">
   <div class="brand" style="align-items:center"><span class="name">OMME'S</span><span class="sub">GALLERY</span></div>
   <h2 id="lk-title">🔒 PIN din</h2><p id="lk-sub"></p>
-  <input id="lk-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off">
+  <input id="lk-pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" autocorrect="off" spellcheck="false" style="-webkit-text-security:disc">
   <div class="msg" id="lk-msg"></div>
   <button class="btn btn-gold btn-block" id="lk-ok">Unlock</button>
   <button class="lnk" id="lk-skip" style="display:none">Pore korbo</button>
@@ -759,11 +792,11 @@ function toast(msg, type){
    in-memory DB kept in sync with Firestore (see sync layer below). Exposes the same api(action, payload) the UI uses. */
 
 const TABLES = ['Products','Customers','Sales','SaleItems','Suppliers','Expenses',
-  'Purchases','PurchaseItems','Returns','ReturnItems','Dues','Lots'];
+  'Purchases','PurchaseItems','Returns','ReturnItems','Dues','Lots','GiftCards'];
 const KEY = {
   Products:'ID', Customers:'ID', Sales:'InvoiceNo', SaleItems:'InvoiceNo',
   Suppliers:'ID', Expenses:'ID', Purchases:'PurchaseNo', PurchaseItems:'PurchaseNo',
-  Returns:'ReturnNo', ReturnItems:'ReturnNo', Dues:'ID', Lots:'ID'
+  Returns:'ReturnNo', ReturnItems:'ReturnNo', Dues:'ID', Lots:'ID', GiftCards:'Code'
 };
 const LOW_STOCK = 1;
 const NUM_FIELDS = ['BuyPrice','SalePrice','Stock','Amount'];
@@ -836,8 +869,54 @@ function addLot(productId, buyPrice, qty, purchaseNo){
 /* Delivery is only printed on the invoice (the courier gets that money, not us), so what we count as
    the sale amount is always Subtotal - Discount. Old rows that stored Delivery inside Total are covered too. */
 function saleNet(s){ return num(s.Subtotal)-num(s.Discount); }
+/* ---------- gift cards: one code per customer, one use, with a date window ---------- */
+const GIFT_ABC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function giftNorm(c){ return String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+function giftFind(code){ const k=giftNorm(code); if(!k) return null; return (DB.GiftCards||[]).find(function(g){ return giftNorm(g.Code)===k || giftNorm(g.Code)==='OMME'+k; })||null; }
+function giftNewCode(){
+  for(let t=0;t<50;t++){
+    const r=new Uint8Array(8); (window.crypto||{}).getRandomValues ? crypto.getRandomValues(r) : r.forEach(function(_,i){ r[i]=Math.floor(Math.random()*256); });
+    const a=Array.from(r).map(function(x){ return GIFT_ABC[x%GIFT_ABC.length]; }).join('');
+    const code='OMME-'+a.slice(0,4)+'-'+a.slice(4);
+    if(!giftFind(code)) return code;
+  }
+  throw new Error('Code banano gelo na — abar chesta korun');
+}
+function giftState(g){
+  if(!g) return '';
+  if(g.Status==='Used') return 'used'; if(g.Status==='Cancelled') return 'cancelled';
+  const t=ymdLocal(new Date());
+  if(g.Until && t>g.Until) return 'expired'; if(g.From && t<g.From) return 'upcoming';
+  return 'active';
+}
+function giftCheck(g, cid){
+  if(!g) return 'Ei code ta paoa jay nai — banan ta abar dekhun';
+  const st=giftState(g);
+  if(st==='used') return 'Ei code age babohar hoye geche ('+(g.UsedInvoice||'')+')';
+  if(st==='cancelled') return 'Ei code batil kora hoyeche';
+  if(st==='expired') return 'Code er meyad shesh hoye geche ('+fdate(g.Until)+')';
+  if(st==='upcoming') return 'Code ta '+fdate(g.From)+' theke chalu hobe';
+  if(String(cid||'')!==String(g.CustomerID||'')) return 'Ei code shudhu '+(g.CustomerName||'')+' er jonno';
+  return '';
+}
+function giftRelease(sale){
+  if(!sale||!sale.GiftCode) return; const g=giftFind(sale.GiftCode);
+  if(g && g.Status==='Used' && String(g.UsedInvoice)===String(sale.InvoiceNo)){ g.Status='Active'; g.UsedInvoice=''; g.UsedDate=''; g.UsedBy=''; }
+}
+function L_createGift(p){
+  const c=DB.Customers.find(function(x){ return String(x.ID)===String(p.customerId); }); if(!c) throw new Error('Customer bachai korun');
+  const pct=num(p.pct); if(!(pct>0 && pct<=90)) throw new Error('Koto % chhar? (1–90)');
+  if(!p.from || !p.until || p.until<p.from) throw new Error('Meyad er tarikh thik korun');
+  const code=giftNewCode(), dm=custDressMap()[String(c.ID)];
+  const g={ Code:code, CustomerID:c.ID, CustomerName:c.Name, Phone:String(p.phone||custPhones(c)[0]||''), Pct:pct, From:p.from, Until:p.until,
+    Status:'Active', CreatedAt:new Date().toISOString(), By:meEmail(), DressesAt:dm?dm.total:0, UsedInvoice:'', UsedDate:'', UsedBy:'' };
+  DB.GiftCards.push(g); return { code:code, name:c.Name, pct:pct };
+}
+function L_cancelGift(code){ const g=giftFind(code); if(!g) return {error:'Code nai'}; if(g.Status==='Used') return {error:'Babohar hoye geche — batil kora jabe na'}; g.Status='Cancelled'; return {code:g.Code}; }
 function L_createSale(sale, items){
   items = items || [];
+  let gift=null;
+  if(sale.GiftCode){ gift=giftFind(sale.GiftCode); const er=giftCheck(gift, sale.CustomerID); if(er) throw new Error(er); }
   const invNo = nextNo('Sales','OG');
   const now = new Date();
   let subtotal=0, profit=0;
@@ -857,6 +936,7 @@ function L_createSale(sale, items){
   DB.Sales.push({ InvoiceNo:invNo, Date:now.toISOString(), CustomerID:sale.CustomerID||'', CustomerName:sale.CustomerName||'',
     Subtotal:subtotal, Discount:discount, Delivery:delivery, Total:total, Profit:netProfit,
     Payment:sale.Payment||'Cash', Status:sale.Status||'Delivered', Note:sale.Note||'', By:meEmail(),
+    GiftCode:gift?gift.Code:'', GiftPct:gift?num(gift.Pct):0,
     Preorder:!!sale.Preorder, PreorderDate:sale.PreorderDate||'',
     DeliverAfter:sale.DeliverAfter||'', DeliverBy:deliverBy(now.toISOString(), sale.DeliverAfter||'') });
   items.forEach(function(it){
@@ -864,6 +944,7 @@ function L_createSale(sale, items){
       Qty:num(it.Qty), SalePrice:num(it.SalePrice), BuyPrice:num(it.BuyPrice), LineTotal:it.LineTotal, LineProfit:it.LineProfit,
       Stitch:it.Stitch||'', Size:it.Size||'' });
   });
+  if(gift){ gift.Status='Used'; gift.UsedInvoice=invNo; gift.UsedDate=now.toISOString(); gift.UsedBy=meEmail(); }
   const received = (sale.Paid===''||sale.Paid==null) ? total : num(sale.Paid);
   let due=0;
   if(received<total){
@@ -906,7 +987,7 @@ function L_returnItems(no, qty, opts){
   const left=DB.SaleItems.filter(function(i){ return String(i.InvoiceNo)===String(no); });
   for(let i=DB.Dues.length-1;i>=0;i--){ if(String(DB.Dues[i].InvoiceNo)===String(no)) DB.Dues.splice(i,1); }
   let whole=false, refund=0;
-  if(!left.length){ whole=true; refund=cur.received; const si=DB.Sales.indexOf(sale); if(si>-1) DB.Sales.splice(si,1); }
+  if(!left.length){ whole=true; refund=cur.received; giftRelease(sale); const si=DB.Sales.indexOf(sale); if(si>-1) DB.Sales.splice(si,1); }
   else{
     let sub=0, pf=0; left.forEach(function(it){ sub+=num(it.LineTotal); pf+=num(it.LineProfit); });
     const disc=Math.min(num(sale.Discount), sub), net=sub-disc;
@@ -960,6 +1041,7 @@ function L_cancelSale(no){
     const p=findProduct(it.ProductID); if(p) p.Stock=num(p.Stock)+num(it.Qty); if(it.ProductID) addLot(it.ProductID, it.BuyPrice, num(it.Qty), '');
     DB.SaleItems.splice(i,1); }
   for(let i=DB.Dues.length-1;i>=0;i--){ if(String(DB.Dues[i].InvoiceNo)===String(no)) DB.Dues.splice(i,1); }
+  giftRelease(sale);
   DB.Sales.splice(DB.Sales.indexOf(sale),1);
   return { cancelled:no };
 }
@@ -1064,6 +1146,12 @@ function dressBadge(dm, big){
   const tr=custTier(dm?dm.total:0); if(!tr) return '';
   return '<span class="rc-badge" style="background:'+tierBg(tr)+'">🔁 '+(big?'Repeat buyer · ':'')+dm.total+' dresses'+(big&&dm.prev?' ('+dm.prev+' ager + '+dm.app+' app e)':'')+'</span>';
 }
+const NAME_TITLES=/^\s*((dr|prof|engr|eng|adv|mrs|mr|ms|miss|md|mst|doctor)\.?\s+|ডাঃ?\s*|ডা\.\s*)+/i;
+function nameKey(n){ return String(n||'').replace(NAME_TITLES,'').trim() || String(n||''); }
+function nameLetter(n){ const ch=nameKey(n).charAt(0).toUpperCase(); return /[A-Z]/.test(ch)?ch:(ch?'#':'#'); }
+function isDr(n){ return /^\s*(dr\b|dr\.|doctor\b|ডাঃ|ডা\.)/i.test(String(n||'')); }
+function custGroups(c){ const g=[]; if(c.Group) g.push(String(c.Group)); if(isDr(c.Name) && g.indexOf('Doctor')<0) g.push('Doctor'); return g; }
+function cmpName(a,b){ return cmpTxt(nameKey(a),nameKey(b)); }
 function custTier(n){ n=num(n); for(let i=0;i<CUST_TIERS.length;i++){ if(n>=CUST_TIERS[i].min) return CUST_TIERS[i]; } return null; }
 function hexA(h,a){ const n=parseInt(String(h).slice(1),16); return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')'; }
 function tierLegend(){ return '<div class="rc-legend"><span>Repeat buyer colour:</span>'+CUST_TIERS.slice().reverse().map(function(t){ return '<span class="rc-badge" style="background:'+tierBg(t)+'">'+t.l+'</span>'; }).join('')+'<span>dresses</span></div>'; }
@@ -1090,8 +1178,8 @@ var ADMIN_EMAILS = ['shishir.mmc163@gmail.com'];   // only these accounts can de
 function isAdmin(){ return ADMIN_EMAILS.indexOf(meEmail()) > -1; }
 const ADMIN_ACTS = ['product-del','cus-del','cus-merge','exp-del','sup-del','attr-del','wa-tpl-del','cus-export','in-export',
   'rep-export-sales','rep-export-products','rep-export-brands','export-xlsx','backup-export','backup-import','inv-csv-import',
-  'show-logs','set-save','ln-add','ln-del','ln-save'];
-const ADMIN_API = ['deleteProduct','deleteCustomer','mergeCustomers','deleteExpense','deleteSupplier'];
+  'show-logs','set-save','ln-add','ln-del','ln-save','gift-new','gift-for','gift-cancel','gf-save'];
+const ADMIN_API = ['deleteProduct','deleteCustomer','mergeCustomers','deleteExpense','deleteSupplier','createGift','cancelGift'];
 function applyRole(){ try{ document.body.classList.toggle('staff', !isAdmin()); }catch(e){} }
 function meEmail(){ return String((fauth&&fauth.currentUser&&fauth.currentUser.email)||'').toLowerCase(); }
 function userName(email){ email=String(email||'').toLowerCase(); const m=(getCfg().userNames)||{}; return m[email] || (email?email.split('@')[0]:''); }
@@ -1117,6 +1205,7 @@ function L_mergeCustomers(fromId, intoId){
   DB.Sales.forEach(function(s){ if(String(s.CustomerID)===String(a.ID)){ s.CustomerID=b.ID; s.CustomerName=b.Name; inv[String(s.InvoiceNo)]=1; n++; } });
   DB.Dues.forEach(function(d){ if(String(d.CustomerID)===String(a.ID) || inv[String(d.InvoiceNo)]){ d.CustomerID=b.ID; d.CustomerName=b.Name; } });
   DB.Returns.forEach(function(r){ if(inv[String(r.InvoiceNo)]) r.CustomerName=b.Name; });
+  (DB.GiftCards||[]).forEach(function(g){ if(String(g.CustomerID)===String(a.ID)){ g.CustomerID=b.ID; g.CustomerName=b.Name; } });
   const ph=custPhones(b);
   custPhones(a).forEach(function(x){ if(!ph.some(function(h){ return h===x || (phoneKey(h) && phoneKey(h)===phoneKey(x)); })) ph.push(x); });
   b.Phone=ph[0]||''; b.Phone2=ph[1]||''; b.Phone3=ph[2]||'';
@@ -1290,7 +1379,7 @@ function L_payDue(id, amount){
 
 /* ---------- dispatcher (same interface the UI already uses) ---------- */
 const MUTATIONS = ['saveProduct','deleteProduct','saveCustomer','deleteCustomer','createSale','saveSupplier',
-  'deleteSupplier','saveExpense','deleteExpense','createPurchase','updatePurchasePayment','createReturn','payDue','updateSale','renameAttr','mergeCustomers','returnItems','cancelSale','saveShipment'];
+  'deleteSupplier','saveExpense','deleteExpense','createPurchase','updatePurchasePayment','createReturn','payDue','updateSale','renameAttr','mergeCustomers','returnItems','cancelSale','saveShipment','createGift','cancelGift'];
 
 async function api(action, p){
   p = p || {}; ensureDB(); let out;
@@ -1330,6 +1419,8 @@ async function api(action, p){
     case 'updateSale':      out=L_updateSale(p.invoiceNo, p.patch, p.edits, p.adds); break;
     case 'returnItems':     out=L_returnItems(p.invoiceNo, p.qty, p.opts); break;
     case 'cancelSale':      out=L_cancelSale(p.invoiceNo); break;
+    case 'createGift':      out=L_createGift(p); break;
+    case 'cancelGift':      out=L_cancelGift(p.code); break;
     case 'saveShipment':    out=L_saveShipment(p.rows, p.meta); break;
     case 'report':          out=L_report(p.from, p.to); break;
     case 'listSuppliers':   out=readAll('Suppliers'); break;
@@ -1402,10 +1493,12 @@ function makeShadow(t, rows){
 function logDesc(a, p, out, pre){
   p=p||{}; out=out||{};
   switch(a){
-    case 'createSale': return 'Notun sale '+out.invoiceNo+' · '+((p.sale&&p.sale.CustomerName)||'Walk-in')+' · '+tk(out.total);
+    case 'createSale': return 'Notun sale '+out.invoiceNo+' · '+((p.sale&&p.sale.CustomerName)||'Walk-in')+' · '+tk(out.total)+(p.sale&&p.sale.GiftCode?' · 🎁 '+p.sale.GiftCode:'');
     case 'updateSale': return 'Sale edit '+p.invoiceNo;
     case 'returnItems': return 'Return '+p.invoiceNo+' · '+((out.returned||[]).join(', '));
     case 'cancelSale': return 'Order batil '+p.invoiceNo;
+    case 'createGift': return 'Gift card '+out.code+' · '+out.name+' · '+out.pct+'%';
+    case 'cancelGift': return 'Gift card batil · '+p.code;
     case 'saveProduct': return (out.isNew?'Notun dress · ':'Dress edit · ')+((p.item&&p.item.Name)||'');
     case 'deleteProduct': return 'Dress muche fela · '+pre;
     case 'saveCustomer': return (out.isNew?'Notun customer · ':'Customer edit · ')+((p.item&&p.item.Name)||'');
@@ -1626,6 +1719,8 @@ function importBackup(json){
 function setScreen(s){
   $('#splash').style.display = (s === 'splash') ? 'grid' : 'none';
   $('#login').classList.toggle('on', s === 'login');
+  // keep Chrome's password manager away from the app: the password box only exists as a password box on the login screen
+  const lp=$('#lg-pass'); if(lp){ if(s==='login'){ lp.disabled=false; lp.type='password'; lp.autocomplete='current-password'; } else { lp.value=''; lp.type='text'; lp.autocomplete='off'; lp.disabled=true; } }
   $('#app').style.display = (s === 'app') ? 'block' : 'none';
 }
 function loginMsg(m){ const e = $('#lg-err'); if(e) e.textContent = m || ''; }
@@ -1822,7 +1917,7 @@ async function viewDashboard(){
       ${backupBanner()}
       ${linksBar()}
       <div class="gs"><span class="gs-mag">⌕</span>
-        <input id="gs-input" type="search" autocomplete="off" placeholder="Search customer, mobile, address, dress name, SKU, invoice…"></div>
+        <input id="gs-input" type="search" name="q-gs" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Search customer, mobile, address, dress name, SKU, invoice…"></div>
       <div id="gs-res"></div>
 
       <div class="tiles">
@@ -1971,9 +2066,9 @@ async function viewInventory(){
   renderInventory('');
 }
 const ATTR_FIELDS=['Category','Brand','Type','Dupatta'];
-const ATTR_SEED={ Brand:['Cross Stitch','So Kamal','Sapphire','Gul Ahmed','Khaadi','Beechtree','Zellbury','Nishat','Limelight','Asim Jofa'] };
+const ATTR_SEED={ Group:['Doctor','Teacher','Banker','Engineer','Family','Reseller'], Brand:['Cross Stitch','So Kamal','Sapphire','Gul Ahmed','Khaadi','Beechtree','Zellbury','Nishat','Limelight','Asim Jofa'] };
 const cmpTxt=(a,b)=>String(a||'').localeCompare(String(b||''),undefined,{sensitivity:'base',numeric:true});
-function attrUsed(f){ const m={}; (DB.Products||[]).forEach(function(p){ const v=String(p[f]||'').trim(); if(v) m[v]=(m[v]||0)+1; }); return m; }
+function attrUsed(f){ const m={}; ((f==='Group'?DB.Customers:DB.Products)||[]).forEach(function(p){ const v=String(p[f]||'').trim(); if(v) m[v]=(m[v]||0)+1; }); return m; }
 function attrList(f){
   const c=getCfg(), saved=(c.lists&&Array.isArray(c.lists[f]))?c.lists[f]:null;
   const set=new Set(saved||ATTR_SEED[f]||[]); Object.keys(attrUsed(f)).forEach(function(v){ set.add(v); });
@@ -2095,7 +2190,7 @@ function renderInventory(q, only){
       <div style="display:flex; gap:8px; flex-wrap:wrap"><button class="btn btn-ghost" data-nav="shipment">📦 Notun chalan</button>
       <button class="btn btn-gold" data-act="product-new">＋ Add product</button></div></div>
     <div class="toolbar"><div class="search"><span class="mag">⌕</span>
-      <input id="inv-search" placeholder="Search name, brand, SKU…" value="${esc(q)}"></div>
+      <input id="inv-search" type="search" name="q-inv-search" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Search name, brand, SKU…" value="${esc(q)}"></div>
       <button class="btn btn-sm ${state.hideSoldOut?'btn-gold':'btn-ghost'}" data-act="inv-toggle-soldout" title="Show/hide sold-out products">${state.hideSoldOut?'✓ Hiding sold-out':'Hide sold-out'}${soldOutCount?' ('+soldOutCount+')':''}</button>
       <select id="inv-sort" title="Sort">${INV_SORTS.map(o=>`<option value="${o[0]}" ${o[0]===sk?'selected':''}>⇅ ${o[1]}</option>`).join('')}</select>
       <button class="btn btn-ghost btn-sm" data-act="attr-manage" title="Edit category, brand, type, dupatta lists">⚙ Categories &amp; brands</button>
@@ -2377,7 +2472,7 @@ async function viewCustomers(){
 function custTabBar(){
   const t=state.custTab||'list';
   const b=(k,l)=>`<button class="btn btn-sm ${t===k?'btn-gold':'btn-ghost'}" data-act="cus-tab" data-tab="${k}">${l}</button>`;
-  return `<div class="toolbar">${b('list','Customers')}${b('dues','Dues / credit')}${b('inactive','💤 Onekdin kenen ni')}${b('wa','📣 WhatsApp')}<span style="flex:1"></span>
+  return `<div class="toolbar">${b('list','Customers')}${b('dues','Dues / credit')}${b('inactive','💤 Onekdin kenen ni')}${b('wa','📣 WhatsApp')}${b('gift','🎁 Gift card')}<span style="flex:1"></span>
     ${t==='list'?'<button class="btn btn-ghost btn-sm" data-act="cus-export">⤓ Export CSV</button>':''}
     ${t==='list'?'<button class="btn btn-gold btn-sm" data-act="customer-new">＋ Add customer</button>':''}</div>`;
 }
@@ -2398,17 +2493,24 @@ function renderCustomers(q, only){
   const t=state.custTab||'list';
   if(t==='inactive'){ renderInactive(); return; }
   if(t==='wa'){ renderWA(); return; }
+  if(t==='gift'){ renderGift(); return; }
   if(t==='dues'){
     $('#view').innerHTML=`<div class="view-head"><div><div class="eyebrow">Customers</div><h2>Buyer directory</h2></div></div>
       ${custTabBar()}<div id="cus-body" class="loading" style="padding:30px"><div class="spin"></div>Loading dues…</div>`;
     loadDues(); return;
   }
-  const list=state.customers.filter(c=>!q || (String(c.Name)+custPhones(c).join(' ')+c.Address+(c.OldAddresses||[]).map(o=>o.a).join(' ')).toLowerCase().includes(q.toLowerCase()));
   const sum=L_customerSummary();
   const dmap=custDressMap(), smap=custStitchMap(), pdm=phoneDupMap();
-  const rows=list.map(c=>{ const sm=sum[String(c.ID)], dm=dmap[String(c.ID)], tr=custTier(dm?dm.total:0), ph=custPhones(c);
-    return `<tr${tr?` class="rc" style="--rc:${tr.c}; background:${hexA(tr.c,.12)}"`:''}>
-      <td><strong>${esc(c.Name)}</strong>${tr?`<div style="margin-top:4px">${dressBadge(dm)}</div>`:''}${retChip(c)?`<div style="margin-top:4px">${retChip(c)}</div>`:''}${(()=>{ const dd=custDupIds(c,pdm); return dd.length?`<div style="margin-top:4px"><button class="pill warn" style="border:none;cursor:pointer" data-act="cus-merge" data-id="${esc(c.ID)}" data-into="${esc(dd[0])}">⚠️ Duplicate? Merge</button></div>`:''; })()}</td>
+  const sk=cusSortKey(), gf=state.cusGroup||'', tf=state.cusTier||0, gmap=giftActiveMap();
+  let list=state.customers.filter(c=>!q || (String(c.Name)+' '+custPhones(c).join(' ')+' '+c.Address+' '+(c.Group||'')+' '+(c.OldAddresses||[]).map(o=>o.a).join(' ')).toLowerCase().includes(q.toLowerCase()));
+  if(gf) list=list.filter(c=>gf==='__none'?!custGroups(c).length:custGroups(c).indexOf(gf)>-1);
+  if(tf) list=list.filter(c=>{ const d=dmap[String(c.ID)], tr=custTier(d?d.total:0); return tr && tr.min===tf; });
+  sortCustomers(list, sk, dmap);
+  let lastL=null; const abc=(sk==='name'||sk==='name-desc');
+  const rows=list.map(c=>{ const sm=sum[String(c.ID)], dm=dmap[String(c.ID)], tr=custTier(dm?dm.total:0), ph=custPhones(c), gr=custGroups(c), ga=gmap[String(c.ID)];
+    let head=''; if(abc){ const L=nameLetter(c.Name); if(L!==lastL){ lastL=L; head=`<tr class="letter-row"><td colspan="5">${L}</td></tr>`; } }
+    return head+`<tr${tr?` class="rc" style="--rc:${tr.c}; background:${hexA(tr.c,.12)}"`:''}>
+      <td><strong>${esc(c.Name)}</strong>${gr.length||ga?`<div class="chips" style="margin-top:4px">${gr.map(x=>'<span class="pill brand">'+(x==='Doctor'?'🩺 ':'')+esc(x)+'</span>').join('')}${ga?'<span class="pill gift">🎁 '+num(ga.Pct)+'% gift</span>':''}</div>`:''}${tr?`<div style="margin-top:4px">${dressBadge(dm)}</div>`:''}${retChip(c)?`<div style="margin-top:4px">${retChip(c)}</div>`:''}${(()=>{ const dd=custDupIds(c,pdm); return dd.length?`<div style="margin-top:4px"><button class="pill warn" style="border:none;cursor:pointer" data-act="cus-merge" data-id="${esc(c.ID)}" data-into="${esc(dd[0])}">⚠️ Duplicate? Merge</button></div>`:''; })()}</td>
       <td class="tnum">${ph.length?esc(ph[0])+ph.slice(1).map(x=>'<div style="font-size:12px;color:var(--muted)">'+esc(x)+'</div>').join(''):''}</td>
       <td>${esc(c.Address||'')}</td>
       <td>${custChips(sum[String(c.ID)])}${(()=>{ const h=stitchChip(smap[String(c.ID)]); return h?'<div class="chips" style="margin-top:5px">'+h+'</div>':''; })()}</td>
@@ -2422,27 +2524,50 @@ function renderCustomers(q, only){
     <div class="view-head"><div><div class="eyebrow">Customers</div><h2>Buyer directory</h2></div></div>
     ${custTabBar()}
     <div class="toolbar"><div class="search"><span class="mag">⌕</span>
-      <input id="cus-search" placeholder="Search name, phone, address…" value="${esc(q)}"></div>
+      <input id="cus-search" type="search" name="q-cus-search" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Search name, phone, address…" value="${esc(q)}"></div>
       <span id="cus-count" style="color:var(--muted); font-size:13px">${list.length} buyer(s)</span></div>
-    ${tierLegend()}
+    <div class="cus-filters">
+      <select id="cus-sort" title="Sajano">${CUS_SORTS.map(o=>`<option value="${o[0]}" ${o[0]===sk?'selected':''}>⇅ ${o[1]}</option>`).join('')}</select>
+      <select id="cus-group" title="Group">${[['','👥 Sob group']].concat(cusGroupList().map(g=>[g,(g==='Doctor'?'🩺 ':'')+g]), [['__none','Group chara']]).map(o=>`<option value="${esc(o[0])}" ${o[0]===gf?'selected':''}>${esc(o[1])}</option>`).join('')}</select>
+      ${(gf||tf)?'<button class="btn btn-ghost btn-sm" data-act="cus-filter-clear">✕ Filter muchun</button>':''}</div>
+    ${tierLegendPick(tf)}
     <div class="card"><div class="table-wrap"><table>
       <thead><tr><th>Name</th><th>Phone</th><th>Address</th><th>Status</th><th class="num">Actions</th></tr></thead>
       <tbody id="cus-tbody">${rows}</tbody></table></div></div>`;
   const s=$('#cus-search'); if(s) s.oninput=()=>renderCustomers(s.value, true);
+  const so=$('#cus-sort'); if(so) so.onchange=()=>{ state.cusSort=so.value; try{ localStorage.setItem('omme_cus_sort',so.value); }catch(e){} renderCustomers($('#cus-search').value); };
+  const gs=$('#cus-group'); if(gs) gs.onchange=()=>{ state.cusGroup=gs.value; renderCustomers($('#cus-search').value); };
 }
+const CUS_SORTS=[['name','Nam A → Z'],['name-desc','Nam Z → A'],['dress','Beshi dress age'],['recent','Shesh kena age'],['new','Notun customer age']];
+function cusSortKey(){ if(!state.cusSort){ try{ state.cusSort=localStorage.getItem('omme_cus_sort')||'name'; }catch(e){ state.cusSort='name'; } } return state.cusSort; }
+function custLastBuy(){ const m={}; DB.Sales.forEach(function(s){ const id=String(s.CustomerID||''); if(id && (!m[id] || String(s.Date)>m[id])) m[id]=String(s.Date); }); return m; }
+function sortCustomers(list, k, dmap){
+  const byN=function(a,b){ return cmpName(a.Name,b.Name); };
+  if(k==='name-desc') return list.sort(function(a,b){ return byN(b,a); });
+  if(k==='dress') return list.sort(function(a,b){ return (((dmap[String(b.ID)]||{}).total||0)-((dmap[String(a.ID)]||{}).total||0))||byN(a,b); });
+  if(k==='recent'){ const lb=custLastBuy(); return list.sort(function(a,b){ return String(lb[String(b.ID)]||'').localeCompare(String(lb[String(a.ID)]||''))||byN(a,b); }); }
+  if(k==='new') return list.sort(function(a,b){ return String(b.CreatedAt||'').localeCompare(String(a.CreatedAt||''))||byN(a,b); });
+  return list.sort(byN);
+}
+function cusGroupList(){ const set=new Set(attrList('Group')); DB.Customers.forEach(function(c){ custGroups(c).forEach(function(g){ set.add(g); }); }); return Array.from(set).filter(Boolean).sort(cmpTxt); }
+function tierLegendPick(sel){
+  return '<div class="rc-legend"><span>Repeat buyer colour (chap din — shudhu oi dhap):</span>'+CUST_TIERS.slice().reverse().map(function(t){
+    return '<button type="button" class="rc-badge pick'+(sel?(sel===t.min?' sel':' dim'):'')+'" data-act="cus-tier" data-min="'+t.min+'" style="background:'+tierBg(t)+'">'+t.l+'</button>'; }).join('')+'<span>dresses</span></div>';
+}
+function giftActiveMap(){ const m={}; (DB.GiftCards||[]).forEach(function(g){ const st=giftState(g); if(st==='active'||st==='upcoming') m[String(g.CustomerID)]=g; }); return m; }
 function customerTable(){
   const sum=L_customerSummary(), dm=custDressMap(), sm2=custStitchMap(), last={}, spent={};
   DB.Sales.forEach(function(s){ const id=String(s.CustomerID||''); if(!id) return; spent[id]=(spent[id]||0)+saleNet(s);
     if(!last[id] || String(s.Date)>last[id]) last[id]=String(s.Date); });
-  const rows=DB.Customers.slice().sort((a,b)=>cmpTxt(a.Name,b.Name)).map(function(c){
+  const rows=DB.Customers.slice().sort((a,b)=>cmpName(a.Name,b.Name)).map(function(c){
     const id=String(c.ID), sm=sum[id]||{}, d=dm[id]||{app:0,prev:0,total:0}, tr=custTier(d.total);
     return [c.Name||'', c.Phone||'', c.Phone2||'', c.Phone3||'', c.Email||'', c.Address||'',
       (c.OldAddresses||[]).map(o=>o.a).join(' | '), sm.orders||0, d.app, d.prev, d.total, tr?tr.l.replace(' 👑',''):'',
       Math.round(spent[id]||0), Math.round(sm.due||0), last[id]?dstr(last[id]):'',
-      Object.keys((sm2[id]||{}).st||{}).join(' / '), Object.keys((sm2[id]||{}).sz||{}).join(', '), Array.isArray(c.ReturnLog)?c.ReturnLog.length:0 ];
+      Object.keys((sm2[id]||{}).st||{}).join(' / '), Object.keys((sm2[id]||{}).sz||{}).join(', '), Array.isArray(c.ReturnLog)?c.ReturnLog.length:0, custGroups(c).join(', ') ];
   });
   return { head:['Name','Mobile 1','Mobile 2','Mobile 3','Email','Address','Old addresses','Orders (app)',
-    'Dresses (app)','Dresses (before app)','Dresses total','Colour group','Total spent','Due','Last order','Stitched/Unstitched','Sizes bought','Returns'], rows:rows };
+    'Dresses (app)','Dresses (before app)','Dresses total','Colour group','Total spent','Due','Last order','Stitched/Unstitched','Sizes bought','Returns','Group'], rows:rows };
 }
 function exportCustomers(){ const t=customerTable(); downloadCSV('customers.csv', t.head, t.rows); toast(t.rows.length+' customers exported','ok'); }
 
@@ -2474,6 +2599,8 @@ async function exportAllExcel(){
     add('Dues',['Invoice','Date','Customer','Amount','Paid','Balance'], DB.Dues.map(d=>[d.InvoiceNo||'', d.Date?dstr(d.Date):'', d.CustomerName||'', num(d.Amount), num(d.Paid), num(d.Balance)]));
     add('Returns',['Return no','Date','Invoice','Customer','Amount','Profit reversed'], DB.Returns.map(r=>[r.ReturnNo, r.Date?dstr(r.Date):'', r.InvoiceNo||'', r.CustomerName||'', num(r.Amount), num(r.ProfitReversed)]));
     const d=new Date();
+    add('Gift cards',['Code','Customer','Mobile','%','From','Until','Status','Used invoice','Used date','Created'],
+      (DB.GiftCards||[]).map(g=>[g.Code, g.CustomerName||'', g.Phone||'', num(g.Pct), g.From||'', g.Until||'', giftState(g), g.UsedInvoice||'', g.UsedDate?dstr(g.UsedDate):'', g.CreatedAt?dstr(g.CreatedAt):'']));
     X.writeFile(wb, 'ommes-gallery-data-'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'.xlsx');
     toast('Excel downloaded ✦ — Google Drive e rakhte paren','ok'); markBackup();
   }catch(e){ toast('Excel banano gelo na: '+e.message,'err'); }
@@ -2627,6 +2754,166 @@ async function savePayDue(id){
   try{ await api('payDue',{id, amount:amt}); closeModal(); toast('Payment received','ok'); loadDues(); }
   catch(e){ toast(e.message,'err'); }
 }
+/* ---------- gift card UI ---------- */
+function giftApply(){
+  const inp=$('#s-gift'), msg=$('#s-gift-msg'); if(!inp) return;
+  const g=giftFind(inp.value), cs=$('#s-cust');
+  if(g && cs && !cs.value && [].some.call(cs.options, o=>String(o.value)===String(g.CustomerID))){ cs.value=g.CustomerID; state.customerId=g.CustomerID; }
+  const er=giftCheck(g, cs?cs.value:'');
+  if(er){ state.gift=null; msg.innerHTML='<span style="color:var(--neg);font-weight:700">✕ '+esc(er)+'</span>'; const dz=$('#s-disc'); if(dz) dz.readOnly=false; renderCart(); return; }
+  state.gift=g; inp.value=g.Code;
+  msg.innerHTML='<span class="pill gift">🎁 '+num(g.Pct)+'% chhar · '+esc(g.CustomerName)+'</span> <button type="button" class="btn-icon" data-act="gift-remove">✕ Soran</button>';
+  renderCart(); toast('Gift code chalu ✦ '+num(g.Pct)+'% chhar','ok');
+}
+function giftRemove(){
+  state.gift=null; const dz=$('#s-disc'); if(dz){ dz.readOnly=false; dz.value='0'; }
+  const gi=$('#s-gift'); if(gi) gi.value=''; const m=$('#s-gift-msg'); if(m) m.innerHTML=''; if($('#cart-tot')) renderCart();
+}
+const GIFT_ST={ active:['pos','Chalu'], upcoming:['amber','Shamne chalu hobe'], used:['brand','Babohrito'], expired:['warn','Meyad shesh'], cancelled:['warn','Batil'] };
+function giftChip(g){ const st=giftState(g), x=GIFT_ST[st]||['','']; return '<span class="pill '+x[0]+'">'+x[1]+'</span>'; }
+function giftHistHtml(c){
+  const L=(DB.GiftCards||[]).filter(g=>String(g.CustomerID)===String(c.ID)).sort((a,b)=>String(b.CreatedAt).localeCompare(String(a.CreatedAt)));
+  if(!L.length) return '';
+  return '<div class="lbl">🎁 Gift card</div>'+L.map(g=>'<div class="old" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">• '+fdate(g.CreatedAt)+' · <strong>'+num(g.Pct)+'%</strong> · '+esc(g.Code)+' · '+fdate(g.From)+' → '+fdate(g.Until)+' '+giftChip(g)+(g.UsedInvoice?' <span style="font-size:12px">'+esc(g.UsedInvoice)+(g.UsedDate?' · '+fdate(g.UsedDate):'')+'</span>':'')+'</div>').join('');
+}
+function giftEligible(){
+  const dm=custDressMap(), byC={};
+  (DB.GiftCards||[]).forEach(g=>{ if(g.Status!=='Cancelled') (byC[String(g.CustomerID)]=byC[String(g.CustomerID)]||[]).push(g); });
+  return DB.Customers.map(c=>{ const id=String(c.ID), tot=(dm[id]||{}).total||0, tr=custTier(tot); if(!tr || tot<6) return null;
+    const L=(byC[id]||[]).sort((a,b)=>String(b.CreatedAt).localeCompare(String(a.CreatedAt)));
+    if(L.some(g=>{ const st=giftState(g); return st==='active'||st==='upcoming'; })) return null;
+    const last=L[0]; if(last){ const t0=custTier(num(last.DressesAt)); if(t0 && t0.min>=tr.min) return null; }
+    return { c:c, tot:tot, tr:tr, last:last };
+  }).filter(Boolean).sort((a,b)=>b.tot-a.tot);
+}
+function renderGift(){
+  const f=state.giftF||'active', all=(DB.GiftCards||[]).slice().sort((a,b)=>String(b.CreatedAt).localeCompare(String(a.CreatedAt)));
+  const cnt={}; all.forEach(g=>{ let st=giftState(g); if(st==='upcoming') st='active'; cnt[st]=(cnt[st]||0)+1; });
+  const shown=all.filter(g=>{ let st=giftState(g); if(st==='upcoming') st='active'; return f==='all'||st===f; });
+  const fb=(k,l)=>`<button class="seg-btn ${f===k?'on':''}" data-act="gift-filter" data-f="${k}">${l}${k!=='all'&&cnt[k]?' ('+cnt[k]+')':''}</button>`;
+  const rows=shown.map(g=>`<tr><td><strong style="font-family:'Courier New',monospace;letter-spacing:.04em">${esc(g.Code)}</strong><div style="font-size:11.5px;color:var(--muted)">${fdate(g.CreatedAt)}${g.By?' · by '+esc(userName(g.By)):''}</div></td>
+      <td><strong>${esc(g.CustomerName||'')}</strong>${g.Phone?'<div style="font-size:12px;color:var(--muted)">'+esc(g.Phone)+'</div>':''}</td>
+      <td class="num tnum"><strong>${num(g.Pct)}%</strong></td>
+      <td style="white-space:nowrap">${fdate(g.From)} → ${fdate(g.Until)}</td>
+      <td>${giftChip(g)}${g.UsedInvoice?'<div style="font-size:12px;margin-top:3px">'+esc(g.UsedInvoice)+(g.UsedDate?' · '+fdate(g.UsedDate):'')+'</div>':''}</td>
+      <td class="num" style="white-space:nowrap"><button class="btn-icon" data-act="gift-view" data-code="${esc(g.Code)}">🎁 Card</button>
+        ${giftState(g)==='active'||giftState(g)==='upcoming'?`<button class="btn-icon" data-act="gift-cancel" data-code="${esc(g.Code)}">Batil</button>`:''}</td></tr>`).join('')
+    || '<tr><td colspan="6" class="empty">Ekhane kichu nei.</td></tr>';
+  const el=giftEligible().slice(0,30);
+  const elRows=el.map(x=>`<div class="attr-row"><div class="nm">${esc(x.c.Name)} <span class="rc-badge" style="background:${tierBg(x.tr)}">🔁 ${x.tot} dresses</span>
+      <div style="font-size:12px;color:var(--muted);font-weight:400;margin-top:3px">${x.last?'Shesh gift: '+fdate(x.last.CreatedAt)+' ('+num(x.last.DressesAt)+' dress e)':'Ekhono gift paynai'}</div></div>
+      <button class="btn btn-gold btn-sm" data-act="gift-for" data-id="${esc(x.c.ID)}">🎁 Gift din</button></div>`).join('');
+  $('#view').innerHTML=`<div class="view-head"><div><div class="eyebrow">Customers</div><h2>Buyer directory</h2></div></div>
+    ${custTabBar()}
+    ${el.length?`<div class="card panel" style="margin-bottom:16px"><h3>🎁 Gift paoar joggo <span class="count">${el.length} jon</span></h3>
+      <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Jara notun rong er dhape uthechen (6+ dress), kintu tarpor kono gift card paynni.</p>${elRows}</div>`:''}
+    <div class="card panel">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><h3 style="margin:0">Gift card</h3><span style="flex:1"></span>
+        <button class="btn btn-gold btn-sm" data-act="gift-new">＋ Notun gift card</button></div>
+      <div class="seg" style="margin-bottom:12px">${fb('active','Chalu')}${fb('used','Babohrito')}${fb('expired','Meyad shesh')}${fb('cancelled','Batil')}${fb('all','Sob')}</div>
+      <div class="table-wrap"><table><thead><tr><th>Code</th><th>Customer</th><th class="num">Chhar</th><th>Meyad</th><th>Obostha</th><th class="num"></th></tr></thead>
+        <tbody>${rows}</tbody></table></div></div>`;
+}
+function addDays(ymd, n){ const d=new Date(ymd+'T00:00:00'); d.setDate(d.getDate()+n); return ymdLocal(d); }
+function addMonths(ymd, n){ const d=new Date(ymd+'T00:00:00'); d.setMonth(d.getMonth()+n); d.setDate(d.getDate()-1); return ymdLocal(d); }
+function giftForm(cid){
+  const cs=DB.Customers.slice().sort((a,b)=>cmpName(a.Name,b.Name)), today=ymdLocal(new Date());
+  openModal(`<div class="modal-head"><h3>🎁 Notun gift card</h3><button class="x" data-act="modal-close">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Customer *</label><select id="gf-cust" class="fullsel"><option value="">— bachai korun —</option>${cs.map(c=>`<option value="${esc(c.ID)}" ${String(c.ID)===String(cid||'')?'selected':''}>${esc(c.Name)}${custPhones(c)[0]?' · '+esc(custPhones(c)[0]):''}</option>`).join('')}</select></div>
+      <div class="field"><label>Mobile (card e ar WhatsApp e)</label><input id="gf-phone" type="tel"></div>
+      <div class="field"><label>Koto % chhar *</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="gf-pct" type="number" min="1" max="90" value="10" style="width:100px">
+          ${[5,10,15,20].map(v=>`<button type="button" class="btn btn-ghost btn-sm" data-act="gf-pct" data-v="${v}">${v}%</button>`).join('')}</div></div>
+      <div class="grid2">
+        <div class="field"><label>Shuru</label><input id="gf-from" type="date" value="${today}"></div>
+        <div class="field"><label>Meyad</label><select id="gf-dur" class="fullsel"><option value="15d">15 din</option><option value="1m" selected>1 mash</option><option value="2m">2 mash</option><option value="3m">3 mash</option><option value="x">Nijer tarikh</option></select></div></div>
+      <div class="field"><label>Shesh tarikh (ei din porjonto chalu)</label><input id="gf-until" type="date"></div>
+      <p style="font-size:12.5px;color:var(--muted);margin:0;line-height:1.6">Code ta shudhu ei customer ekbar babohar korte parben. Proti bar notun, alada code toiri hobe.</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button><button class="btn btn-gold" data-act="gf-save">🎁 Code banan</button></div>`);
+  const sel=$('#gf-cust'), ph=$('#gf-phone'), fr=$('#gf-from'), du=$('#gf-dur'), un=$('#gf-until');
+  const fillPh=()=>{ const c=DB.Customers.find(x=>String(x.ID)===String(sel.value)); ph.value=c?(custPhones(c)[0]||''):''; };
+  const calc=()=>{ const f=fr.value||today, v=du.value; if(v==='x') return; un.value = v==='15d'?addDays(f,14):addMonths(f, Number(v.charAt(0))); };
+  sel.onchange=fillPh; fr.onchange=calc; du.onchange=calc; un.oninput=()=>{ du.value='x'; };
+  fillPh(); calc();
+}
+async function giftSave(){
+  const p={ customerId:$('#gf-cust').value, phone:$('#gf-phone').value.trim(), pct:Number($('#gf-pct').value), from:$('#gf-from').value, until:$('#gf-until').value };
+  if(!p.customerId){ toast('Customer bachai korun','err'); return; }
+  try{ const r=await api('createGift', p); toast('Gift card toiri holo ✦ '+r.code,'ok'); giftView(r.code); if(state.view==='customers' && state.custTab==='gift') renderGift(); }
+  catch(e){ toast(e.message,'err'); }
+}
+function giftLinks(){ return shopLinks().filter(l=>l && l.u && /web|facebook page|^facebook$|fb/i.test(String(l.n||''))).slice(0,2); }
+function shortUrl(u){ return String(u||'').replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/\/$/,''); }
+function giftCardHTML(g){
+  const L=giftLinks();
+  return `<div class="gcard" id="gcnode"><div class="b1"></div><div class="b2"></div><div class="b3"></div>
+    <div class="top"><div class="logo"><img src="${OG_LOGO}" alt=""></div><div><div class="brand">OMME'S GALLERY</div><div class="tag">Original Pakistani Dress · All over Bangladesh</div></div></div>
+    <div class="kind">GIFT CARD</div>
+    <div class="for">Specially for</div><div class="nm">${esc(g.CustomerName||'')}</div>
+    <div class="off"><div class="p">${num(g.Pct)}%</div><div class="o">OFF</div></div>
+    <div class="code"><div class="l">YOUR CODE</div><div class="v">${esc(g.Code)}</div></div>
+    <div class="valid">Valid <strong>${fdate(g.From)} – ${fdate(g.Until)}</strong><br>One-time use · order er somoy code ta din</div>
+    <div class="foot">${L.length?L.map(l=>'<span>'+(/face|fb/i.test(l.n)?'📘 ':'🌐 ')+esc(shortUrl(l.u))+'</span>').join(''):'<span>✦ Buy your happiness</span>'}</div></div>`;
+}
+function giftMsg(g){
+  const L=giftLinks();
+  return 'Assalamu Alaikum '+(g.CustomerName||'')+' 🌸\n\nOMME\'S GALLERY er pokkho theke apnar jonno ekta Gift Card 🎁\n'+
+    num(g.Pct)+'% chhar — code: *'+g.Code+'*\nMeyad: '+fdate(g.From)+' – '+fdate(g.Until)+'\n\nOrder korar somoy code ta amader pathaben. Code ta shudhu apnar jonno, ekbar babohar kora jabe.'+
+    (L.length?'\n\n'+L.map(l=>l.u).join('\n'):'')+'\n\nOMME\'S GALLERY · Original Pakistani Dress · All over Bangladesh';
+}
+let _gcFile=null;
+function giftView(code){
+  const g=giftFind(code); if(!g) return;
+  openModal(`<div class="modal-head"><h3>🎁 ${esc(g.CustomerName||'')} · ${num(g.Pct)}%</h3><button class="x" data-act="modal-close">×</button></div>
+    <div class="modal-body" style="padding:14px">
+      <div id="gcwrap" style="overflow:hidden; margin:0 auto"><div id="gcscale" style="width:640px; transform-origin:0 0">${giftCardHTML(g)}</div></div>
+      <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center">${giftChip(g)}<span style="font-size:12.5px;color:var(--muted)">Chhobi ta WhatsApp / Messenger e pathan, sathe message ta copy kore din.</span></div></div>
+    <div class="modal-foot" style="flex-wrap:wrap"><button class="btn btn-ghost" data-act="modal-close">Close</button>
+      <button class="btn btn-ghost" data-act="gc-copy" data-code="${esc(g.Code)}">📋 Message copy</button>
+      ${waNumber(g.Phone)?`<button class="btn btn-ghost" data-act="gc-wa" data-code="${esc(g.Code)}">WhatsApp chat</button>`:''}
+      <button class="btn btn-ghost" data-act="gc-dl" data-code="${esc(g.Code)}">⭳ PNG</button>
+      <button class="btn btn-gold" data-act="gc-share" data-code="${esc(g.Code)}">➤ Share</button></div>`);
+  $('#modal').classList.add('wide');
+  fitGC(); setTimeout(fitGC,60);
+  _gcFile=null; setTimeout(async function(){ try{ _gcFile={ code:g.Code, blob:await gcBlob() }; }catch(e){} }, 400);
+}
+function fitGC(){
+  const w=$('#gcwrap'), sc=$('#gcscale'); if(!w||!sc||!w.parentElement) return;
+  const z=Math.min(1,(w.parentElement.clientWidth-28)/640); if(z<=0) return;
+  sc.style.transform='scale('+z+')'; w.style.width=Math.round(640*z)+'px'; w.style.height=Math.round(360*z)+'px';
+}
+async function gcBlob(){
+  const src=$('#gcnode'); if(!src||!window.html2canvas) throw new Error('nothing to render');
+  const holder=document.createElement('div'); holder.style.cssText='position:fixed;left:-12000px;top:0;width:640px;pointer-events:none';
+  const clone=src.cloneNode(true); clone.removeAttribute('id'); holder.appendChild(clone); document.body.appendChild(holder);
+  try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready;
+    const c=await html2canvas(clone,{scale:2.5, backgroundColor:null}); return await new Promise(r=>c.toBlob(r,'image/png')); }
+  finally{ holder.remove(); }
+}
+async function gcShare(code, onlySave){
+  try{
+    let b=(_gcFile&&_gcFile.code===code)?_gcFile.blob:null; if(!b){ b=await gcBlob(); _gcFile={code:code, blob:b}; }
+    const name='omme-gift-'+code+'.png';
+    if(!onlySave){ const file=new File([b], name, {type:'image/png'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"OMME'S GALLERY — Gift card", text:giftMsg(giftFind(code)||{})}); return; } }
+    saveBlob(b, name); toast('Card downloaded ✦','ok');
+  }catch(e){ if(e&&e.name==='AbortError') return; if(e&&e.name==='NotAllowedError'){ toast('Chhobi ready — abar Share e tap korun','ok'); return; } toast('Chhobi banano gelo na','err'); }
+}
+function giftReportCard(r){
+  const from=r.from||'', to=r.to||'9999-12-31', inR=d=>{ const x=d?ymdLocal(new Date(d)):''; return x && x>=from && x<=to; };
+  const used=DB.Sales.filter(s=>s.GiftCode && inR(s.Date)), disc=used.reduce((a,s)=>a+num(s.Discount),0), sales=used.reduce((a,s)=>a+saleNet(s),0);
+  const made=(DB.GiftCards||[]).filter(g=>inR(g.CreatedAt)).length, act=Object.keys(giftActiveMap()).length;
+  if(!made && !used.length && !act) return '';
+  return `<div class="card panel" style="margin-bottom:16px"><h3>🎁 Gift card <span class="count">bachai kora tarikh</span></h3>
+    <div class="rep-tiles" style="margin-bottom:0">
+      <div class="tile magenta"><span class="glyph">🎁</span><div class="tk">Card deya hoyeche</div><div class="tv" data-count="${made}" data-plain="1">0</div><div class="tm">ekhon chalu ${act} ta</div></div>
+      <div class="tile indigo"><span class="glyph">🧾</span><div class="tk">Code diye order</div><div class="tv" data-count="${used.length}" data-plain="1">0</div><div class="tm">bikri ${tk(sales)}</div></div>
+      <div class="tile gold"><span class="glyph">৳</span><div class="tk">Mot chhar dilam</div><div class="tv" data-count="${disc}">৳0</div><div class="tm">gift code er karone</div></div>
+      <div class="tile emerald"><span class="glyph">%</span><div class="tk">Babohar er har</div><div class="tv" data-count="${made?Math.round(used.length*100/made):0}" data-plain="1">0</div><div class="tm">% card babohar hoyeche</div></div>
+    </div></div>`;
+}
 function customerForm(c){
   c=c||{};
   openModal(`
@@ -2641,6 +2928,7 @@ function customerForm(c){
         <div class="field"><label>Mobile 3 <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="c-phone3" type="tel" value="${esc(c.Phone3||'')}"></div>
         <div class="field"><label>Email</label><input id="c-email" value="${esc(c.Email)}"></div>
       </div>
+      <div class="field"><label>Group / pesha <span style="font-weight:400;color:var(--muted)">(nam er age "Dr" thakle nijei Doctor dhora hobe)</span></label>${attrSelect('Group','c-group',c.Group||'')}</div>
       <div class="field"><label>Ager dress <span style="font-weight:400;color:var(--muted)">(app shuru korar age koyta dress niyeche)</span></label>
         <input id="c-prev" type="number" min="0" value="${num(c.PrevDresses)||''}" placeholder="0"></div>
       <div class="field"><label>Address (current / latest)</label><textarea id="c-addr" rows="2">${esc(c.Address)}</textarea>
@@ -2653,6 +2941,7 @@ function customerForm(c){
       <button class="btn btn-ghost" data-act="modal-close">Cancel</button>
       <button class="btn btn-gold" data-act="customer-save" data-id="${esc(c.ID||'')}">Save customer</button></div>`);
   window._oldAddr=(Array.isArray(c.OldAddresses)?c.OldAddresses:[]).slice(); renderOldAddr();
+  bindAttrSelects($('#modal'));
 }
 function custDupIds(c, dmap){
   const out=new Set(), nm=String(c.Name||'').trim().toLowerCase();
@@ -2701,7 +2990,7 @@ function renderOldAddr(){
 async function saveCustomer(id, thenSelect){
   const item={ ID:id||'', Name:$('#c-name').value.trim(), Phone:$('#c-phone').value.trim(),
     Phone2:$('#c-phone2').value.trim(), Phone3:$('#c-phone3').value.trim(), PrevDresses:Math.max(0,Number($('#c-prev').value)||0),
-    Email:$('#c-email').value.trim(), Address:$('#c-addr').value.trim() };
+    Email:$('#c-email').value.trim(), Address:$('#c-addr').value.trim(), Group:($('#c-group')&&$('#c-group').value!=='__new')?$('#c-group').value:'' };
   if(!item.Name){ toast('Name is required','err'); return; }
   if(!id){
     const keys=custPhones(item).map(phoneKey).filter(Boolean);
@@ -2741,7 +3030,9 @@ async function customerHistory(id){
         ${(()=>{ const ph=custPhones(c), olds=Array.isArray(c.OldAddresses)?c.OldAddresses:[], dm=custDressMap()[String(c.ID)], tr=custTier(dm?dm.total:0);
           return `<div class="cinfo">${tr?`<div style="margin-bottom:8px">${dressBadge(dm,true)}</div>`:''}
             ${Array.isArray(c.ReturnLog)&&c.ReturnLog.length?'<div style="margin-bottom:8px">'+retChip(c)+'</div><div class="lbl">Return history</div>'+c.ReturnLog.map(x=>'<div class="old" style="color:#c62828">• '+fdate(x.d)+' · '+esc(x.inv)+' · '+esc(x.items)+(x.whole?' (puro order)':'')+(x.reason?' — '+esc(x.reason):'')+'</div>').join(''):''}
+            ${custGroups(c).length?'<div class="lbl">Group</div><div>'+custGroups(c).map(esc).join(', ')+'</div>':''}
             <div class="lbl">Mobile</div><div>${ph.length?ph.map(esc).join(' &nbsp;·&nbsp; '):'—'}</div>
+            ${giftHistHtml(c)}
             <div class="lbl">Current address</div><div>${esc(c.Address||'—')}</div>
             ${olds.length?'<div class="lbl">Old addresses</div>'+olds.map(o=>'<div class="old">• '+esc(o.a)+(o.d?' <span style="font-size:11px">(changed '+fdate(o.d)+')</span>':'')+'</div>').join(''):''}
           </div>`; })()}
@@ -2752,7 +3043,7 @@ async function customerHistory(id){
         <div class="table-wrap"><table><thead><tr><th>Invoice</th><th>Date</th><th class="num">Total</th><th class="num"></th></tr></thead>
           <tbody>${rows}</tbody></table></div>
       </div>
-      <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Close</button></div>`);
+      <div class="modal-foot"><button class="btn btn-ghost" data-act="gift-for" data-id="${esc(c.ID)}">🎁 Gift card din</button><span style="flex:1"></span><button class="btn btn-ghost" data-act="modal-close">Close</button></div>`);
     $('#modal').classList.add('wide');
   }catch(e){ closeModal(); toast(e.message,'err'); }
 }
@@ -2966,7 +3257,7 @@ function renderSales(){
       <button class="btn btn-ghost btn-sm" data-act="recent-sales">🧾 Recent sales · Edit / Return</button></div>
     <div class="posview">
       <div class="card pos-products">
-        <div class="search"><span class="mag">⌕</span><input id="pos-search" placeholder="Search name, brand, SKU, category, size…"></div>
+        <div class="search"><span class="mag">⌕</span><input id="pos-search" type="search" name="q-pos-search" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Search name, brand, SKU, category, size…"></div>
         <div class="pos-tools">
           <button class="btn btn-sm btn-ghost" id="pos-hide" data-act="pos-hide">Hide sold-out</button>
           <select id="pos-sort" title="Sort">${INV_SORTS.map(o=>`<option value="${o[0]}" ${o[0]===posSortKey()?'selected':''}>⇅ ${o[1]}</option>`).join('')}</select>
@@ -2987,6 +3278,10 @@ function renderSales(){
           <div><label class="mini-l">Discount ৳</label><input id="s-disc" type="number" value="0"></div>
           <div><label class="mini-l">Delivery ৳ (invoice only)</label><input id="s-deliv" type="number" value="0"></div>
         </div>
+        <div style="margin-top:8px"><label class="mini-l">🎁 Gift code (thakle)</label>
+          <div style="display:flex; gap:6px"><input class="fullsel" id="s-gift" placeholder="OMME-XXXX-XXXX" autocomplete="off" autocorrect="off" spellcheck="false" style="flex:1; text-transform:uppercase; letter-spacing:.05em">
+            <button type="button" class="btn btn-ghost btn-sm" data-act="gift-apply">Apply</button></div>
+          <div id="s-gift-msg" style="font-size:12.5px; margin-top:5px"></div></div>
         <div>
           <label class="mini-l">Payment</label>
           <select class="fullsel" id="s-pay"><option>Cash</option><option>bKash</option><option>Nagad</option><option>Bank</option></select>
@@ -3019,7 +3314,8 @@ function renderSales(){
   renderProductList('');
   const s=$('#pos-search'); if(s){ s.oninput=()=>renderProductList(s.value); }
   const ps=$('#pos-sort'); if(ps) ps.onchange=()=>{ state.posSort=ps.value; try{ localStorage.setItem('omme_pos_sort', ps.value); }catch(e){} renderProductList($('#pos-search')?$('#pos-search').value:''); };
-  const cs=$('#s-cust'); if(cs) cs.onchange=()=>{ state.customerId=cs.value; };
+  const cs=$('#s-cust'); if(cs) cs.onchange=()=>{ state.customerId=cs.value; if(state.gift && String(state.gift.CustomerID)!==String(cs.value)){ giftRemove(); toast('Customer bodlano holo — gift code soriye deya holo','err'); } };
+  state.gift=null; const gi=$('#s-gift'); if(gi) gi.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); giftApply(); } };
   ['s-disc','s-deliv','s-received'].forEach(id=>{ const el=$('#'+id); if(el) el.oninput=renderCart; });
   const pre=$('#s-pre'); if(pre) pre.onchange=()=>{ $('#s-predate-box').style.display=pre.checked?'':'none'; syncStatus(); if(pre.checked && state.payMode!=='none') setPayMode('adv'); };
   const da=$('#s-delafter'); if(da) da.onchange=syncStatus;
@@ -3066,6 +3362,7 @@ function renderCart(){
       </div>`).join('');
     box.querySelectorAll('[data-cart-size]').forEach(function(el){ const f=function(){ const it=state.cart.find(x=>String(x.id)===el.dataset.cartSize); if(it) it.size=el.value.trim(); }; el.onchange=f; el.oninput=f; });
   }
+  if(state.gift){ let sub=0; state.cart.forEach(i=>sub+=i.qty*i.sale); const dz=$('#s-disc'); if(dz){ dz.value=Math.round(sub*num(state.gift.Pct)/100); dz.readOnly=true; } }
   const t=cartTotals(); const tbox=$('#cart-tot');
   const recv=$('#s-received')?$('#s-received').value:'';
   const received = recv===''? t.total : (Number(recv)||0);
@@ -3108,7 +3405,7 @@ async function saveSale(){
     Payment:$('#s-pay')?$('#s-pay').value:'Cash', Status:$('#s-status')?$('#s-status').value:'Delivered', Note:'',
     Preorder:!!($('#s-pre')&&$('#s-pre').checked), PreorderDate:($('#s-predate')?$('#s-predate').value:''),
     DeliverAfter:($('#s-delafter')?$('#s-delafter').value:''), Note:($('#s-note')?$('#s-note').value.trim():''),
-    Paid: recVal===''? '' : (Number(recVal)||0) };
+    Paid: recVal===''? '' : (Number(recVal)||0), GiftCode: state.gift?state.gift.Code:'' };
   const items=state.cart.map(i=>{ const pp=findProduct(i.id)||{}; return { ProductID:i.id, ProductName:i.name, Qty:i.qty, SalePrice:i.sale, BuyPrice:i.buy,
     Stitch:pp.Stitch||'', Size:pp.Stitch==='Stitched'?(i.size||''):'' }; });
   const btn=document.querySelector('[data-act="sale-save"]'); if(btn){ btn.textContent='Saving…'; btn.disabled=true; }
@@ -3117,10 +3414,10 @@ async function saveSale(){
     toast('Invoice '+r.invoiceNo+' saved'+(r.due>0?' · due '+tk(r.due):''),'ok');
     showInvoice({ InvoiceNo:r.invoiceNo, Date:new Date().toISOString(), CustomerName:sale.CustomerName, CustomerID:sale.CustomerID,
       Preorder:sale.Preorder, PreorderDate:sale.PreorderDate, Note:sale.Note, DeliverAfter:sale.DeliverAfter, Status:sale.Status,
-      Subtotal:r.subtotal, Discount:r.discount, Delivery:r.delivery, Total:r.total, Payment:sale.Payment,
+      Subtotal:r.subtotal, Discount:r.discount, Delivery:r.delivery, Total:r.total, Payment:sale.Payment, GiftCode:sale.GiftCode, GiftPct:state.gift?num(state.gift.Pct):0,
       Received:r.received, Due:r.due },
       items.map(i=>({ProductName:i.ProductName, Qty:i.Qty, SalePrice:i.SalePrice, LineTotal:i.Qty*i.SalePrice, Stitch:i.Stitch, Size:i.Size})));
-    state.cart=[]; state.customerId='';
+    state.cart=[]; state.customerId=''; giftRemove();
     state.products=await api('listProducts'); // refresh stock
     ['s-received','s-disc','s-deliv'].forEach(function(id){ const el=$('#'+id); if(el) el.value = id==='s-received'?'':'0'; });
     state.payMode='full'; setPayMode('full');
@@ -3243,6 +3540,7 @@ function showInvoice(sale, items){
   });
   const mo=$('#m-shipon'); if(mo) mo.onchange=function(){ invShip(mo.checked); };
   const mu=$('#m-shipunit'); if(mu) mu.onchange=function(){ document.querySelectorAll('.og-chip[data-grp="su"]').forEach(x=>x.classList.toggle('on', x.dataset.v===mu.value)); invRecalc(); invPrepare(); };
+  if(sale.GiftCode){ const gv='🎁 Gift card '+sale.GiftCode+(num(sale.GiftPct)?' ('+num(sale.GiftPct)+'% off)':''); ['m-discreason','og-discreason'].forEach(function(id){ const e=document.getElementById(id); if(e && !e.value) e.value=gv; }); }
   invRecalc(); fitInvoice(); setTimeout(fitInvoice,60); invPrepare();
 }
 /* pre-order shipping by weight: shown on the invoice only (like delivery), not in the accounts */
@@ -3445,6 +3743,7 @@ function renderReports(d){
       <canvas id="prechart" height="130"></canvas>
     </div>
 
+    ${giftReportCard(r)}
     <div class="card panel" style="margin-bottom:16px">
       <h3>Best-selling products <button class="btn-icon" data-act="rep-export-products" style="font-weight:600">⤓ CSV</button></h3>
       <div class="table-wrap" style="max-height:420px; overflow:auto"><table class="rt">
@@ -3664,7 +3963,7 @@ function renderExpenses(q, cat, only){
     <div class="card panel" style="margin-bottom:16px"><h3>By category</h3><div>${catPills}</div>
       <p style="font-size:12px;color:var(--muted);margin:10px 0 0">These are tracked separately. Since your Buy price already includes packaging/delivery/ad cost, they are <strong>not</strong> subtracted again from sales profit.</p></div>
     <div class="toolbar">
-      <div class="search"><span class="mag">⌕</span><input id="exp-search" placeholder="Search note/category…" value="${esc(q)}"></div>
+      <div class="search"><span class="mag">⌕</span><input id="exp-search" type="search" name="q-exp-search" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Search note/category…" value="${esc(q)}"></div>
       <select id="exp-cat" style="padding:10px 12px;border:1px solid var(--line-2);border-radius:9px;background:var(--card)">
         <option value="">All categories</option>${opts}</select>
     </div>
@@ -3771,7 +4070,7 @@ function renderNewPurchase(){
       <button class="btn btn-ghost btn-sm" data-act="pur-tab" data-tab="list">← Back</button></div>
     <div class="posview">
       <div class="card pos-products">
-        <div class="search"><span class="mag">⌕</span><input id="pur-search" placeholder="Search product to add…"></div>
+        <div class="search"><span class="mag">⌕</span><input id="pur-search" type="search" name="q-pur-search" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Search product to add…"></div>
         <div class="plist" id="pur-plist"></div>
       </div>
       <div class="card cart">
@@ -4163,6 +4462,22 @@ document.addEventListener('click', function(e){
     case 'ln-add': { const L=linksRead(); L.push({i:'🔗',n:'',u:''}); $('#ln-box').innerHTML=linksEditor(L); const ins=document.querySelectorAll('.ln-n'); if(ins.length) ins[ins.length-1].focus(); break; }
     case 'ln-del': { const L=linksRead(); L.splice(Number(el.dataset.i),1); linksSave(L); $('#ln-box').innerHTML=linksEditor(); toast('Link muche gelo','ok'); break; }
     case 'ln-save': { const L=linksRead().filter(x=>x.n||x.u); linksSave(L); $('#ln-box').innerHTML=linksEditor(); toast('Links saved ✦','ok'); break; }
+    case 'cus-tier': { const m=Number(el.dataset.min); state.cusTier = state.cusTier===m ? 0 : m; renderCustomers($('#cus-search')?$('#cus-search').value:''); break; }
+    case 'cus-filter-clear': state.cusTier=0; state.cusGroup=''; renderCustomers($('#cus-search')?$('#cus-search').value:''); break;
+    case 'gift-new': giftForm(''); break;
+    case 'gift-for': giftForm(id); break;
+    case 'gf-pct': { const i=$('#gf-pct'); if(i) i.value=el.dataset.v; break; }
+    case 'gf-save': giftSave(); break;
+    case 'gift-view': giftView(el.dataset.code); break;
+    case 'gift-filter': state.giftF=el.dataset.f; renderGift(); break;
+    case 'gift-cancel': if(confirm('Ei gift card ('+el.dataset.code+') batil korben? Customer ar babohar korte parben na.')) api('cancelGift',{code:el.dataset.code}).then(r=>{ if(r&&r.error){ toast(r.error,'err'); return; } toast('Batil kora holo','ok'); renderGift(); }).catch(e=>toast(e.message,'err')); break;
+    case 'gc-dl': gcShare(el.dataset.code, true); break;
+    case 'gc-share': gcShare(el.dataset.code, false); break;
+    case 'gc-copy': { const g=giftFind(el.dataset.code); if(!g) break; const t=giftMsg(g);
+      (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Message copy holo ✦','ok')).catch(()=>{ prompt('Copy korun:', t); }); break; }
+    case 'gc-wa': { const g=giftFind(el.dataset.code); if(g) window.open('https://wa.me/'+waNumber(g.Phone)+'?text='+encodeURIComponent(giftMsg(g)),'_blank'); break; }
+    case 'gift-apply': giftApply(); break;
+    case 'gift-remove': giftRemove(); toast('Gift code soriye deya holo','ok'); break;
     case 'pin-set': { const go=()=>lockShow('set', function(){}); if(pinGet()) lockShow('verify', go); else go(); break; }
     case 'pin-off': lockShow('verify', function(){ pinPut(null); try{ localStorage.setItem('omme_pin_skip_'+meEmail(),'1'); }catch(x){} toast('App lock bondho','ok'); viewSettings(); }); break;
     case 'show-logs': showLogs(); break;
