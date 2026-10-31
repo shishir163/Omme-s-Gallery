@@ -423,8 +423,8 @@
   .gcard .b2{position:absolute; width:260px; height:260px; border-radius:50%; left:-80px; bottom:-140px; background:rgba(255,214,102,.20)}
   .gcard .b3{position:absolute; width:90px; height:90px; border-radius:50%; left:300px; top:-40px; background:rgba(255,255,255,.08)}
   .gcard .top{position:absolute; left:28px; top:24px; display:flex; gap:12px; align-items:center}
-  .gcard .logo{width:54px; height:54px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,.18)}
-  .gcard .logo img{width:48px; height:48px; object-fit:contain}
+  .gcard .logo{width:58px; height:58px; border-radius:50%; background:#000; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,.25)}
+  .gcard .logo img{display:block; width:100%; height:100%; object-fit:cover}
   .gcard .brand{font-family:'Cormorant Garamond',Georgia,serif; font-weight:700; font-size:29px; letter-spacing:.14em; line-height:1}
   .gcard .tag{font-size:11.5px; letter-spacing:.05em; opacity:.95; margin-top:5px}
   .gcard .kind{position:absolute; right:26px; top:30px; background:rgba(255,255,255,.96); color:#a3195b; font-weight:900; font-size:12px; letter-spacing:.24em; padding:7px 14px; border-radius:999px}
@@ -439,7 +439,7 @@
   .gcard .valid{position:absolute; right:30px; bottom:68px; text-align:right; font-size:12.5px; line-height:1.55}
   .gcard .valid strong{font-size:14.5px; font-weight:900}
   .gcard .foot{position:absolute; left:0; right:0; bottom:0; padding:11px 28px; background:rgba(40,6,40,.30); font-size:12px; display:flex; gap:18px; justify-content:space-between; align-items:center}
-  body.staff [data-act="gift-new"], body.staff [data-act="gift-for"], body.staff [data-act="gift-cancel"]{display:none !important}
+  body.staff [data-act="gift-new"], body.staff [data-act="gift-for"], body.staff [data-act="gift-del"]{display:none !important}
   .pill.amber{background:rgba(240,170,40,.2); color:#b97800}
   .wa-next{display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:14px; border:none; border-radius:12px;
     background:#25D366; color:#fff; font-weight:900; font-size:15px; margin:4px 0 14px}
@@ -570,16 +570,16 @@
     .inv-tbl .c-det, .inv-tbl .c-sku, .inv-tbl .c-buy{display:none}
     .inv-tbl .inv-sub{display:block}
     .inv-tbl th, .inv-tbl td{padding:10px 3px}
-    .inv-tbl .pthumb{width:40px; height:40px}
+    .inv-tbl .pthumb{width:42px; height:58px}
     .inv-tbl .btn-icon{padding:6px 6px; font-size:12px}
     .inv-tbl td:last-child{padding-right:8px}
     .inv-tbl td:first-child, .inv-tbl th:first-child{padding-left:8px}
     .inv-tbl .chips .pill{font-size:10px; padding:2px 7px}
   }
-  .pthumb{width:44px; height:44px; border-radius:8px; object-fit:cover; flex:none; border:1px solid var(--line); background:var(--input-bg); cursor:zoom-in; display:block}
+  .pthumb{width:44px; height:60px; border-radius:8px; object-fit:cover; object-position:50% 12%; flex:none; border:1px solid var(--line); background:var(--input-bg); cursor:zoom-in; display:block}
   .pthumb.nophoto{display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:17px; cursor:default; opacity:.55}
-  .pthumb.big{width:86px; height:86px; border-radius:10px}
-  .pthumb.sm{width:34px; height:34px; border-radius:7px}
+  .pthumb.big{width:90px; height:124px; border-radius:10px}
+  .pthumb.sm{width:34px; height:46px; border-radius:7px}
   #lightbox{position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.82); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:20px; cursor:zoom-out}
   #lightbox img{max-width:94vw; max-height:78vh; border-radius:12px; background:#fff}
   #lightbox .cap{color:#fff; font-weight:600; font-size:15px; text-align:center}
@@ -699,7 +699,7 @@
     <div class="field"><label>Password</label><input id="lg-pass" type="password" autocomplete="current-password"></div>
     <div id="lg-err"></div>
     <button class="btn btn-gold btn-block" id="lg-btn" type="submit">Sign in</button>
-    <div class="lg-or">othoba</div>
+    <div class="lg-or">or</div>
     <button class="btn btn-ghost btn-block" type="button" id="lg-google"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.2l7.9 6.1C12.4 13.7 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C1 16.5 0 20.1 0 24s1 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.6-4.2-13.5-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg> Sign in with Google</button>
   </form>
 </div>
@@ -745,12 +745,12 @@
 
 <div id="lock"><div class="box">
   <div class="brand" style="align-items:center"><span class="name">OMME'S</span><span class="sub">GALLERY</span></div>
-  <h2 id="lk-title">🔒 PIN din</h2><p id="lk-sub"></p>
+  <h2 id="lk-title">🔒 Enter PIN</h2><p id="lk-sub"></p>
   <input id="lk-pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" autocorrect="off" spellcheck="false" style="-webkit-text-security:disc">
   <div class="msg" id="lk-msg"></div>
   <button class="btn btn-gold btn-block" id="lk-ok">Unlock</button>
-  <button class="lnk" id="lk-skip" style="display:none">Pore korbo</button>
-  <div><button class="lnk" id="lk-out">PIN bhule gechi — Sign out</button></div>
+  <button class="lnk" id="lk-skip" style="display:none">Later</button>
+  <div><button class="lnk" id="lk-out">Forgot PIN — Sign out</button></div>
 </div></div>
 <div class="backdrop" id="backdrop"><div class="modal" id="modal"></div></div>
 <div id="toast"></div>
@@ -880,7 +880,7 @@ function giftNewCode(){
     const code='OMME-'+a.slice(0,4)+'-'+a.slice(4);
     if(!giftFind(code)) return code;
   }
-  throw new Error('Code banano gelo na — abar chesta korun');
+  throw new Error('Could not make a code — try again');
 }
 function giftState(g){
   if(!g) return '';
@@ -890,13 +890,13 @@ function giftState(g){
   return 'active';
 }
 function giftCheck(g, cid){
-  if(!g) return 'Ei code ta paoa jay nai — banan ta abar dekhun';
+  if(!g) return 'Code not found — check the spelling';
   const st=giftState(g);
-  if(st==='used') return 'Ei code age babohar hoye geche ('+(g.UsedInvoice||'')+')';
-  if(st==='cancelled') return 'Ei code batil kora hoyeche';
-  if(st==='expired') return 'Code er meyad shesh hoye geche ('+fdate(g.Until)+')';
-  if(st==='upcoming') return 'Code ta '+fdate(g.From)+' theke chalu hobe';
-  if(String(cid||'')!==String(g.CustomerID||'')) return 'Ei code shudhu '+(g.CustomerName||'')+' er jonno';
+  if(st==='used') return 'This code is already used ('+(g.UsedInvoice||'')+')';
+  if(st==='cancelled') return 'This code was cancelled';
+  if(st==='expired') return 'This code has expired ('+fdate(g.Until)+')';
+  if(st==='upcoming') return 'This code starts on '+fdate(g.From);
+  if(String(cid||'')!==String(g.CustomerID||'')) return 'This code is only for '+(g.CustomerName||'');
   return '';
 }
 function giftRelease(sale){
@@ -904,15 +904,15 @@ function giftRelease(sale){
   if(g && g.Status==='Used' && String(g.UsedInvoice)===String(sale.InvoiceNo)){ g.Status='Active'; g.UsedInvoice=''; g.UsedDate=''; g.UsedBy=''; }
 }
 function L_createGift(p){
-  const c=DB.Customers.find(function(x){ return String(x.ID)===String(p.customerId); }); if(!c) throw new Error('Customer bachai korun');
-  const pct=num(p.pct); if(!(pct>0 && pct<=90)) throw new Error('Koto % chhar? (1–90)');
-  if(!p.from || !p.until || p.until<p.from) throw new Error('Meyad er tarikh thik korun');
+  const c=DB.Customers.find(function(x){ return String(x.ID)===String(p.customerId); }); if(!c) throw new Error('Select a customer');
+  const pct=num(p.pct); if(!(pct>0 && pct<=90)) throw new Error('Discount % must be 1–90');
+  if(!p.from || !p.until || p.until<p.from) throw new Error('Check the start and end dates');
   const code=giftNewCode(), dm=custDressMap()[String(c.ID)];
   const g={ Code:code, CustomerID:c.ID, CustomerName:c.Name, Phone:String(p.phone||custPhones(c)[0]||''), Pct:pct, From:p.from, Until:p.until,
     Status:'Active', CreatedAt:new Date().toISOString(), By:meEmail(), DressesAt:dm?dm.total:0, UsedInvoice:'', UsedDate:'', UsedBy:'' };
   DB.GiftCards.push(g); return { code:code, name:c.Name, pct:pct };
 }
-function L_cancelGift(code){ const g=giftFind(code); if(!g) return {error:'Code nai'}; if(g.Status==='Used') return {error:'Babohar hoye geche — batil kora jabe na'}; g.Status='Cancelled'; return {code:g.Code}; }
+function L_deleteGift(code){ const g=giftFind(code); if(!g) return {error:'Code not found'}; const i=DB.GiftCards.indexOf(g); if(i>-1) DB.GiftCards.splice(i,1); return {code:g.Code}; }
 function L_createSale(sale, items){
   items = items || [];
   let gift=null;
@@ -982,7 +982,7 @@ function L_returnItems(no, qty, opts){
     it.Qty=num(it.Qty)-r; it.LineTotal=num(it.Qty)*num(it.SalePrice); it.LineProfit=num(it.Qty)*(num(it.SalePrice)-num(it.BuyPrice));
     back.push((it.ProductName||'')+(r>1?' ×'+r:''));
   });
-  if(!back.length) return {error:'Kono dress bachai kora hoy nai'};
+  if(!back.length) return {error:'No dress selected'};
   for(let i=DB.SaleItems.length-1;i>=0;i--){ const it=DB.SaleItems[i]; if(String(it.InvoiceNo)===String(no) && num(it.Qty)<=0) DB.SaleItems.splice(i,1); }
   const left=DB.SaleItems.filter(function(i){ return String(i.InvoiceNo)===String(no); });
   for(let i=DB.Dues.length-1;i>=0;i--){ if(String(DB.Dues[i].InvoiceNo)===String(no)) DB.Dues.splice(i,1); }
@@ -1178,8 +1178,8 @@ var ADMIN_EMAILS = ['shishir.mmc163@gmail.com'];   // only these accounts can de
 function isAdmin(){ return ADMIN_EMAILS.indexOf(meEmail()) > -1; }
 const ADMIN_ACTS = ['product-del','cus-del','cus-merge','exp-del','sup-del','attr-del','wa-tpl-del','cus-export','in-export',
   'rep-export-sales','rep-export-products','rep-export-brands','export-xlsx','backup-export','backup-import','inv-csv-import',
-  'show-logs','set-save','ln-add','ln-del','ln-save','gift-new','gift-for','gift-cancel','gf-save'];
-const ADMIN_API = ['deleteProduct','deleteCustomer','mergeCustomers','deleteExpense','deleteSupplier','createGift','cancelGift'];
+  'show-logs','set-save','ln-add','ln-del','ln-save','gift-new','gift-for','gift-del','gf-save'];
+const ADMIN_API = ['deleteProduct','deleteCustomer','mergeCustomers','deleteExpense','deleteSupplier','createGift','deleteGift'];
 function applyRole(){ try{ document.body.classList.toggle('staff', !isAdmin()); }catch(e){} }
 function meEmail(){ return String((fauth&&fauth.currentUser&&fauth.currentUser.email)||'').toLowerCase(); }
 function userName(email){ email=String(email||'').toLowerCase(); const m=(getCfg().userNames)||{}; return m[email] || (email?email.split('@')[0]:''); }
@@ -1379,11 +1379,11 @@ function L_payDue(id, amount){
 
 /* ---------- dispatcher (same interface the UI already uses) ---------- */
 const MUTATIONS = ['saveProduct','deleteProduct','saveCustomer','deleteCustomer','createSale','saveSupplier',
-  'deleteSupplier','saveExpense','deleteExpense','createPurchase','updatePurchasePayment','createReturn','payDue','updateSale','renameAttr','mergeCustomers','returnItems','cancelSale','saveShipment','createGift','cancelGift'];
+  'deleteSupplier','saveExpense','deleteExpense','createPurchase','updatePurchasePayment','createReturn','payDue','updateSale','renameAttr','mergeCustomers','returnItems','cancelSale','saveShipment','createGift','deleteGift'];
 
 async function api(action, p){
   p = p || {}; ensureDB(); let out;
-  if(ADMIN_API.indexOf(action)>-1 && !isAdmin()) throw new Error('Eta shudhu admin korte paren');
+  if(ADMIN_API.indexOf(action)>-1 && !isAdmin()) throw new Error('Only the admin can do this');
   const pre = (action==='deleteProduct') ? ((findProduct(p.id)||{}).Name||'')
     : (action==='deleteCustomer') ? ((DB.Customers.find(function(c){ return String(c.ID)===String(p.id); })||{}).Name||'')
     : (action==='mergeCustomers') ? [p.from,p.into].map(function(id){ return (DB.Customers.find(function(c){ return String(c.ID)===String(id); })||{}).Name||''; }).join(' → ')
@@ -1420,7 +1420,7 @@ async function api(action, p){
     case 'returnItems':     out=L_returnItems(p.invoiceNo, p.qty, p.opts); break;
     case 'cancelSale':      out=L_cancelSale(p.invoiceNo); break;
     case 'createGift':      out=L_createGift(p); break;
-    case 'cancelGift':      out=L_cancelGift(p.code); break;
+    case 'deleteGift':      out=L_deleteGift(p.code); break;
     case 'saveShipment':    out=L_saveShipment(p.rows, p.meta); break;
     case 'report':          out=L_report(p.from, p.to); break;
     case 'listSuppliers':   out=readAll('Suppliers'); break;
@@ -1493,26 +1493,26 @@ function makeShadow(t, rows){
 function logDesc(a, p, out, pre){
   p=p||{}; out=out||{};
   switch(a){
-    case 'createSale': return 'Notun sale '+out.invoiceNo+' · '+((p.sale&&p.sale.CustomerName)||'Walk-in')+' · '+tk(out.total)+(p.sale&&p.sale.GiftCode?' · 🎁 '+p.sale.GiftCode:'');
+    case 'createSale': return 'New sale '+out.invoiceNo+' · '+((p.sale&&p.sale.CustomerName)||'Walk-in')+' · '+tk(out.total)+(p.sale&&p.sale.GiftCode?' · 🎁 '+p.sale.GiftCode:'');
     case 'updateSale': return 'Sale edit '+p.invoiceNo;
     case 'returnItems': return 'Return '+p.invoiceNo+' · '+((out.returned||[]).join(', '));
-    case 'cancelSale': return 'Order batil '+p.invoiceNo;
+    case 'cancelSale': return 'Order deleted '+p.invoiceNo;
     case 'createGift': return 'Gift card '+out.code+' · '+out.name+' · '+out.pct+'%';
-    case 'cancelGift': return 'Gift card batil · '+p.code;
-    case 'saveProduct': return (out.isNew?'Notun dress · ':'Dress edit · ')+((p.item&&p.item.Name)||'');
-    case 'deleteProduct': return 'Dress muche fela · '+pre;
-    case 'saveCustomer': return (out.isNew?'Notun customer · ':'Customer edit · ')+((p.item&&p.item.Name)||'');
-    case 'deleteCustomer': return 'Customer muche fela · '+pre;
-    case 'mergeCustomers': return 'Customer merge · '+pre;
-    case 'saveExpense': return 'Khoroch · '+((p.item&&p.item.Category)||'')+' · '+tk(p.item&&p.item.Amount);
-    case 'deleteExpense': return 'Khoroch muche fela · '+pre;
+    case 'deleteGift': return 'Gift card deleted · '+p.code;
+    case 'saveProduct': return (out.isNew?'New dress · ':'Dress edited · ')+((p.item&&p.item.Name)||'');
+    case 'deleteProduct': return 'Dress deleted · '+pre;
+    case 'saveCustomer': return (out.isNew?'New customer · ':'Customer edited · ')+((p.item&&p.item.Name)||'');
+    case 'deleteCustomer': return 'Customer deleted · '+pre;
+    case 'mergeCustomers': return 'Customers merged · '+pre;
+    case 'saveExpense': return 'Expense · '+((p.item&&p.item.Category)||'')+' · '+tk(p.item&&p.item.Amount);
+    case 'deleteExpense': return 'Expense deleted · '+pre;
     case 'createPurchase': return 'Purchase '+out.purchaseNo+' · '+tk(out.total);
     case 'updatePurchasePayment': return 'Purchase payment '+p.purchaseNo+' · '+tk(p.paid);
-    case 'payDue': return 'Baki taka pawa gelo · '+tk(p.amount);
-    case 'saveShipment': return 'Notun chalan · '+out.added+' notun dress, '+out.updated+' ta te stock barlo';
+    case 'payDue': return 'Due received · '+tk(p.amount);
+    case 'saveShipment': return 'New chalan · '+out.added+' new dress, '+out.updated+' restocked';
     case 'renameAttr': return p.field+': "'+p.from+'" → "'+(p.to||'(faka)')+'"';
     case 'saveSupplier': return 'Supplier · '+((p.item&&p.item.Name)||'');
-    case 'deleteSupplier': return 'Supplier muche fela';
+    case 'deleteSupplier': return 'Supplier deleted';
     case 'createReturn': return 'Return';
   }
   return a;
@@ -1526,13 +1526,13 @@ async function showLogs(){
   try{
     const snap=await fdb.collection('logs').orderBy('ts','desc').limit(200).get();
     const rows=snap.docs.map(d=>d.data()).map(x=>`<tr><td style="white-space:nowrap">${fdate(x.ts)}<div style="font-size:11.5px;color:var(--muted)">${new Date(x.ts).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div></td>
-      <td><strong>${esc(userName(x.by))}</strong></td><td>${esc(x.text||x.action)}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">Ekhono kichu nei.</td></tr>';
+      <td><strong>${esc(userName(x.by))}</strong></td><td>${esc(x.text||x.action)}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">Nothing yet.</td></tr>';
     openModal(`<div class="modal-head"><h3>Activity log</h3><button class="x" data-act="modal-close">×</button></div>
-      <div class="modal-body"><p style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Shesh 200 ta kaj — ke, kokhon, ki korlo.</p>
-        <div class="table-wrap"><table><thead><tr><th>Kokhon</th><th>Ke</th><th>Ki</th></tr></thead><tbody>${rows}</tbody></table></div></div>
+      <div class="modal-body"><p style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Last 200 actions — who did what, and when.</p>
+        <div class="table-wrap"><table><thead><tr><th>When</th><th>Who</th><th>What</th></tr></thead><tbody>${rows}</tbody></table></div></div>
       <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Close</button></div>`);
     $('#modal').classList.add('wide');
-  }catch(e){ closeModal(); toast('Log pora gelo na: '+e.message,'err'); }
+  }catch(e){ closeModal(); toast('Could not load the log: '+e.message,'err'); }
 }
 async function persist(){
   if(!fdb) return;
@@ -1702,7 +1702,7 @@ async function renderLegacyBox(){
   const old = await findLegacyData(); if(!old) return;
   box.innerHTML = `<div class="card panel" style="margin-bottom:16px"><h3>Old local data</h3>
     <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.55">This browser still has data from the earlier offline version (${esc(legacyCounts(old))}). Upload it once so it appears on every device.</p>
-    <button class="btn btn-gold" data-act="migrate-yes">⭱ Upload old local data to Firebase</button></div>`;
+    <button class="btn btn-gold" data-act="migrate-yes">⬆ Upload old local data to Firebase</button></div>`;
 }
 
 /* ---------- backup ---------- */
@@ -1731,8 +1731,8 @@ function authErrorText(e){
   if(c === 'auth/too-many-requests') return 'Too many attempts. Wait a few minutes and try again.';
   if(c === 'auth/network-request-failed') return 'No internet connection.';
   if(c === 'auth/user-disabled') return 'This account has been disabled.';
-  if(c === 'auth/unauthorized-domain') return 'Firebase e ei website allow kora nai — Authentication > Settings > Authorized domains e shishir163.github.io jog korun.';
-  if(c === 'auth/operation-not-allowed') return 'Google sign-in Firebase e chalu kora nai — Authentication > Sign-in method > Google chalu korun.';
+  if(c === 'auth/unauthorized-domain') return 'This website is not allowed in Firebase — add shishir163.github.io in Authentication > Settings > Authorized domains.';
+  if(c === 'auth/operation-not-allowed') return 'Google sign-in is not turned on in Firebase — enable it in Authentication > Sign-in method > Google.';
   return 'Could not sign in: ' + ((e && e.message) || e);
 }
 function doLogin(){
@@ -1743,7 +1743,7 @@ function doLogin(){
     .then(function(){ btn.disabled = false; btn.textContent = 'Sign in'; });
 }
 function doGoogle(){
-  if(!fauth || !firebase.auth.GoogleAuthProvider){ loginMsg('Google sign-in load hoy nai — internet check korun.'); return; }
+  if(!fauth || !firebase.auth.GoogleAuthProvider){ loginMsg('Google sign-in did not load — check the internet.'); return; }
   const prov=new firebase.auth.GoogleAuthProvider(); prov.setCustomParameters({ prompt:'select_account' });
   const btn=$('#lg-google'); btn.disabled=true; loginMsg('');
   fauth.signInWithPopup(prov).catch(function(e){
@@ -1765,28 +1765,28 @@ async function pinHash(pin){
 }
 function lockShow(mode, cb){
   LOCK.mode=mode; LOCK.cb=cb||null; LOCK.step1=''; LOCK.on=true;
-  const t={ unlock:['🔒 PIN din','App khulte apnar PIN din'], set:['🔐 Notun PIN','4–6 shongkhar PIN din (ei phone/laptop er jonno)'], verify:['🔒 Bortoman PIN','Age bortoman PIN din'] }[mode];
+  const t={ unlock:['🔒 Enter PIN','Enter your PIN to open the app'], set:['🔐 New PIN','Choose a 4–6 digit PIN (for this phone/laptop)'], verify:['🔒 Current PIN','Enter your current PIN first'] }[mode];
   $('#lk-title').textContent=t[0]; $('#lk-sub').textContent=t[1]; $('#lk-msg').textContent=''; $('#lk-pin').value='';
   $('#lk-ok').textContent = mode==='unlock'?'Unlock':(mode==='verify'?'Next':'Set PIN');
   $('#lk-skip').style.display = (mode==='set' && !pinGet() && !cb) ? '' : (mode!=='unlock'?'':'none');
-  $('#lk-skip').textContent = (mode==='set' && !cb) ? 'Pore korbo' : 'Cancel';
+  $('#lk-skip').textContent = (mode==='set' && !cb) ? 'Later' : 'Cancel';
   $('#lk-out').style.display = mode==='unlock' ? '' : 'none';
   $('#lock').classList.add('on'); setTimeout(function(){ try{ $('#lk-pin').focus(); }catch(e){} }, 50);
 }
 function lockHide(){ LOCK.on=false; LOCK.last=Date.now(); $('#lock').classList.remove('on'); }
 async function lockOk(){
   const v=$('#lk-pin').value.trim(), m=$('#lk-msg');
-  if(!/^\d{4,6}$/.test(v)){ m.textContent='4 theke 6 ta shongkha din'; return; }
+  if(!/^\d{4,6}$/.test(v)){ m.textContent='Enter 4 to 6 digits'; return; }
   if(LOCK.mode==='unlock' || LOCK.mode==='verify'){
     const p=pinGet(); if(!p){ lockHide(); return; }
     if(await pinHash(v)===p.h){ LOCK.tries=0; const cb=LOCK.cb; lockHide(); if(cb) cb(); return; }
     LOCK.tries++; $('#lk-pin').value='';
-    if(LOCK.tries>=5){ m.textContent='5 bar bhul — sign out hocche'; setTimeout(doSignOut, 900); return; }
-    m.textContent='Bhul PIN ('+(5-LOCK.tries)+' bar baki)'; return;
+    if(LOCK.tries>=5){ m.textContent='5 wrong tries — signing out'; setTimeout(doSignOut, 900); return; }
+    m.textContent='Wrong PIN ('+(5-LOCK.tries)+' tries left)'; return;
   }
-  if(!LOCK.step1){ LOCK.step1=v; $('#lk-pin').value=''; $('#lk-sub').textContent='Abar ekই PIN din (nishchit korte)'.replace('ekই','ek'); m.textContent=''; return; }
-  if(v!==LOCK.step1){ LOCK.step1=''; $('#lk-pin').value=''; m.textContent='Duto PIN mile nai — abar shuru korun'; $('#lk-sub').textContent='4–6 shongkhar PIN din'; return; }
-  const old=pinGet()||{}; pinPut({ h:await pinHash(v), mins:old.mins||5 }); lockHide(); toast('PIN set holo ✦','ok');
+  if(!LOCK.step1){ LOCK.step1=v; $('#lk-pin').value=''; $('#lk-sub').textContent='Enter the same PIN again to confirm'; m.textContent=''; return; }
+  if(v!==LOCK.step1){ LOCK.step1=''; $('#lk-pin').value=''; m.textContent='The PINs did not match — start again'; $('#lk-sub').textContent='Choose a 4–6 digit PIN'; return; }
+  const old=pinGet()||{}; pinPut({ h:await pinHash(v), mins:old.mins||5 }); lockHide(); toast('PIN set ✦','ok');
   if(state.view==='settings') viewSettings();
 }
 function lockSkip(){ if(LOCK.mode==='set' && !LOCK.cb){ try{ localStorage.setItem('omme_pin_skip_'+meEmail(),'1'); }catch(e){} } lockHide(); }
@@ -2021,7 +2021,7 @@ function globalSearch(q){
       <div class="chips" style="margin-top:5px">${x.Preorder?'<span class="pill pre">✅ প্রি-অর্ডার</span>':''}<span class="pill ${(x.Status||'Delivered')==='Pending'?'amber':'pos'}">${esc(x.Status||'Delivered')}</span>${payChip(pyi.state,pyi.due)}${delChip(x)}</div>${x.Note?'<div class="sub" style="margin-top:4px">📝 '+esc(x.Note)+'</div>':''}</div>
       <div class="acts"><button class="btn-icon" data-act="sale-view" data-inv="${esc(x.InvoiceNo)}">View</button>
       <button class="btn-icon" data-act="sale-edit" data-inv="${esc(x.InvoiceNo)}" data-from="dash">Edit</button></div></div>`; }).join('');
-  box.innerHTML = h || '<div class="gs-none">Kichu pawa gelo na — onno bhabe likhe dekhun.</div>';
+  box.innerHTML = h || '<div class="gs-none">Nothing found — try different words.</div>';
 }
 function animateTiles(){
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches;
@@ -2117,7 +2117,7 @@ function attrManager(f){
   const tabs=ATTR_FIELDS.map(x=>`<button type="button" class="seg-btn ${x===f?'on':''}" data-act="attr-tab" data-f="${x}">${x}</button>`).join('');
   const rows=list.map((v,i)=>`<div class="attr-row"><div class="nm">${esc(v)}</div><div class="ct">${used[v]?used[v]+' product':'unused'}</div>
       <button class="btn-icon" data-act="attr-ren" data-i="${i}">Rename</button><button class="btn-icon" data-act="attr-del" data-i="${i}">✕</button></div>`).join('')
-    || '<div class="empty" style="padding:18px 0">Ekhono kichu nei — niche theke add korun.</div>';
+    || '<div class="empty" style="padding:18px 0">Nothing yet — add one below.</div>';
   openModal(`
     <div class="modal-head"><h3>Categories &amp; brands</h3><button class="x" data-act="modal-close">×</button></div>
     <div class="modal-body">
@@ -2125,19 +2125,19 @@ function attrManager(f){
       <div style="display:flex; gap:8px; margin-bottom:10px"><input id="attr-new" placeholder="New ${f.toLowerCase()} name…" style="flex:1">
         <button class="btn btn-gold btn-sm" data-act="attr-add">＋ Add</button></div>
       <div>${rows}</div>
-      <p style="font-size:12px;color:var(--muted);margin:12px 0 0">Rename korle shob product e nam bodle jabe. Ekta nam onno ekta ache emon nam e rename korle dutoi mile ek hoye jabe.</p>
+      <p style="font-size:12px;color:var(--muted);margin:12px 0 0">Renaming changes it on every product. Renaming to a name that already exists merges the two.</p>
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Done</button></div>`);
   const ni=$('#attr-new'); if(ni) ni.onkeydown=e=>{ if(e.key==='Enter') attrAdd(); };
 }
 function attrAdd(){
   const f=state.attrTab, v=($('#attr-new').value||'').trim(); if(!v) return;
-  if(attrList(f).some(x=>cmpTxt(x,v)===0)){ toast('"'+v+'" already ache','err'); return; }
+  if(attrList(f).some(x=>cmpTxt(x,v)===0)){ toast('"'+v+'" already exists','err'); return; }
   saveAttrList(f, attrList(f).concat([v])); attrManager(f); window._attrDirty=true; toast('Added','ok');
 }
 async function attrRename(i){
   const f=state.attrTab, from=(window._attrCur||[])[i]; if(from==null) return;
-  const to=(prompt('"'+from+'" er notun nam:', from)||'').trim(); if(!to || to===from) return;
+  const to=(prompt('New name for "'+from+'":', from)||'').trim(); if(!to || to===from) return;
   try{
     const r=await api('renameAttr',{field:f, from, to});
     saveAttrList(f, attrList(f).filter(x=>x!==from).concat([to])); window._attrDirty=true;
@@ -2148,7 +2148,7 @@ async function attrRename(i){
 async function attrDelete(i){
   const f=state.attrTab, v=(window._attrCur||[])[i]; if(v==null) return;
   const n=attrUsed(f)[v]||0;
-  if(n && !confirm('"'+v+'" '+n+' ta product e ache. Oi product gulo theke '+f+' faka kore dibo?')) return;
+  if(n && !confirm('"'+v+'" is used on '+n+' product(s). Clear '+f+' on those products?')) return;
   try{
     if(n) await api('renameAttr',{field:f, from:v, to:''});
     saveAttrList(f, attrList(f).filter(x=>x!==v)); window._attrDirty=true;
@@ -2187,14 +2187,14 @@ function renderInventory(q, only){
   if(only && $('#inv-tbody')){ $('#inv-tbody').innerHTML=rows; const ct=$('#inv-count'); if(ct) ct.textContent=list.length+' item(s)'; return; }
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Inventory</div><h2>Products &amp; stock</h2></div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap"><button class="btn btn-ghost" data-nav="shipment">📦 Notun chalan</button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap"><button class="btn btn-ghost" data-nav="shipment">📦 New chalan</button>
       <button class="btn btn-gold" data-act="product-new">＋ Add product</button></div></div>
     <div class="toolbar"><div class="search"><span class="mag">⌕</span>
       <input id="inv-search" type="search" name="q-inv-search" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Search name, brand, SKU…" value="${esc(q)}"></div>
       <button class="btn btn-sm ${state.hideSoldOut?'btn-gold':'btn-ghost'}" data-act="inv-toggle-soldout" title="Show/hide sold-out products">${state.hideSoldOut?'✓ Hiding sold-out':'Hide sold-out'}${soldOutCount?' ('+soldOutCount+')':''}</button>
       <select id="inv-sort" title="Sort">${INV_SORTS.map(o=>`<option value="${o[0]}" ${o[0]===sk?'selected':''}>⇅ ${o[1]}</option>`).join('')}</select>
       <button class="btn btn-ghost btn-sm" data-act="attr-manage" title="Edit category, brand, type, dupatta lists">⚙ Categories &amp; brands</button>
-      <button class="btn btn-ghost btn-sm" data-act="inv-csv-import" title="Import products from CSV">⭱ CSV Import</button>
+      <button class="btn btn-ghost btn-sm" data-act="inv-csv-import" title="Import products from CSV">⬆ CSV Import</button>
       <input id="inv-csv-file" type="file" accept=".csv,text/csv" style="display:none">
       <span id="inv-count" style="color:var(--muted); font-size:13px">${list.length} item(s)</span></div>
     <div class="card"><div class="table-wrap"><table class="inv-tbl">
@@ -2219,18 +2219,18 @@ function renderShipment(){
   const brands=attrList('Brand'), cats=attrList('Category'), names=DB.Products.map(p=>p.Name).filter(Boolean);
   const rows=S.rows.map((r,i)=>`<div class="sh-row" id="shr-${i}">
       <div class="sh-grid">
-        <div class="w2"><label>#${i+1} Dress er nam</label><input data-sh="${i}" data-f="name" list="sh-names" value="${esc(r.name)}" placeholder="e.g. Colourful EMB UF-4178"></div>
+        <div class="w2"><label>#${i+1} Dress name</label><input data-sh="${i}" data-f="name" list="sh-names" value="${esc(r.name)}" placeholder="e.g. Colourful EMB UF-4178"></div>
         <div class="w15"><label>Brand</label><input data-sh="${i}" data-f="brand" list="sh-brands" value="${esc(r.brand)}"></div>
         <div><label>Category</label><input data-sh="${i}" data-f="cat" list="sh-cats" value="${esc(r.cat)}" placeholder="3pc"></div>
         <div><label>Type</label><input data-sh="${i}" data-f="type" list="sh-types" value="${esc(r.type||'')}" placeholder="Lawn / Emb"></div>
         <div><label>Dupatta</label><input data-sh="${i}" data-f="dup" list="sh-dups" value="${esc(r.dup||'')}" placeholder="Chiffon"></div>
         <div><label>Stitched?</label><select data-sh="${i}" data-f="st"><option value="">—</option><option ${r.st==='Unstitched'?'selected':''}>Unstitched</option><option ${r.st==='Stitched'?'selected':''}>Stitched</option></select></div>
-        <div><label>Size ${r.st==='Stitched'?'':'<span style="font-weight:400">(stitched hole)</span>'}</label><input data-sh="${i}" data-f="size" value="${esc(r.size||'')}" placeholder="M (36), L (38)" ${r.st==='Stitched'?'':'disabled'}></div>
+        <div><label>Size ${r.st==='Stitched'?'':'<span style="font-weight:400">(if stitched)</span>'}</label><input data-sh="${i}" data-f="size" value="${esc(r.size||'')}" placeholder="M (36), L (38)" ${r.st==='Stitched'?'':'disabled'}></div>
         <div class="w15"><label>SKU</label><input data-sh="${i}" data-f="sku" value="${esc(r.sku)}"></div>
-        <div><label>Website dam ৳</label><input data-sh="${i}" data-f="web" type="number" inputmode="decimal" value="${esc(r.web)}"></div>
+        <div><label>Website price ৳</label><input data-sh="${i}" data-f="web" type="number" inputmode="decimal" value="${esc(r.web)}"></div>
         <div><label>Weight (g)</label><input data-sh="${i}" data-f="w" type="number" inputmode="decimal" value="${esc(r.w)}"></div>
-        <div><label>Koyta</label><input data-sh="${i}" data-f="qty" type="number" inputmode="numeric" value="${esc(r.qty)}"></div>
-        <div><label>Bikri dam ৳</label><input data-sh="${i}" data-f="sell" type="number" inputmode="decimal" value="${esc(r.sell)}"></div>
+        <div><label>Qty</label><input data-sh="${i}" data-f="qty" type="number" inputmode="numeric" value="${esc(r.qty)}"></div>
+        <div><label>Sale price ৳</label><input data-sh="${i}" data-f="sell" type="number" inputmode="decimal" value="${esc(r.sell)}"></div>
         <div><label>PKR (note)</label><input data-sh="${i}" data-f="pkr" value="${esc(r.pkr)}"></div>
         <div><label>Photo</label><div class="sh-ph">${r.photo?'<img class="pthumb sm" src="'+r.photo+'" alt="" style="cursor:default">':'<div class="pthumb sm nophoto">👗</div>'}
           <button type="button" class="btn-icon" data-act="sh-photo" data-i="${i}">📷</button>${r.photo?'<button type="button" class="btn-icon" data-act="sh-photo-del" data-i="${i}">✕</button>':''}</div></div>
@@ -2238,15 +2238,15 @@ function renderShipment(){
       <div class="sh-calc" id="shc-${i}"></div>
     </div>`).join('');
   $('#view').innerHTML=`
-    <div class="view-head"><div><div class="eyebrow">Inventory</div><h2>📦 Notun chalan</h2></div>
+    <div class="view-head"><div><div class="eyebrow">Inventory</div><h2>📦 New chalan</h2></div>
       <button class="btn btn-ghost btn-sm" data-nav="inventory">← Inventory</button></div>
     <div class="card panel" style="margin-bottom:14px">
       <div class="sh-head">
-        <div class="field" style="margin:0"><label>Tarikh</label><input id="sh-date" type="date" value="${esc(S.date)}"></div>
+        <div class="field" style="margin:0"><label>Date</label><input id="sh-date" type="date" value="${esc(S.date)}"></div>
         <div class="field" style="margin:0"><label>Weight charge — ৳ per kg</label><input id="sh-rate" type="number" inputmode="decimal" value="${esc(S.rate)}"></div>
-        <div class="field" style="margin:0"><label>Onnanno khoroch ৳ (prottek dress)</label><input id="sh-other" type="number" inputmode="decimal" value="${esc(S.other)}"></div>
+        <div class="field" style="margin:0"><label>Other cost ৳ (per dress)</label><input id="sh-other" type="number" inputmode="decimal" value="${esc(S.other)}"></div>
       </div>
-      <p style="font-size:12px;color:var(--muted);margin:10px 0 0">Weight charge = weight (g) × rate ÷ 1000 · Mot khoroch = website dam + weight charge + onnanno · Margin = labh ÷ bikri dam. ${shipDefaults().minMargin}% er niche gele lal.</p>
+      <p style="font-size:12px;color:var(--muted);margin:10px 0 0">Weight charge = weight (g) × rate ÷ 1000 · Total cost = website price + weight charge + other cost · Margin = profit ÷ sale price. Below ${shipDefaults().minMargin}% shows red.</p>
     </div>
     <datalist id="sh-names">${names.map(n=>'<option value="'+esc(n)+'">').join('')}</datalist>
     <datalist id="sh-brands">${brands.map(n=>'<option value="'+esc(n)+'">').join('')}</datalist>
@@ -2258,13 +2258,13 @@ function renderShipment(){
     <div class="card panel sh-bar">
       <div class="sh-tot" id="sh-tot"></div>
       <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap">
-        <button class="btn btn-ghost btn-sm" data-act="sh-add">＋ Arekta dress</button>
-        <button class="btn btn-ghost btn-sm" data-act="sh-clear">Sob muche notun kore</button><span style="flex:1"></span>
-        <button class="btn btn-gold" data-act="sh-save">✓ Stock e tulun</button></div>
+        <button class="btn btn-ghost btn-sm" data-act="sh-add">＋ Another dress</button>
+        <button class="btn btn-ghost btn-sm" data-act="sh-clear">Clear all &amp; start over</button><span style="flex:1"></span>
+        <button class="btn btn-gold" data-act="sh-save">✓ Add to stock</button></div>
     </div>`;
   document.querySelectorAll('[data-sh]').forEach(el=>{ el.oninput=()=>shipInput(el); el.onchange=()=>{ shipInput(el, true); if(el.dataset.f==='st') renderShipment(); }; });
   const sf=$('#sh-file'); if(sf) sf.onchange=async()=>{ const f=sf.files&&sf.files[0], i=window._shPhotoRow; if(!f||i==null) return;
-    try{ toast('Chhobi chhoto korchi…'); const d=await shrinkPhoto(f); state.ship.rows[i].photo=d; shipSave(); renderShipment(); }catch(e){ toast(e.message,'err'); } sf.value=''; };
+    try{ toast('Shrinking photo…'); const d=await shrinkPhoto(f); state.ship.rows[i].photo=d; shipSave(); renderShipment(); }catch(e){ toast(e.message,'err'); } sf.value=''; };
   ['sh-date','sh-rate','sh-other'].forEach(id=>{ const el=$('#'+id); el.oninput=()=>{ S.date=$('#sh-date').value; S.rate=$('#sh-rate').value; S.other=$('#sh-other').value; shipSave(); shipCalcAll(); }; });
   shipCalcAll();
 }
@@ -2283,10 +2283,10 @@ function shipCalcRow(i){
   const S=state.ship, r=S.rows[i], box=$('#shc-'+i), rowEl=$('#shr-'+i); if(!r||!box) return;
   const c=shipCalc(r, S.rate, S.other), min=shipDefaults().minMargin, has=num(r.web)||num(r.w)||num(r.sell);
   const ex=r.pid?findProduct(r.pid):null;
-  box.innerHTML = !has ? '<span>Website dam, weight ar bikri dam dile hisab dekhabe</span>' :
-    `<span>Weight charge <b>${tk(c.wc)}</b></span><span>Mot khoroch <b>${tk(Math.round(c.cost))}</b></span>`+
-    (c.sell?`<span>Labh <b style="color:${c.profit<0?'var(--neg)':'var(--pos)'}">${tk(Math.round(c.profit))}</b></span><span class="mg ${c.margin<min?'low':'ok'}">${(Math.round(c.margin*100)/100).toFixed(2)}%</span>`:'<span>Bikri dam din</span>')+
-    (ex?`<span class="pill st">✓ Age theke ache — stock ${num(ex.Stock)} → ${num(ex.Stock)+num(r.qty)}</span>`:'')+
+  box.innerHTML = !has ? '<span>Enter website price, weight and sale price to see the costing</span>' :
+    `<span>Weight charge <b>${tk(c.wc)}</b></span><span>Total cost <b>${tk(Math.round(c.cost))}</b></span>`+
+    (c.sell?`<span>Profit <b style="color:${c.profit<0?'var(--neg)':'var(--pos)'}">${tk(Math.round(c.profit))}</b></span><span class="mg ${c.margin<min?'low':'ok'}">${(Math.round(c.margin*100)/100).toFixed(2)}%</span>`:'<span>Enter sale price</span>')+
+    (ex?`<span class="pill st">✓ Already in stock — ${num(ex.Stock)} → ${num(ex.Stock)+num(r.qty)}</span>`:'')+
     `<span style="flex:1"></span><button class="btn-icon" data-act="sh-dup" data-i="${i}" title="Copy">⧉</button><button class="btn-icon" data-act="sh-del" data-i="${i}">✕</button>`;
   if(rowEl) rowEl.classList.toggle('bad', !!(c.sell && c.margin<min));
 }
@@ -2297,22 +2297,22 @@ function shipTotals(){
   S.rows.forEach(r=>{ const q=num(r.qty); if(!String(r.name||'').trim()||!q) return; const c=shipCalc(r,S.rate,S.other);
     n+=q; w+=c.w*q; wc+=c.wc*q; cost+=c.cost*q; sell+=c.sell*q; if(c.sell && c.margin<min) low++; });
   const pf=sell-cost;
-  box.innerHTML=`<span>Dress <b>${n}</b></span><span>Mot weight <b>${(Math.round(w/10)/100)} kg</b></span><span>Weight charge <b>${tk(wc)}</b></span>
-    <span>Mot khoroch <b>${tk(Math.round(cost))}</b></span><span>Bikri hole <b>${tk(sell)}</b></span>
-    <span>Shombhabbo labh <b style="color:${pf<0?'var(--neg)':'var(--pos)'}">${tk(Math.round(pf))}</b> ${sell?'('+(Math.round(pf/sell*1000)/10)+'%)':''}</span>
-    ${low?`<span class="pill" style="background:#c62828;color:#fff">⚠️ ${low} ta dress ${min}% er niche</span>`:''}`;
+  box.innerHTML=`<span>Dress <b>${n}</b></span><span>Total weight <b>${(Math.round(w/10)/100)} kg</b></span><span>Weight charge <b>${tk(wc)}</b></span>
+    <span>Total cost <b>${tk(Math.round(cost))}</b></span><span>If all sold <b>${tk(sell)}</b></span>
+    <span>Expected profit <b style="color:${pf<0?'var(--neg)':'var(--pos)'}">${tk(Math.round(pf))}</b> ${sell?'('+(Math.round(pf/sell*1000)/10)+'%)':''}</span>
+    ${low?`<span class="pill" style="background:#c62828;color:#fff">⚠️ ${low} dress below ${min}%</span>`:''}`;
 }
 async function shipCommit(){
   const S=state.ship; const rows=S.rows.filter(r=>String(r.name||'').trim() && num(r.qty)>0);
-  if(!rows.length){ toast('Kono dress nei','err'); return; }
+  if(!rows.length){ toast('No dresses added','err'); return; }
   const miss=rows.filter(r=>!num(r.web)||!num(r.w)).length;
-  if(miss && !confirm(miss+' ta dress e website dam ba weight nei — tobuo tulbo?')) return;
-  if(!num(S.rate)){ toast('Weight charge per kg din','err'); return; }
+  if(miss && !confirm(miss+' dress have no website price or weight — save anyway?')) return;
+  if(!num(S.rate)){ toast('Enter the weight charge per kg','err'); return; }
   try{
     const r=await api('saveShipment',{ rows:rows, meta:{ date:S.date, rate:num(S.rate), other:num(S.other) } });
     const c=Object.assign({}, getCfg()); c.shipRate=num(S.rate); c.shipOther=num(S.other); setCfg(c);
     state.ship=null; try{ localStorage.removeItem('omme_ship_draft'); }catch(e){}
-    toast('Stock e uthlo ✦ · notun '+r.added+' · stock barlo '+r.updated,'ok'); setNav('inventory');
+    toast('Added to stock ✦ · new '+r.added+' · restocked '+r.updated,'ok'); setNav('inventory');
   }catch(e){ toast(e.message,'err'); }
 }
 const LINK_DEFAULTS=[{i:'🌐',n:'Website',u:'https://ommesgallery.xyz'},{i:'📘',n:'Facebook page',u:''},{i:'👥',n:'Facebook group',u:''},{i:'📸',n:'Instagram',u:''}];
@@ -2325,7 +2325,7 @@ function linksEditor(L){
   return L.map((x,i)=>`<div class="ln-row"><input class="ln-i" data-i="${i}" value="${esc(x.i||'')}" placeholder="Icon" style="text-align:center">
       <input class="ln-n" data-i="${i}" value="${esc(x.n||'')}" placeholder="Nam (e.g. Facebook page)">
       <input class="ln-u ln-url" data-i="${i}" value="${esc(x.u||'')}" placeholder="https://…">
-      <button type="button" class="btn-icon" data-act="ln-del" data-i="${i}">✕</button></div>`).join('') || '<p style="color:var(--muted);font-size:13px">Kono link nei.</p>';
+      <button type="button" class="btn-icon" data-act="ln-del" data-i="${i}">✕</button></div>`).join('') || '<p style="color:var(--muted);font-size:13px">No links.</p>';
 }
 function linksRead(){ const out=[]; document.querySelectorAll('.ln-n').forEach(el=>{ const i=el.dataset.i; out.push({ i:(document.querySelector('.ln-i[data-i="'+i+'"]')||{}).value||'🔗', n:el.value.trim(), u:((document.querySelector('.ln-u[data-i="'+i+'"]')||{}).value||'').trim() }); }); return out; }
 function linksSave(L){ const c=Object.assign({}, getCfg()); c.links=L; setCfg(c); }
@@ -2345,7 +2345,7 @@ function showPhoto(id){
 async function shrinkPhoto(file){
   const url=URL.createObjectURL(file);
   try{
-    const img=await new Promise(function(res,rej){ const i=new Image(); i.onload=function(){ res(i); }; i.onerror=function(){ rej(new Error('Chhobi pora gelo na')); }; i.src=url; });
+    const img=await new Promise(function(res,rej){ const i=new Image(); i.onload=function(){ res(i); }; i.onerror=function(){ rej(new Error('Could not read the picture')); }; i.src=url; });
     let max=420, q=0.8, out='';
     for(let a=0;a<10;a++){
       const sc=Math.min(1, max/Math.max(img.naturalWidth,img.naturalHeight));
@@ -2386,16 +2386,16 @@ function productForm(p){
         <div class="field"><label>Buy price (৳) ${p.ID?'<span style="font-weight:400;color:var(--muted);font-size:11px">— নতুন lot-এর দাম দিতে হলে Purchase করো</span>':''}</label><input id="f-buy" type="number" value="${p.BuyPrice||''}"></div>
         <div class="field"><label>Sale price (৳)</label><input id="f-sale" type="number" value="${p.SalePrice||''}"></div>
       </div>
-      <details class="wcalc" ${p.WeightG?'open':''}><summary>⚖️ Weight diye buy price hisab</summary>
+      <details class="wcalc" ${p.WeightG?'open':''}><summary>⚖️ Buy price from weight</summary>
         <div class="grid2" style="margin-top:10px">
-          <div class="field"><label>Website dam ৳</label><input id="f-web" type="number" value="${p.WebPrice||''}"></div>
+          <div class="field"><label>Website price ৳</label><input id="f-web" type="number" value="${p.WebPrice||''}"></div>
           <div class="field"><label>Weight (g)</label><input id="f-wg" type="number" value="${p.WeightG||''}"></div>
           <div class="field"><label>Rate ৳/kg</label><input id="f-rate" type="number" value="${p.ShipRate||shipDefaults().rate}"></div>
           <div class="field"><label>Onnanno ৳</label><input id="f-oth" type="number" value="${p.OtherCost!=null&&p.OtherCost!==''?p.OtherCost:shipDefaults().other}"></div>
         </div>
-        <div class="field" style="margin-bottom:8px"><label>PKR dam (shudhu note)</label><input id="f-pkr" value="${esc(p.PKR||'')}"></div>
+        <div class="field" style="margin-bottom:8px"><label>PKR price (note only)</label><input id="f-pkr" value="${esc(p.PKR||'')}"></div>
         <div id="f-wres" style="font-size:13px;margin-bottom:8px"></div>
-        <button type="button" class="btn btn-ghost btn-sm" data-act="f-wapply">↑ Buy price e boshao</button></details>
+        <button type="button" class="btn btn-ghost btn-sm" data-act="f-wapply">↑ Use as buy price</button></details>
       <div class="field"><label>Stock quantity</label><input id="f-stock" type="number" value="${p.Stock!==undefined?p.Stock:''}"></div>
       <div class="field"><label>Stitched / Unstitched</label>
         <div class="seg" id="f-stitch">
@@ -2403,11 +2403,11 @@ function productForm(p){
           <button type="button" class="seg-btn ${p.Stitch==='Stitched'?'on':''}" data-act="stitch-pick" data-v="Stitched">🧵 Stitched</button>
         </div>
         <input id="f-size" value="${esc(p.Size||'')}" placeholder="Available size + map — e.g. M (36), L (38), XL (40)" style="margin-top:8px;${p.Stitch==='Stitched'?'':'display:none'}">
-        <div class="hint" id="f-size-hint" style="${p.Stitch==='Stitched'?'':'display:none'}">Koma (,) diye alada korun — sale er somoy ei size gulo theke bachte parben.</div></div>
+        <div class="hint" id="f-size-hint" style="${p.Stitch==='Stitched'?'':'display:none'}">Separate with commas — you can pick from these sizes when selling.</div></div>
       <div class="field"><label class="chk"><input type="checkbox" id="f-pre" ${p.Preorder?'checked':''}> ✅ প্রি-অর্ডার dress (this is pre-order)</label></div>
       <div class="field"><label class="chk"><input type="checkbox" id="f-defect" ${p.Defect?'checked':''}> ⚠️ Defect dress</label>
-        <input id="f-defect-note" value="${esc(p.DefectNote||'')}" placeholder="Ki defect? (optional) — e.g. dupatta te daag" style="margin-top:8px;${p.Defect?'':'display:none'}"></div>
-      <div class="field"><label>Photo <span style="font-weight:400;color:var(--muted);font-size:11px">— chhoto preview (auto chhoto hoye jabe)</span></label>
+        <input id="f-defect-note" value="${esc(p.DefectNote||'')}" placeholder="What defect? (optional) — e.g. stain on dupatta" style="margin-top:8px;${p.Defect?'':'display:none'}"></div>
+      <div class="field"><label>Photo <span style="font-weight:400;color:var(--muted);font-size:11px">— small preview (shrunk automatically)</span></label>
         <div style="display:flex; gap:14px; align-items:center">
           <div id="f-photo-box"></div>
           <div><input type="file" id="f-photo-file" accept="image/*" style="display:none">
@@ -2421,7 +2421,7 @@ function productForm(p){
       <button class="btn btn-gold" data-act="product-save" data-id="${esc(p.ID||'')}">Save product</button></div>`);
   bindAttrSelects($('#modal'));
   const wcalc=()=>{ const o=$('#f-wres'); if(!o) return; const c=shipCalc({web:$('#f-web').value,w:$('#f-wg').value,sell:$('#f-sale').value}, $('#f-rate').value, $('#f-oth').value);
-    o.innerHTML=(c.web||c.w)?`Weight charge <b>${tk(c.wc)}</b> · Mot khoroch <b>${tk(Math.round(c.cost))}</b>`+(c.sell?` · Labh <b>${tk(Math.round(c.profit))}</b> <span class="pill ${c.margin<shipDefaults().minMargin?'defect':'pos'}">${c.margin.toFixed(2)}%</span>`:''):''; };
+    o.innerHTML=(c.web||c.w)?`Weight charge <b>${tk(c.wc)}</b> · Total cost <b>${tk(Math.round(c.cost))}</b>`+(c.sell?` · Profit <b>${tk(Math.round(c.profit))}</b> <span class="pill ${c.margin<shipDefaults().minMargin?'defect':'pos'}">${c.margin.toFixed(2)}%</span>`:''):''; };
   ['f-web','f-wg','f-rate','f-oth','f-sale'].forEach(id=>{ const el=$('#'+id); if(el) el.addEventListener('input', wcalc); }); wcalc();
   window._pStitch=p.Stitch||'';
   const fd=$('#f-defect'); if(fd) fd.onchange=()=>{ $('#f-defect-note').style.display=fd.checked?'':'none'; };
@@ -2429,8 +2429,8 @@ function productForm(p){
   const pf=$('#f-photo-file');
   if(pf) pf.onchange=async function(){
     const f=pf.files&&pf.files[0]; if(!f) return;
-    $('#f-photo-info').textContent='Chhoto korchi…';
-    try{ const d=await shrinkPhoto(f); window._pPhoto=d; photoBox(d, '≈ '+Math.round(d.length*0.75/1024)+' KB · Save product chaplei save hobe'); }
+    $('#f-photo-info').textContent='Shrinking…';
+    try{ const d=await shrinkPhoto(f); window._pPhoto=d; photoBox(d, '≈ '+Math.round(d.length*0.75/1024)+' KB · saved when you tap Save product'); }
     catch(e){ $('#f-photo-info').textContent=e.message; }
     pf.value='';
   };
@@ -2472,7 +2472,7 @@ async function viewCustomers(){
 function custTabBar(){
   const t=state.custTab||'list';
   const b=(k,l)=>`<button class="btn btn-sm ${t===k?'btn-gold':'btn-ghost'}" data-act="cus-tab" data-tab="${k}">${l}</button>`;
-  return `<div class="toolbar">${b('list','Customers')}${b('dues','Dues / credit')}${b('inactive','💤 Onekdin kenen ni')}${b('wa','📣 WhatsApp')}${b('gift','🎁 Gift card')}<span style="flex:1"></span>
+  return `<div class="toolbar">${b('list','Customers')}${b('dues','Dues / credit')}${b('inactive','💤 Inactive buyers')}${b('wa','📣 WhatsApp')}${b('gift','🎁 Gift card')}<span style="flex:1"></span>
     ${t==='list'?'<button class="btn btn-ghost btn-sm" data-act="cus-export">⤓ Export CSV</button>':''}
     ${t==='list'?'<button class="btn btn-gold btn-sm" data-act="customer-new">＋ Add customer</button>':''}</div>`;
 }
@@ -2528,8 +2528,8 @@ function renderCustomers(q, only){
       <span id="cus-count" style="color:var(--muted); font-size:13px">${list.length} buyer(s)</span></div>
     <div class="cus-filters">
       <select id="cus-sort" title="Sajano">${CUS_SORTS.map(o=>`<option value="${o[0]}" ${o[0]===sk?'selected':''}>⇅ ${o[1]}</option>`).join('')}</select>
-      <select id="cus-group" title="Group">${[['','👥 Sob group']].concat(cusGroupList().map(g=>[g,(g==='Doctor'?'🩺 ':'')+g]), [['__none','Group chara']]).map(o=>`<option value="${esc(o[0])}" ${o[0]===gf?'selected':''}>${esc(o[1])}</option>`).join('')}</select>
-      ${(gf||tf)?'<button class="btn btn-ghost btn-sm" data-act="cus-filter-clear">✕ Filter muchun</button>':''}</div>
+      <select id="cus-group" title="Group">${[['','👥 All groups']].concat(cusGroupList().map(g=>[g,(g==='Doctor'?'🩺 ':'')+g]), [['__none','No group']]).map(o=>`<option value="${esc(o[0])}" ${o[0]===gf?'selected':''}>${esc(o[1])}</option>`).join('')}</select>
+      ${(gf||tf)?'<button class="btn btn-ghost btn-sm" data-act="cus-filter-clear">✕ Clear filter</button>':''}</div>
     ${tierLegendPick(tf)}
     <div class="card"><div class="table-wrap"><table>
       <thead><tr><th>Name</th><th>Phone</th><th>Address</th><th>Status</th><th class="num">Actions</th></tr></thead>
@@ -2538,7 +2538,7 @@ function renderCustomers(q, only){
   const so=$('#cus-sort'); if(so) so.onchange=()=>{ state.cusSort=so.value; try{ localStorage.setItem('omme_cus_sort',so.value); }catch(e){} renderCustomers($('#cus-search').value); };
   const gs=$('#cus-group'); if(gs) gs.onchange=()=>{ state.cusGroup=gs.value; renderCustomers($('#cus-search').value); };
 }
-const CUS_SORTS=[['name','Nam A → Z'],['name-desc','Nam Z → A'],['dress','Beshi dress age'],['recent','Shesh kena age'],['new','Notun customer age']];
+const CUS_SORTS=[['name','Name A → Z'],['name-desc','Name Z → A'],['dress','Most dresses'],['recent','Recent buyers'],['new','Newest customers']];
 function cusSortKey(){ if(!state.cusSort){ try{ state.cusSort=localStorage.getItem('omme_cus_sort')||'name'; }catch(e){ state.cusSort='name'; } } return state.cusSort; }
 function custLastBuy(){ const m={}; DB.Sales.forEach(function(s){ const id=String(s.CustomerID||''); if(id && (!m[id] || String(s.Date)>m[id])) m[id]=String(s.Date); }); return m; }
 function sortCustomers(list, k, dmap){
@@ -2551,7 +2551,7 @@ function sortCustomers(list, k, dmap){
 }
 function cusGroupList(){ const set=new Set(attrList('Group')); DB.Customers.forEach(function(c){ custGroups(c).forEach(function(g){ set.add(g); }); }); return Array.from(set).filter(Boolean).sort(cmpTxt); }
 function tierLegendPick(sel){
-  return '<div class="rc-legend"><span>Repeat buyer colour (chap din — shudhu oi dhap):</span>'+CUST_TIERS.slice().reverse().map(function(t){
+  return '<div class="rc-legend"><span>Repeat buyer colour (tap to filter):</span>'+CUST_TIERS.slice().reverse().map(function(t){
     return '<button type="button" class="rc-badge pick'+(sel?(sel===t.min?' sel':' dim'):'')+'" data-act="cus-tier" data-min="'+t.min+'" style="background:'+tierBg(t)+'">'+t.l+'</button>'; }).join('')+'<span>dresses</span></div>';
 }
 function giftActiveMap(){ const m={}; (DB.GiftCards||[]).forEach(function(g){ const st=giftState(g); if(st==='active'||st==='upcoming') m[String(g.CustomerID)]=g; }); return m; }
@@ -2574,9 +2574,9 @@ function exportCustomers(){ const t=customerTable(); downloadCSV('customers.csv'
 /* ===================== EXCEL: everything in one file ===================== */
 function loadScript(src){ return new Promise(function(res,rej){ const x=document.createElement('script'); x.src=src; x.onload=res; x.onerror=function(){ rej(new Error('load failed')); }; document.head.appendChild(x); }); }
 async function exportAllExcel(){
-  toast('Excel file banano hocche…');
+  toast('Making the Excel file…');
   try{ if(!window.XLSX) await loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'); }
-  catch(e){ toast('Internet lagbe — Excel tool load hoy nai','err'); return; }
+  catch(e){ toast('Needs internet — the Excel tool did not load','err'); return; }
   try{
     const X=window.XLSX, wb=X.utils.book_new(), pi=payInfo(), cust={}, prod={}, sDate={}, sCust={};
     DB.Customers.forEach(c=>{ cust[String(c.ID)]=c; }); DB.Products.forEach(p=>{ prod[String(p.ID)]=p; });
@@ -2602,14 +2602,14 @@ async function exportAllExcel(){
     add('Gift cards',['Code','Customer','Mobile','%','From','Until','Status','Used invoice','Used date','Created'],
       (DB.GiftCards||[]).map(g=>[g.Code, g.CustomerName||'', g.Phone||'', num(g.Pct), g.From||'', g.Until||'', giftState(g), g.UsedInvoice||'', g.UsedDate?dstr(g.UsedDate):'', g.CreatedAt?dstr(g.CreatedAt):'']));
     X.writeFile(wb, 'ommes-gallery-data-'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'.xlsx');
-    toast('Excel downloaded ✦ — Google Drive e rakhte paren','ok'); markBackup();
-  }catch(e){ toast('Excel banano gelo na: '+e.message,'err'); }
+    toast('Excel downloaded ✦ — you can keep it on Google Drive','ok'); markBackup();
+  }catch(e){ toast('Could not make the Excel file: '+e.message,'err'); }
 }
 
 /* ===================== MARKETING: inactive buyers + WhatsApp ===================== */
 const WA_DEFAULTS=[
-  {n:'Notun collection', t:"আসসালামু আলাইকুম {name}! 🌸 OMME'S GALLERY তে নতুন collection এসেছে। ছবি আর ভিডিও দেখতে আমাদের Facebook page বা ommesgallery.xyz এ আসুন। পছন্দ হলে এখানেই রিপ্লাই দিন ✦"},
-  {n:'Onekdin dekha nai', t:"আসসালামু আলাইকুম {name}! অনেকদিন আপনার কোনো অর্ডার পাইনি 🥺 আপনার জন্য নতুন কিছু dress রেখেছি। দেখতে চাইলে রিপ্লাই দিন — OMME'S GALLERY ✦"},
+  {n:'New collection', t:"আসসালামু আলাইকুম {name}! 🌸 OMME'S GALLERY তে নতুন collection এসেছে। ছবি আর ভিডিও দেখতে আমাদের Facebook page বা ommesgallery.xyz এ আসুন। পছন্দ হলে এখানেই রিপ্লাই দিন ✦"},
+  {n:'Long time no see', t:"আসসালামু আলাইকুম {name}! অনেকদিন আপনার কোনো অর্ডার পাইনি 🥺 আপনার জন্য নতুন কিছু dress রেখেছি। দেখতে চাইলে রিপ্লাই দিন — OMME'S GALLERY ✦"},
   {n:'Offer', t:"আসসালামু আলাইকুম {name}! 🎉 OMME'S GALLERY তে এখন বিশেষ ছাড় চলছে। আমাদের পুরনো ক্রেতা হিসেবে আপনার জন্য আলাদা সুবিধা আছে। জানতে রিপ্লাই দিন ✦"}];
 function waTemplates(){ const c=getCfg(); return (Array.isArray(c.waTemplates)&&c.waTemplates.length)?c.waTemplates:WA_DEFAULTS.slice(); }
 function saveWaTemplates(L){ const c=Object.assign({}, getCfg()); c.waTemplates=L; setCfg(c); }
@@ -2627,21 +2627,21 @@ function inactiveList(days){
 function rcRowAttr(dm){ const tr=custTier(dm?dm.total:0); return tr?` class="rc" style="--rc:${tr.c}; background:${hexA(tr.c,.12)}"`:''; }
 function renderInactive(){
   const days=state.inDays||90, L=inactiveList(days);
-  const opts=[30,60,90,180,365].map(d=>`<button class="btn btn-sm ${d===days?'btn-gold':'btn-ghost'}" data-act="in-days" data-d="${d}">${d} din+</button>`).join('');
+  const opts=[30,60,90,180,365].map(d=>`<button class="btn btn-sm ${d===days?'btn-gold':'btn-ghost'}" data-act="in-days" data-d="${d}">${d} days+</button>`).join('');
   const rows=L.map(x=>{ const c=x.c, ph=custPhones(c);
     return `<tr${rcRowAttr(x.dm)}><td><strong>${esc(c.Name)}</strong>${x.dm&&custTier(x.dm.total)?'<div style="margin-top:4px">'+dressBadge(x.dm)+'</div>':''}</td>
       <td class="tnum">${esc(ph[0]||'—')}</td>
-      <td>${x.last?fdate(x.last)+'<div style="font-size:12px;color:var(--muted)">'+x.days+' din age</div>':'<span style="color:var(--muted)">App e kono order nei</span>'}</td>
+      <td>${x.last?fdate(x.last)+'<div style="font-size:12px;color:var(--muted)">'+x.days+' days ago</div>':'<span style="color:var(--muted)">No orders in the app</span>'}</td>
       <td class="num tnum">${x.dm?x.dm.total:0}</td>
       <td class="num">${ph.length?`<button class="btn-wa" data-act="wa-one" data-id="${esc(c.ID)}">WhatsApp</button>`:''}
         <button class="btn-icon" data-act="customer-hist" data-id="${esc(c.ID)}">History</button></td></tr>`; }).join('')
-    || `<tr><td colspan="5" class="empty">${days} din er beshi kenen ni emon keu nei ✦</td></tr>`;
+    || `<tr><td colspan="5" class="empty">Nobody inactive for more than ${days} days ✦</td></tr>`;
   $('#view').innerHTML=`<div class="view-head"><div><div class="eyebrow">Customers</div><h2>Buyer directory</h2></div></div>
     ${custTabBar()}
-    <div class="toolbar"><span style="font-size:13px;color:var(--muted)">Shesh order er por koto din:</span>${opts}<span style="flex:1"></span>
+    <div class="toolbar"><span style="font-size:13px;color:var(--muted)">Days since last order:</span>${opts}<span style="flex:1"></span>
       <button class="btn btn-ghost btn-sm" data-act="in-export">⤓ CSV</button>
-      <button class="btn-wa" style="padding:9px 14px" data-act="wa-from-inactive">📣 Ei ${L.length} jon ke WhatsApp</button></div>
-    <p style="font-size:12.5px;color:var(--muted);margin:-6px 0 12px">Beshi dress newa customer upore. "App e kono order nei" = app shuru korar ager customer.</p>
+      <button class="btn-wa" style="padding:9px 14px" data-act="wa-from-inactive">📣 WhatsApp these ${L.length}</button></div>
+    <p style="font-size:12.5px;color:var(--muted);margin:-6px 0 12px">Biggest buyers first. "No orders in the app" = customers from before the app.</p>
     <div class="card"><div class="table-wrap"><table>
       <thead><tr><th>Name</th><th>Mobile</th><th>Last order</th><th class="num">Dresses</th><th class="num"></th></tr></thead>
       <tbody>${rows}</tbody></table></div></div>`;
@@ -2669,7 +2669,7 @@ function waText(c){
   return t.replace(/\{name\}/g, String(c.Name||'').trim());
 }
 function waOpen(c){
-  const n=waNumber(c.Phone||c.Phone2||c.Phone3); if(!n){ toast('Ei customer er mobile nei','err'); return false; }
+  const n=waNumber(c.Phone||c.Phone2||c.Phone3); if(!n){ toast('This customer has no mobile number','err'); return false; }
   window.open('https://wa.me/'+n+'?text='+encodeURIComponent(waText(c)),'_blank'); return true;
 }
 function renderWA(){
@@ -2681,8 +2681,8 @@ function renderWA(){
   const rows=L.map(c=>{ const ph=custPhones(c), d=dm[String(c.ID)], done=sent.has(String(c.ID));
     return `<tr${rcRowAttr(d)}><td><strong>${esc(c.Name)}</strong>${d&&custTier(d.total)?'<div style="margin-top:4px">'+dressBadge(d)+'</div>':''}</td>
       <td class="tnum">${esc(ph[0]||'—')}</td>
-      <td class="num">${!ph.length?'<span style="color:var(--muted);font-size:12px">mobile nei</span>':(done?'<span class="sent-tag">✓ sent</span> <button class="btn-icon" data-act="wa-send" data-id="'+esc(c.ID)+'">abar</button>':'<button class="btn-wa" data-act="wa-send" data-id="'+esc(c.ID)+'">Send</button>')}</td></tr>`; }).join('')
-    || '<tr><td colspan="3" class="empty">Ei group e keu nei.</td></tr>';
+      <td class="num">${!ph.length?'<span style="color:var(--muted);font-size:12px">no mobile</span>':(done?'<span class="sent-tag">✓ sent</span> <button class="btn-icon" data-act="wa-send" data-id="'+esc(c.ID)+'">again</button>':'<button class="btn-wa" data-act="wa-send" data-id="'+esc(c.ID)+'">Send</button>')}</td></tr>`; }).join('')
+    || '<tr><td colspan="3" class="empty">Nobody in this group.</td></tr>';
   $('#view').innerHTML=`<div class="view-head"><div><div class="eyebrow">Customers</div><h2>Buyer directory</h2></div></div>
     ${custTabBar()}
     <div class="row2">
@@ -2696,14 +2696,14 @@ function renderWA(){
         <textarea id="wa-text">${esc(state.waDraft)}</textarea>
         <div style="display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap">
           <button class="btn btn-gold btn-sm" data-act="wa-tpl-save">Save message</button>
-          <span style="font-size:12px;color:var(--muted)">{name} er jaygay customer er nam boshe jabe</span></div>
+          <span style="font-size:12px;color:var(--muted)">{name} is replaced with the customer's name</span></div>
       </div>
       <div class="card panel">
         <h3>Kader pathaben</h3>
-        <div class="toolbar" style="margin-bottom:8px">${ab('all','Sobai')}${ab('repeat','Repeat (2+ dress)')}${ab('big','11+ dress')}${ab('inactive','Onekdin kenen ni ('+(state.inDays||90)+' din+)')}</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:6px">${L.length} jon · mobile ache ${withPh.length} · pathano hoyeche ${withPh.filter(c=>sent.has(String(c.ID))).length}</div>
-        <button class="wa-next" data-act="wa-next" ${next?'':'disabled'}>${next?'▶ Porer jon: '+esc(next.Name):'✓ Sobaike pathano hoyeche'}</button>
-        <div style="font-size:12px;color:var(--muted)">Prottek bar WhatsApp khulbe — Send chepe app e fire ashun, tarpor abar "Porer jon". <a href="#" data-act="wa-reset">Notun kore shuru</a></div>
+        <div class="toolbar" style="margin-bottom:8px">${ab('all','Everyone')}${ab('repeat','Repeat (2+ dress)')}${ab('big','11+ dress')}${ab('inactive','Inactive ('+(state.inDays||90)+' days+)')}</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:6px">${L.length} people · with mobile ${withPh.length} · sent ${withPh.filter(c=>sent.has(String(c.ID))).length}</div>
+        <button class="wa-next" data-act="wa-next" ${next?'':'disabled'}>${next?'▶ Next: '+esc(next.Name):'✓ Sent to everyone'}</button>
+        <div style="font-size:12px;color:var(--muted)">WhatsApp opens each time — tap Send, come back to the app, then tap "Next". <a href="#" data-act="wa-reset">Start over</a></div>
       </div>
     </div>
     <div class="card" style="margin-top:16px"><div class="table-wrap"><table>
@@ -2719,12 +2719,12 @@ function waTplSave(){
   T[i]=Object.assign({}, T[i], {t:t}); saveWaTemplates(T); state.waDraft=t; toast('Message saved ✦','ok');
 }
 function waTplNew(){
-  const n=(prompt('Notun message er nam (e.g. Eid offer):')||'').trim(); if(!n) return;
+  const n=(prompt('Name for the new message (e.g. Eid offer):')||'').trim(); if(!n) return;
   const T=waTemplates(); T.push({n:n, t:"আসসালামু আলাইকুম {name}! "}); saveWaTemplates(T); state.waTpl=T.length-1; state.waDraft=null; renderWA();
 }
 function waTplDel(){
-  const T=waTemplates(); if(T.length<=1){ toast('Ontoto ekta message thakte hobe','err'); return; }
-  if(!confirm('"'+T[state.waTpl||0].n+'" message ta muche dibo?')) return;
+  const T=waTemplates(); if(T.length<=1){ toast('Keep at least one message','err'); return; }
+  if(!confirm('Delete the "'+T[state.waTpl||0].n+'" message?')) return;
   T.splice(state.waTpl||0,1); saveWaTemplates(T); state.waTpl=0; state.waDraft=null; renderWA();
 }
 async function loadDues(){
@@ -2762,19 +2762,19 @@ function giftApply(){
   const er=giftCheck(g, cs?cs.value:'');
   if(er){ state.gift=null; msg.innerHTML='<span style="color:var(--neg);font-weight:700">✕ '+esc(er)+'</span>'; const dz=$('#s-disc'); if(dz) dz.readOnly=false; renderCart(); return; }
   state.gift=g; inp.value=g.Code;
-  msg.innerHTML='<span class="pill gift">🎁 '+num(g.Pct)+'% chhar · '+esc(g.CustomerName)+'</span> <button type="button" class="btn-icon" data-act="gift-remove">✕ Soran</button>';
-  renderCart(); toast('Gift code chalu ✦ '+num(g.Pct)+'% chhar','ok');
+  msg.innerHTML='<span class="pill gift">🎁 '+num(g.Pct)+'% off · '+esc(g.CustomerName)+'</span> <button type="button" class="btn-icon" data-act="gift-remove">✕ Remove</button>';
+  renderCart(); toast('Gift code applied ✦ '+num(g.Pct)+'% off','ok');
 }
 function giftRemove(){
   state.gift=null; const dz=$('#s-disc'); if(dz){ dz.readOnly=false; dz.value='0'; }
   const gi=$('#s-gift'); if(gi) gi.value=''; const m=$('#s-gift-msg'); if(m) m.innerHTML=''; if($('#cart-tot')) renderCart();
 }
-const GIFT_ST={ active:['pos','Chalu'], upcoming:['amber','Shamne chalu hobe'], used:['brand','Babohrito'], expired:['warn','Meyad shesh'], cancelled:['warn','Batil'] };
+const GIFT_ST={ active:['pos','Active'], upcoming:['amber','Starts soon'], used:['brand','Used'], expired:['warn','Expired'], cancelled:['warn','Cancelled'] };
 function giftChip(g){ const st=giftState(g), x=GIFT_ST[st]||['','']; return '<span class="pill '+x[0]+'">'+x[1]+'</span>'; }
 function giftHistHtml(c){
   const L=(DB.GiftCards||[]).filter(g=>String(g.CustomerID)===String(c.ID)).sort((a,b)=>String(b.CreatedAt).localeCompare(String(a.CreatedAt)));
   if(!L.length) return '';
-  return '<div class="lbl">🎁 Gift card</div>'+L.map(g=>'<div class="old" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">• '+fdate(g.CreatedAt)+' · <strong>'+num(g.Pct)+'%</strong> · '+esc(g.Code)+' · '+fdate(g.From)+' → '+fdate(g.Until)+' '+giftChip(g)+(g.UsedInvoice?' <span style="font-size:12px">'+esc(g.UsedInvoice)+(g.UsedDate?' · '+fdate(g.UsedDate):'')+'</span>':'')+'</div>').join('');
+  return '<div class="lbl">🎁 Gift cards</div>'+L.map(g=>'<div class="old" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">• '+fdate(g.CreatedAt)+' · <strong>'+num(g.Pct)+'%</strong> · '+esc(g.Code)+' · '+fdate(g.From)+' → '+fdate(g.Until)+' '+giftChip(g)+(g.UsedInvoice?' <span style="font-size:12px">'+esc(g.UsedInvoice)+(g.UsedDate?' · '+fdate(g.UsedDate):'')+'</span>':'')+'</div>').join('');
 }
 function giftEligible(){
   const dm=custDressMap(), byC={};
@@ -2797,41 +2797,41 @@ function renderGift(){
       <td style="white-space:nowrap">${fdate(g.From)} → ${fdate(g.Until)}</td>
       <td>${giftChip(g)}${g.UsedInvoice?'<div style="font-size:12px;margin-top:3px">'+esc(g.UsedInvoice)+(g.UsedDate?' · '+fdate(g.UsedDate):'')+'</div>':''}</td>
       <td class="num" style="white-space:nowrap"><button class="btn-icon" data-act="gift-view" data-code="${esc(g.Code)}">🎁 Card</button>
-        ${giftState(g)==='active'||giftState(g)==='upcoming'?`<button class="btn-icon" data-act="gift-cancel" data-code="${esc(g.Code)}">Batil</button>`:''}</td></tr>`).join('')
-    || '<tr><td colspan="6" class="empty">Ekhane kichu nei.</td></tr>';
+        <button class="btn-icon" data-act="gift-del" data-code="${esc(g.Code)}">Delete</button></td></tr>`).join('')
+    || '<tr><td colspan="6" class="empty">Nothing here.</td></tr>';
   const el=giftEligible().slice(0,30);
   const elRows=el.map(x=>`<div class="attr-row"><div class="nm">${esc(x.c.Name)} <span class="rc-badge" style="background:${tierBg(x.tr)}">🔁 ${x.tot} dresses</span>
-      <div style="font-size:12px;color:var(--muted);font-weight:400;margin-top:3px">${x.last?'Shesh gift: '+fdate(x.last.CreatedAt)+' ('+num(x.last.DressesAt)+' dress e)':'Ekhono gift paynai'}</div></div>
-      <button class="btn btn-gold btn-sm" data-act="gift-for" data-id="${esc(x.c.ID)}">🎁 Gift din</button></div>`).join('');
+      <div style="font-size:12px;color:var(--muted);font-weight:400;margin-top:3px">${x.last?'Last gift: '+fdate(x.last.CreatedAt)+' (at '+num(x.last.DressesAt)+' dresses)':'No gift yet'}</div></div>
+      <button class="btn btn-gold btn-sm" data-act="gift-for" data-id="${esc(x.c.ID)}">🎁 Gift</button></div>`).join('');
   $('#view').innerHTML=`<div class="view-head"><div><div class="eyebrow">Customers</div><h2>Buyer directory</h2></div></div>
     ${custTabBar()}
-    ${el.length?`<div class="card panel" style="margin-bottom:16px"><h3>🎁 Gift paoar joggo <span class="count">${el.length} jon</span></h3>
-      <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Jara notun rong er dhape uthechen (6+ dress), kintu tarpor kono gift card paynni.</p>${elRows}</div>`:''}
+    ${el.length?`<div class="card panel" style="margin-bottom:16px"><h3>🎁 Eligible for a gift <span class="count">${el.length}</span></h3>
+      <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Customers who reached a new colour level (6+ dresses) and have not had a gift card since.</p>${elRows}</div>`:''}
     <div class="card panel">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><h3 style="margin:0">Gift card</h3><span style="flex:1"></span>
-        <button class="btn btn-gold btn-sm" data-act="gift-new">＋ Notun gift card</button></div>
-      <div class="seg" style="margin-bottom:12px">${fb('active','Chalu')}${fb('used','Babohrito')}${fb('expired','Meyad shesh')}${fb('cancelled','Batil')}${fb('all','Sob')}</div>
-      <div class="table-wrap"><table><thead><tr><th>Code</th><th>Customer</th><th class="num">Chhar</th><th>Meyad</th><th>Obostha</th><th class="num"></th></tr></thead>
+        <button class="btn btn-gold btn-sm" data-act="gift-new">＋ New gift card</button></div>
+      <div class="seg" style="margin-bottom:12px">${fb('active','Active')}${fb('used','Used')}${fb('expired','Expired')}${cnt.cancelled?fb('cancelled','Cancelled'):''}${fb('all','All')}</div>
+      <div class="table-wrap"><table><thead><tr><th>Code</th><th>Customer</th><th class="num">Discount</th><th>Valid</th><th>Status</th><th class="num"></th></tr></thead>
         <tbody>${rows}</tbody></table></div></div>`;
 }
 function addDays(ymd, n){ const d=new Date(ymd+'T00:00:00'); d.setDate(d.getDate()+n); return ymdLocal(d); }
 function addMonths(ymd, n){ const d=new Date(ymd+'T00:00:00'); d.setMonth(d.getMonth()+n); d.setDate(d.getDate()-1); return ymdLocal(d); }
 function giftForm(cid){
   const cs=DB.Customers.slice().sort((a,b)=>cmpName(a.Name,b.Name)), today=ymdLocal(new Date());
-  openModal(`<div class="modal-head"><h3>🎁 Notun gift card</h3><button class="x" data-act="modal-close">×</button></div>
+  openModal(`<div class="modal-head"><h3>🎁 New gift card</h3><button class="x" data-act="modal-close">×</button></div>
     <div class="modal-body">
-      <div class="field"><label>Customer *</label><select id="gf-cust" class="fullsel"><option value="">— bachai korun —</option>${cs.map(c=>`<option value="${esc(c.ID)}" ${String(c.ID)===String(cid||'')?'selected':''}>${esc(c.Name)}${custPhones(c)[0]?' · '+esc(custPhones(c)[0]):''}</option>`).join('')}</select></div>
-      <div class="field"><label>Mobile (card e ar WhatsApp e)</label><input id="gf-phone" type="tel"></div>
-      <div class="field"><label>Koto % chhar *</label>
+      <div class="field"><label>Customer *</label><select id="gf-cust" class="fullsel"><option value="">— select —</option>${cs.map(c=>`<option value="${esc(c.ID)}" ${String(c.ID)===String(cid||'')?'selected':''}>${esc(c.Name)}${custPhones(c)[0]?' · '+esc(custPhones(c)[0]):''}</option>`).join('')}</select></div>
+      <div class="field"><label>Mobile (for WhatsApp)</label><input id="gf-phone" type="tel"></div>
+      <div class="field"><label>Discount % *</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="gf-pct" type="number" min="1" max="90" value="10" style="width:100px">
           ${[5,10,15,20].map(v=>`<button type="button" class="btn btn-ghost btn-sm" data-act="gf-pct" data-v="${v}">${v}%</button>`).join('')}</div></div>
       <div class="grid2">
-        <div class="field"><label>Shuru</label><input id="gf-from" type="date" value="${today}"></div>
-        <div class="field"><label>Meyad</label><select id="gf-dur" class="fullsel"><option value="15d">15 din</option><option value="1m" selected>1 mash</option><option value="2m">2 mash</option><option value="3m">3 mash</option><option value="x">Nijer tarikh</option></select></div></div>
-      <div class="field"><label>Shesh tarikh (ei din porjonto chalu)</label><input id="gf-until" type="date"></div>
-      <p style="font-size:12.5px;color:var(--muted);margin:0;line-height:1.6">Code ta shudhu ei customer ekbar babohar korte parben. Proti bar notun, alada code toiri hobe.</p>
+        <div class="field"><label>Start date</label><input id="gf-from" type="date" value="${today}"></div>
+        <div class="field"><label>Validity</label><select id="gf-dur" class="fullsel"><option value="15d">15 days</option><option value="1m" selected>1 month</option><option value="2m">2 months</option><option value="3m">3 months</option><option value="x">Custom date</option></select></div></div>
+      <div class="field"><label>End date (valid until)</label><input id="gf-until" type="date"></div>
+      <p style="font-size:12.5px;color:var(--muted);margin:0;line-height:1.6">Only this customer can use the code, one time. Every card gets its own unique code.</p>
     </div>
-    <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button><button class="btn btn-gold" data-act="gf-save">🎁 Code banan</button></div>`);
+    <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button><button class="btn btn-gold" data-act="gf-save">🎁 Create code</button></div>`);
   const sel=$('#gf-cust'), ph=$('#gf-phone'), fr=$('#gf-from'), du=$('#gf-dur'), un=$('#gf-until');
   const fillPh=()=>{ const c=DB.Customers.find(x=>String(x.ID)===String(sel.value)); ph.value=c?(custPhones(c)[0]||''):''; };
   const calc=()=>{ const f=fr.value||today, v=du.value; if(v==='x') return; un.value = v==='15d'?addDays(f,14):addMonths(f, Number(v.charAt(0))); };
@@ -2840,8 +2840,8 @@ function giftForm(cid){
 }
 async function giftSave(){
   const p={ customerId:$('#gf-cust').value, phone:$('#gf-phone').value.trim(), pct:Number($('#gf-pct').value), from:$('#gf-from').value, until:$('#gf-until').value };
-  if(!p.customerId){ toast('Customer bachai korun','err'); return; }
-  try{ const r=await api('createGift', p); toast('Gift card toiri holo ✦ '+r.code,'ok'); giftView(r.code); if(state.view==='customers' && state.custTab==='gift') renderGift(); }
+  if(!p.customerId){ toast('Select a customer','err'); return; }
+  try{ const r=await api('createGift', p); toast('Gift card created ✦ '+r.code,'ok'); giftView(r.code); if(state.view==='customers' && state.custTab==='gift') renderGift(); }
   catch(e){ toast(e.message,'err'); }
 }
 function giftLinks(){ return shopLinks().filter(l=>l && l.u && /web|facebook page|^facebook$|fb/i.test(String(l.n||''))).slice(0,2); }
@@ -2854,13 +2854,13 @@ function giftCardHTML(g){
     <div class="for">Specially for</div><div class="nm">${esc(g.CustomerName||'')}</div>
     <div class="off"><div class="p">${num(g.Pct)}%</div><div class="o">OFF</div></div>
     <div class="code"><div class="l">YOUR CODE</div><div class="v">${esc(g.Code)}</div></div>
-    <div class="valid">Valid <strong>${fdate(g.From)} – ${fdate(g.Until)}</strong><br>One-time use · order er somoy code ta din</div>
+    <div class="valid">Valid <strong>${fdate(g.From)} – ${fdate(g.Until)}</strong><br>One-time use · Give during order</div>
     <div class="foot">${L.length?L.map(l=>'<span>'+(/face|fb/i.test(l.n)?'📘 ':'🌐 ')+esc(shortUrl(l.u))+'</span>').join(''):'<span>✦ Buy your happiness</span>'}</div></div>`;
 }
 function giftMsg(g){
   const L=giftLinks();
-  return 'Assalamu Alaikum '+(g.CustomerName||'')+' 🌸\n\nOMME\'S GALLERY er pokkho theke apnar jonno ekta Gift Card 🎁\n'+
-    num(g.Pct)+'% chhar — code: *'+g.Code+'*\nMeyad: '+fdate(g.From)+' – '+fdate(g.Until)+'\n\nOrder korar somoy code ta amader pathaben. Code ta shudhu apnar jonno, ekbar babohar kora jabe.'+
+  return 'Assalamu Alaikum '+(g.CustomerName||'')+' 🌸\n\nA gift card from OMME\'S GALLERY, just for you 🎁\n'+
+    num(g.Pct)+'% OFF — code: *'+g.Code+'*\nValid: '+fdate(g.From)+' – '+fdate(g.Until)+'\n\nPlease share this code when you place your order. It is only for you and can be used once.'+
     (L.length?'\n\n'+L.map(l=>l.u).join('\n'):'')+'\n\nOMME\'S GALLERY · Original Pakistani Dress · All over Bangladesh';
 }
 let _gcFile=null;
@@ -2869,11 +2869,11 @@ function giftView(code){
   openModal(`<div class="modal-head"><h3>🎁 ${esc(g.CustomerName||'')} · ${num(g.Pct)}%</h3><button class="x" data-act="modal-close">×</button></div>
     <div class="modal-body" style="padding:14px">
       <div id="gcwrap" style="overflow:hidden; margin:0 auto"><div id="gcscale" style="width:640px; transform-origin:0 0">${giftCardHTML(g)}</div></div>
-      <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center">${giftChip(g)}<span style="font-size:12.5px;color:var(--muted)">Chhobi ta WhatsApp / Messenger e pathan, sathe message ta copy kore din.</span></div></div>
+      <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center">${giftChip(g)}<span style="font-size:12.5px;color:var(--muted)">Send the picture on WhatsApp / Messenger, and paste the message with it.</span></div></div>
     <div class="modal-foot" style="flex-wrap:wrap"><button class="btn btn-ghost" data-act="modal-close">Close</button>
-      <button class="btn btn-ghost" data-act="gc-copy" data-code="${esc(g.Code)}">📋 Message copy</button>
+      <button class="btn btn-ghost" data-act="gc-copy" data-code="${esc(g.Code)}">📋 Copy message</button>
       ${waNumber(g.Phone)?`<button class="btn btn-ghost" data-act="gc-wa" data-code="${esc(g.Code)}">WhatsApp chat</button>`:''}
-      <button class="btn btn-ghost" data-act="gc-dl" data-code="${esc(g.Code)}">⭳ PNG</button>
+      <button class="btn btn-ghost" data-act="gc-dl" data-code="${esc(g.Code)}">⬇ PNG</button>
       <button class="btn btn-gold" data-act="gc-share" data-code="${esc(g.Code)}">➤ Share</button></div>`);
   $('#modal').classList.add('wide');
   fitGC(); setTimeout(fitGC,60);
@@ -2899,19 +2899,19 @@ async function gcShare(code, onlySave){
     if(!onlySave){ const file=new File([b], name, {type:'image/png'});
       if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"OMME'S GALLERY — Gift card", text:giftMsg(giftFind(code)||{})}); return; } }
     saveBlob(b, name); toast('Card downloaded ✦','ok');
-  }catch(e){ if(e&&e.name==='AbortError') return; if(e&&e.name==='NotAllowedError'){ toast('Chhobi ready — abar Share e tap korun','ok'); return; } toast('Chhobi banano gelo na','err'); }
+  }catch(e){ if(e&&e.name==='AbortError') return; if(e&&e.name==='NotAllowedError'){ toast('Picture ready — tap Share again','ok'); return; } toast('Could not make the picture','err'); }
 }
 function giftReportCard(r){
   const from=r.from||'', to=r.to||'9999-12-31', inR=d=>{ const x=d?ymdLocal(new Date(d)):''; return x && x>=from && x<=to; };
   const used=DB.Sales.filter(s=>s.GiftCode && inR(s.Date)), disc=used.reduce((a,s)=>a+num(s.Discount),0), sales=used.reduce((a,s)=>a+saleNet(s),0);
   const made=(DB.GiftCards||[]).filter(g=>inR(g.CreatedAt)).length, act=Object.keys(giftActiveMap()).length;
   if(!made && !used.length && !act) return '';
-  return `<div class="card panel" style="margin-bottom:16px"><h3>🎁 Gift card <span class="count">bachai kora tarikh</span></h3>
+  return `<div class="card panel" style="margin-bottom:16px"><h3>🎁 Gift cards <span class="count">selected dates</span></h3>
     <div class="rep-tiles" style="margin-bottom:0">
-      <div class="tile magenta"><span class="glyph">🎁</span><div class="tk">Card deya hoyeche</div><div class="tv" data-count="${made}" data-plain="1">0</div><div class="tm">ekhon chalu ${act} ta</div></div>
-      <div class="tile indigo"><span class="glyph">🧾</span><div class="tk">Code diye order</div><div class="tv" data-count="${used.length}" data-plain="1">0</div><div class="tm">bikri ${tk(sales)}</div></div>
-      <div class="tile gold"><span class="glyph">৳</span><div class="tk">Mot chhar dilam</div><div class="tv" data-count="${disc}">৳0</div><div class="tm">gift code er karone</div></div>
-      <div class="tile emerald"><span class="glyph">%</span><div class="tk">Babohar er har</div><div class="tv" data-count="${made?Math.round(used.length*100/made):0}" data-plain="1">0</div><div class="tm">% card babohar hoyeche</div></div>
+      <div class="tile magenta"><span class="glyph">🎁</span><div class="tk">Cards given</div><div class="tv" data-count="${made}" data-plain="1">0</div><div class="tm">${act} active now</div></div>
+      <div class="tile indigo"><span class="glyph">🧾</span><div class="tk">Orders with a code</div><div class="tv" data-count="${used.length}" data-plain="1">0</div><div class="tm">sales ${tk(sales)}</div></div>
+      <div class="tile gold"><span class="glyph">৳</span><div class="tk">Total discount given</div><div class="tv" data-count="${disc}">৳0</div><div class="tm">through gift codes</div></div>
+      <div class="tile emerald"><span class="glyph">%</span><div class="tk">Use rate</div><div class="tv" data-count="${made?Math.round(used.length*100/made):0}" data-plain="1">0</div><div class="tm">% of cards used</div></div>
     </div></div>`;
 }
 function customerForm(c){
@@ -2928,11 +2928,11 @@ function customerForm(c){
         <div class="field"><label>Mobile 3 <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="c-phone3" type="tel" value="${esc(c.Phone3||'')}"></div>
         <div class="field"><label>Email</label><input id="c-email" value="${esc(c.Email)}"></div>
       </div>
-      <div class="field"><label>Group / pesha <span style="font-weight:400;color:var(--muted)">(nam er age "Dr" thakle nijei Doctor dhora hobe)</span></label>${attrSelect('Group','c-group',c.Group||'')}</div>
-      <div class="field"><label>Ager dress <span style="font-weight:400;color:var(--muted)">(app shuru korar age koyta dress niyeche)</span></label>
+      <div class="field"><label>Group / profession <span style="font-weight:400;color:var(--muted)">(names starting with "Dr" are Doctor automatically)</span></label>${attrSelect('Group','c-group',c.Group||'')}</div>
+      <div class="field"><label>Earlier dresses <span style="font-weight:400;color:var(--muted)">(how many she bought before the app)</span></label>
         <input id="c-prev" type="number" min="0" value="${num(c.PrevDresses)||''}" placeholder="0"></div>
       <div class="field"><label>Address (current / latest)</label><textarea id="c-addr" rows="2">${esc(c.Address)}</textarea>
-        <div class="hint">Notun address dile ager ta "Old address" e joma thakbe.</div></div>
+        <div class="hint">When you enter a new address, the old one is kept under "Old addresses".</div></div>
       <div class="field" id="c-old-box"></div>
     </div>
     <div class="modal-foot" style="flex-wrap:wrap">
@@ -2959,10 +2959,10 @@ function mergeForm(fromId, intoId){
   const dupOpts=others.filter(x=>dups.indexOf(String(x.ID))>-1), rest=others.filter(x=>dups.indexOf(String(x.ID))<0);
   openModal(`<div class="modal-head"><h3>🔗 Merge customer</h3><button class="x" data-act="modal-close">×</button></div>
     <div class="modal-body">
-      <div class="cinfo"><div class="lbl">Ei customer ke soriye debo</div><div><strong>${esc(a.Name)}</strong></div><div class="old">${esc(custLine(a))}${a.Address?' · '+esc(a.Address):''}</div></div>
-      <div class="field"><label>Kar sathe ek korben? (je ta rakhte chan)</label>
-        <select id="mg-into">${dupOpts.length?'<optgroup label="Same number / same nam">'+dupOpts.map(opt).join('')+'</optgroup>':''}<optgroup label="Onnora">${rest.map(opt).join('')}</optgroup></select></div>
-      <p style="font-size:12.5px;color:var(--muted);margin:0;line-height:1.6">${esc(a.Name)} er <strong>sob order, baki taka, mobile number ar address</strong> bachai kora customer er kache chole jabe. Kichu harabe na. Tarpor ${esc(a.Name)} list theke soriye deya hobe.</p>
+      <div class="cinfo"><div class="lbl">This customer will be removed</div><div><strong>${esc(a.Name)}</strong></div><div class="old">${esc(custLine(a))}${a.Address?' · '+esc(a.Address):''}</div></div>
+      <div class="field"><label>Merge into which customer? (the one to keep)</label>
+        <select id="mg-into">${dupOpts.length?'<optgroup label="Same number / same name">'+dupOpts.map(opt).join('')+'</optgroup>':''}<optgroup label="Others">${rest.map(opt).join('')}</optgroup></select></div>
+      <p style="font-size:12.5px;color:var(--muted);margin:0;line-height:1.6">All of ${esc(a.Name)}'s <strong>orders, dues, mobile numbers and addresses</strong> move to the selected customer. Nothing is lost. Then ${esc(a.Name)} is removed from the list.</p>
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
       <button class="btn btn-gold" data-act="mg-do" data-id="${esc(a.ID)}">🔗 Merge</button></div>`);
@@ -2970,17 +2970,17 @@ function mergeForm(fromId, intoId){
 async function doMerge(fromId){
   const into=$('#mg-into')&&$('#mg-into').value; if(!into) return;
   const b=DB.Customers.find(x=>String(x.ID)===String(into)), a=DB.Customers.find(x=>String(x.ID)===String(fromId));
-  if(!confirm('"'+(a&&a.Name)+'" ke "'+(b&&b.Name)+'" er sathe ek kore dibo?\n\nEta pore ulta kora jabe na.')) return;
+  if(!confirm('"'+(a&&a.Name)+'" into "'+(b&&b.Name)+'"?\n\nThis cannot be undone.')) return;
   try{
     const r=await api('mergeCustomers',{from:fromId, into:into}); if(r&&r.error){ toast(r.error,'err'); return; }
-    closeModal(); state.customers=await api('listCustomers'); toast('Merged ✦ · '+r.moved+' ta order sorano holo','ok');
+    closeModal(); state.customers=await api('listCustomers'); toast('Merged ✦ · '+r.moved+' order(s) moved','ok');
     if(state.view==='customers') renderCustomers('');
   }catch(e){ toast(e.message,'err'); }
 }
 function delCustomer(id){
   const c=DB.Customers.find(x=>String(x.ID)===String(id)); if(!c) return;
-  if(DB.Sales.some(s=>String(s.CustomerID)===String(id))){ toast('Ei customer er order ache — muchte parben na, Merge korun','err'); return; }
-  confirmDel('"'+c.Name+'" ke muche dibo?', ()=>api('deleteCustomer',{id}).then(async()=>{ state.customers=await api('listCustomers'); toast('Deleted','ok'); if(state.view==='customers') renderCustomers(''); }));
+  if(DB.Sales.some(s=>String(s.CustomerID)===String(id))){ toast('This customer has orders — cannot delete. Use Merge instead','err'); return; }
+  confirmDel('Delete "'+c.Name+'"?', ()=>api('deleteCustomer',{id}).then(async()=>{ state.customers=await api('listCustomers'); toast('Deleted','ok'); if(state.view==='customers') renderCustomers(''); }));
 }
 function renderOldAddr(){
   const b=$('#c-old-box'); if(!b) return; const L=window._oldAddr||[];
@@ -2995,12 +2995,12 @@ async function saveCustomer(id, thenSelect){
   if(!id){
     const keys=custPhones(item).map(phoneKey).filter(Boolean);
     const same=DB.Customers.find(x=>custPhones(x).some(p=>keys.indexOf(phoneKey(p))>-1));
-    if(same && !confirm('Ei number e "'+same.Name+'" age thekei ache.\n\nOK = tobuo notun customer banabo\nCancel = banabo na (age-r ta use korun)')) return;
+    if(same && !confirm('"'+same.Name+'" already has this number.\n\nOK = make a new customer anyway\nCancel = don\'t (use the existing one)')) return;
   }
   let olds=(window._oldAddr||[]).slice();
   const prev=id?state.customers.find(x=>String(x.ID)===String(id)):null, pa=String(prev&&prev.Address||'').trim();
   if(pa && pa!==item.Address && !olds.some(o=>o.a===pa) &&
-     confirm('Address bodle geche.\n\nOK = ager address ta "Old address" hisebe rekhe dibo\nCancel = shudhu bodle dibo (bhul thik korle)')){
+     confirm('The address changed.\n\nOK = keep the old one under "Old addresses"\nCancel = just replace it (fixing a mistake)')){
     olds.unshift({ a:pa, d:dstr(new Date()) });
   }
   olds=olds.filter(o=>o.a && o.a!==item.Address);
@@ -3043,7 +3043,7 @@ async function customerHistory(id){
         <div class="table-wrap"><table><thead><tr><th>Invoice</th><th>Date</th><th class="num">Total</th><th class="num"></th></tr></thead>
           <tbody>${rows}</tbody></table></div>
       </div>
-      <div class="modal-foot"><button class="btn btn-ghost" data-act="gift-for" data-id="${esc(c.ID)}">🎁 Gift card din</button><span style="flex:1"></span><button class="btn btn-ghost" data-act="modal-close">Close</button></div>`);
+      <div class="modal-foot"><button class="btn btn-ghost" data-act="gift-for" data-id="${esc(c.ID)}">🎁 Gift</button><span style="flex:1"></span><button class="btn btn-ghost" data-act="modal-close">Close</button></div>`);
     $('#modal').classList.add('wide');
   }catch(e){ closeModal(); toast(e.message,'err'); }
 }
@@ -3072,9 +3072,9 @@ async function saleEditForm(inv, from, cid){
           <div class="field"><label>Payment</label><select id="se-pay">${['Cash','bKash','Nagad','Bank'].map(x=>`<option ${sl.Payment===x?'selected':''}>${x}</option>`).join('')}</select></div>
         </div>
         <div class="table-wrap" style="margin-bottom:12px"><table class="se-tbl"><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Sale ৳</th><th class="num">Buy ৳</th></tr></thead><tbody id="se-lines">${lines}</tbody></table></div>
-        <div class="se-add"><select id="se-addsel"><option value="">＋ Onno dress jog korun…</option>${state.products.concat().filter(p=>num(p.Stock)>0||p.Preorder).sort((a,b)=>cmpTxt(a.Name,b.Name)).map(p=>`<option value="${esc(p.ID)}">${esc(p.Name)}${p.SKU?' · '+esc(p.SKU):''} · ${tk(p.SalePrice)} · ${num(p.Stock)} stock</option>`).join('')}</select>
+        <div class="se-add"><select id="se-addsel"><option value="">＋ Add another dress…</option>${state.products.concat().filter(p=>num(p.Stock)>0||p.Preorder).sort((a,b)=>cmpTxt(a.Name,b.Name)).map(p=>`<option value="${esc(p.ID)}">${esc(p.Name)}${p.SKU?' · '+esc(p.SKU):''} · ${tk(p.SalePrice)} · ${num(p.Stock)} stock</option>`).join('')}</select>
           <button type="button" class="btn btn-ghost btn-sm" data-act="se-add">＋ Add</button></div>
-        <p style="font-size:12px;color:var(--muted);margin:-4px 0 12px">Pre-order dress ashle <strong>Buy ৳</strong> boshiye dilei profit nijei thik hoye jabe.</p>
+        <p style="font-size:12px;color:var(--muted);margin:-4px 0 12px">When a pre-order dress arrives, enter its <strong>Buy ৳</strong> and the profit updates itself.</p>
         <div class="grid2">
           <div class="field"><label>Discount ৳</label><input id="se-disc" type="number" value="${num(sl.Discount)}"></div>
           <div class="field"><label>Delivery ৳ (invoice only)</label><input id="se-deliv" type="number" value="${num(sl.Delivery)}"></div>
@@ -3086,15 +3086,15 @@ async function saleEditForm(inv, from, cid){
         </div>
         <div class="grid2">
           <div class="field"><label>Delivery after</label><select id="se-delafter">${delOptsHtml(sl.DeliverAfter)}</select></div>
-          <div class="field"><label>Received so far ৳ (delivery chhara)</label><input id="se-recv" type="number" value="${r.received}"></div>
+          <div class="field"><label>Received so far ৳ (without delivery)</label><input id="se-recv" type="number" value="${r.received}"></div>
         </div>
         <div class="field"><label>Note</label><textarea id="se-note" rows="2" placeholder="e.g. 2 week por nibe…">${esc(sl.Note||'')}</textarea></div>
         <div id="se-tot"></div>
-        <p style="font-size:12px;color:var(--muted);margin:10px 0 0">Qty bodlale stock ar profit nijei thik hoye jabe.</p>
+        <p style="font-size:12px;color:var(--muted);margin:10px 0 0">Changing qty updates stock and profit automatically.</p>
       </div>
       <div class="modal-foot" style="flex-wrap:wrap">
         <button class="btn btn-danger btn-sm" data-act="sale-return" data-inv="${esc(sl.InvoiceNo)}">↩ Return</button>
-        <button class="btn btn-ghost btn-sm" data-act="sale-cancel" data-inv="${esc(sl.InvoiceNo)}">✕ Order batil</button><span style="flex:1"></span>
+        <button class="btn btn-ghost btn-sm" data-act="sale-cancel" data-inv="${esc(sl.InvoiceNo)}">✕ Delete order</button><span style="flex:1"></span>
         <button class="btn btn-ghost" data-act="modal-close">Close</button>
         <button class="btn btn-gold" data-act="sale-edit-save" data-inv="${esc(sl.InvoiceNo)}">Save changes</button></div>`);
     $('#modal').querySelectorAll('input').forEach(el=>{ el.oninput=saleEditTotals; el.onchange=saleEditTotals; });
@@ -3137,7 +3137,7 @@ async function afterSaleChange(){
 function seAddLine(){
   const sel=$('#se-addsel'); const p=sel&&findProduct(sel.value); if(!p) return;
   const tb=$('#se-lines'); const tr=document.createElement('tr'); tr.dataset.pid=p.ID;
-  tr.innerHTML=`<td>${esc(p.Name)} <span class="pill pos" style="font-size:10px">notun</span>${p.Stitch==='Stitched'?`<div><input class="se-s" placeholder="Size" value="${esc(sizeList(p.Size).length===1?sizeList(p.Size)[0]:'')}"></div>`:''}</td>
+  tr.innerHTML=`<td>${esc(p.Name)} <span class="pill pos" style="font-size:10px">new</span>${p.Stitch==='Stitched'?`<div><input class="se-s" placeholder="Size" value="${esc(sizeList(p.Size).length===1?sizeList(p.Size)[0]:'')}"></div>`:''}</td>
     <td class="num"><input class="se-q se-nq" type="number" min="0" value="1" style="width:56px;text-align:right"></td>
     <td class="num"><input class="se-p se-np" type="number" min="0" value="${num(p.SalePrice)}" style="width:76px;text-align:right"></td>
     <td class="num" style="color:var(--muted);font-size:12px">${tk(p.BuyPrice)}</td>`;
@@ -3154,28 +3154,28 @@ function returnForm(inv){
   openModal(`<div class="modal-head"><h3>↩ Return · ${esc(inv)}</h3><button class="x" data-act="modal-close">×</button></div>
     <div class="modal-body">
       <p style="margin:0 0 12px;font-size:13.5px">${esc(r.sale.CustomerName||'Walk-in')} · ${fdate(r.sale.Date)} · ${tk(saleNet(r.sale))}</p>
-      <div class="table-wrap" style="margin-bottom:12px"><table class="se-tbl"><thead><tr><th>Dress</th><th class="num">Nise</th><th class="num">Ferot</th><th class="num">Defect?</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="field"><label>Karon (optional)</label><input id="rt-reason" placeholder="e.g. parcel neyni / size hoyni / colour pochondo hoyni"></div>
-      <div class="field"><label>Courier return charge ৳ (optional — Expenses e jabe)</label><input id="rt-charge" type="number" min="0" placeholder="0"></div>
-      <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.6">Dress stock e ferot ashbe, order theke sore jabe (hisab oi order er mash ei thakbe). Sob dress ferot dile puro order bad hoye jabe.${c?' '+esc(c.Name)+' er nam er pashe lal "↩ Returned" chinho thakbe.':''}</p>
+      <div class="table-wrap" style="margin-bottom:12px"><table class="se-tbl"><thead><tr><th>Dress</th><th class="num">Bought</th><th class="num">Return</th><th class="num">Defect?</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="field"><label>Reason (optional)</label><input id="rt-reason" placeholder="e.g. parcel refused / wrong size / didn't like the colour"></div>
+      <div class="field"><label>Courier return charge ৳ (optional — goes to Expenses)</label><input id="rt-charge" type="number" min="0" placeholder="0"></div>
+      <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.6">Dresses go back to stock and come off the order (the change stays in that order's month). Returning every dress removes the whole order.${c?' '+esc(c.Name)+' gets a red "↩ Returned" mark.':''}</p>
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Cancel</button>
-      <button class="btn btn-danger" data-act="rt-do" data-inv="${esc(inv)}">↩ Return korun</button></div>`);
+      <button class="btn btn-danger" data-act="rt-do" data-inv="${esc(inv)}">↩ Return</button></div>`);
 }
 async function doReturn(inv){
   const qty={}, defect={}; let n=0;
   document.querySelectorAll('.rt-q').forEach(q=>{ const v=Math.max(0,Number(q.value)||0); if(v){ qty[q.dataset.k]=v; n+=v; } });
   document.querySelectorAll('.rt-d').forEach(d=>{ if(d.checked) defect[d.dataset.k]=true; });
-  if(!n){ toast('Koyta dress ferot ashlo seta likhun','err'); return; }
+  if(!n){ toast('Enter how many dresses came back','err'); return; }
   try{
     const r=await api('returnItems',{invoiceNo:inv, qty, opts:{ reason:$('#rt-reason').value.trim(), charge:Number($('#rt-charge').value)||0, defect }});
     if(r&&r.error){ toast(r.error,'err'); return; }
-    closeModal(); toast((r.whole?'Puro order ':'')+'Return holo · '+n+' ta dress stock e ferot'+(r.refund>0?' · customer ke '+tk(r.refund)+' ferot dite hobe':'')+' ✦','ok'); afterSaleChange();
+    closeModal(); toast((r.whole?'Whole order ':'')+'Returned · '+n+' dress back in stock'+(r.refund>0?' · refund '+tk(r.refund)+' to the customer':'')+' ✦','ok'); afterSaleChange();
   }catch(e){ toast(e.message,'err'); }
 }
 function cancelSale(inv){
-  if(!confirm(inv+' order ta batil korbo?\n\nSob dress stock e ferot jabe, order ta muche jabe. Customer er nam e kono lal chinho thakbe na.\n(Customer pore nile — Edit e "Delivery after" diye rakhte paren.)')) return;
-  api('cancelSale',{invoiceNo:inv}).then(r=>{ if(r&&r.error){ toast(r.error,'err'); return; } closeModal(); toast(inv+' batil holo · dress stock e ferot','ok'); afterSaleChange(); })
+  if(!confirm('Delete order '+inv+'?\n\nAll dresses go back to stock and the order is removed. (If the customer will take it later, use "Delivery after" in Edit instead.)')) return;
+  api('cancelSale',{invoiceNo:inv}).then(r=>{ if(r&&r.error){ toast(r.error,'err'); return; } closeModal(); toast(inv+' deleted · dresses back in stock','ok'); afterSaleChange(); })
     .catch(e=>toast(e.message,'err'));
 }
 function recentSales(){
@@ -3187,9 +3187,9 @@ function recentSales(){
       <td class="num" style="white-space:nowrap"><button class="btn-icon" data-act="sale-view" data-inv="${esc(s.InvoiceNo)}">View</button>
         <button class="btn-icon" data-act="sale-edit" data-inv="${esc(s.InvoiceNo)}" data-from="recent">Edit</button>
         <button class="btn-icon" style="color:#c62828" data-act="sale-return" data-inv="${esc(s.InvoiceNo)}">↩</button></td></tr>`).join('')
-    || '<tr><td colspan="3" class="empty">Ekhono kono sale nei.</td></tr>';
+    || '<tr><td colspan="3" class="empty">No sales yet.</td></tr>';
   openModal(`<div class="modal-head"><h3>🧾 Recent sales</h3><button class="x" data-act="modal-close">×</button></div>
-    <div class="modal-body"><p style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Edit e dress bodlano / qty komano / onno dress jog kora jay. ↩ = Return. Puro order batil korte Edit e "Order batil".</p>
+    <div class="modal-body"><p style="font-size:12.5px;color:var(--muted);margin:0 0 10px">In Edit you can change dresses, lower qty or add dresses. ↩ = Return. To remove a whole order use "Delete order" in Edit.</p>
       <div class="table-wrap"><table><tbody>${rows}</tbody></table></div></div>
     <div class="modal-foot"><button class="btn btn-ghost" data-act="modal-close">Close</button></div>`);
   $('#modal').classList.add('wide');
@@ -3278,7 +3278,7 @@ function renderSales(){
           <div><label class="mini-l">Discount ৳</label><input id="s-disc" type="number" value="0"></div>
           <div><label class="mini-l">Delivery ৳ (invoice only)</label><input id="s-deliv" type="number" value="0"></div>
         </div>
-        <div style="margin-top:8px"><label class="mini-l">🎁 Gift code (thakle)</label>
+        <div style="margin-top:8px"><label class="mini-l">🎁 Gift code (if any)</label>
           <div style="display:flex; gap:6px"><input class="fullsel" id="s-gift" placeholder="OMME-XXXX-XXXX" autocomplete="off" autocorrect="off" spellcheck="false" style="flex:1; text-transform:uppercase; letter-spacing:.05em">
             <button type="button" class="btn btn-ghost btn-sm" data-act="gift-apply">Apply</button></div>
           <div id="s-gift-msg" style="font-size:12.5px; margin-top:5px"></div></div>
@@ -3293,16 +3293,16 @@ function renderSales(){
         </div>
         <div class="mini" style="margin-top:8px">
           <div><label class="mini-l">Delivery after</label><select class="fullsel" id="s-delafter">${delOptsHtml('')}</select></div>
-          <div style="font-size:11px;color:var(--muted);align-self:end;padding-bottom:6px">Customer pore nile eta select korun — Pending thakbe.</div>
+          <div style="font-size:11px;color:var(--muted);align-self:end;padding-bottom:6px">If the customer takes it later, choose this — it stays Pending.</div>
         </div>
-        <div style="margin-top:8px"><label class="mini-l">Note</label><textarea class="fullsel" id="s-note" rows="2" placeholder="e.g. 2 week por nibe, size, colour…" style="font-family:inherit; resize:vertical"></textarea></div>
+        <div style="margin-top:8px"><label class="mini-l">Note</label><textarea class="fullsel" id="s-note" rows="2" placeholder="e.g. will take after 2 weeks, size, colour…" style="font-family:inherit; resize:vertical"></textarea></div>
         <div style="margin-top:10px"><label class="mini-l">Payment received</label>
           <div class="seg" id="s-paymode">
             <button type="button" class="seg-btn on" data-act="pay-mode" data-m="full">Full paid</button>
             <button type="button" class="seg-btn" data-act="pay-mode" data-m="adv">Advance</button>
             <button type="button" class="seg-btn" data-act="pay-mode" data-m="none">Due</button>
           </div>
-          <div id="s-recv-box" style="display:none; margin-top:8px"><label class="mini-l">Advance / received now ৳ (delivery chhara)</label><input class="fullsel" id="s-received" type="number" placeholder="koto taka dilo?"></div>
+          <div id="s-recv-box" style="display:none; margin-top:8px"><label class="mini-l">Advance / received now ৳ (without delivery)</label><input class="fullsel" id="s-received" type="number" placeholder="amount received"></div>
         </div>
         <div id="cart-tot" style="margin-top:12px"></div>
         <div style="display:flex; gap:8px; margin-top:14px">
@@ -3314,7 +3314,7 @@ function renderSales(){
   renderProductList('');
   const s=$('#pos-search'); if(s){ s.oninput=()=>renderProductList(s.value); }
   const ps=$('#pos-sort'); if(ps) ps.onchange=()=>{ state.posSort=ps.value; try{ localStorage.setItem('omme_pos_sort', ps.value); }catch(e){} renderProductList($('#pos-search')?$('#pos-search').value:''); };
-  const cs=$('#s-cust'); if(cs) cs.onchange=()=>{ state.customerId=cs.value; if(state.gift && String(state.gift.CustomerID)!==String(cs.value)){ giftRemove(); toast('Customer bodlano holo — gift code soriye deya holo','err'); } };
+  const cs=$('#s-cust'); if(cs) cs.onchange=()=>{ state.customerId=cs.value; if(state.gift && String(state.gift.CustomerID)!==String(cs.value)){ giftRemove(); toast('Customer changed — gift code removed','err'); } };
   state.gift=null; const gi=$('#s-gift'); if(gi) gi.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); giftApply(); } };
   ['s-disc','s-deliv','s-received'].forEach(id=>{ const el=$('#'+id); if(el) el.oninput=renderCart; });
   const pre=$('#s-pre'); if(pre) pre.onchange=()=>{ $('#s-predate-box').style.display=pre.checked?'':'none'; syncStatus(); if(pre.checked && state.payMode!=='none') setPayMode('adv'); };
@@ -3513,21 +3513,21 @@ function showInvoice(sale, items){
         <div class="grid2"><div class="field"><label>Zone</label><input id="m-zone" placeholder="Inside / Outside Dhaka"></div>
           <div class="field"><label>Time</label><input id="m-time" placeholder="1–2 Days / 2–3 Days"></div></div>
         <div class="field"><label>Note</label><input id="m-note" value="${esc(noteDef)}" placeholder="Size, colour, special instruction…"></div>
-        <div class="field"><label>Discount er karon</label><input id="m-discreason" placeholder="Reason for discount…"></div>
+        <div class="field"><label>Discount reason</label><input id="m-discreason" placeholder="Reason for discount…"></div>
         <div class="field"><label class="chk"><input type="checkbox" id="m-shipon"> Pre-Order Shipping (By Weight)</label></div>
         <div class="grid2" id="m-shipbox" style="display:none">
           <div class="field"><label>Rate ৳/kg</label><input id="m-shiprate" type="number" value="${shipRateDef}"></div>
           <div class="field"><label>Weight</label><div style="display:flex;gap:6px"><input id="m-shipwt" type="number" value="${wtG||''}" style="flex:1;min-width:0">
             <select id="m-shipunit" style="width:84px"><option value="kg" ${wtG?'':'selected'}>KG</option><option value="g" ${wtG?'selected':''}>Gram</option></select></div></div></div>
-        <p style="font-size:12px;color:var(--muted);margin:0">Courier, Order type ar Payment e invoice er upor tap korun. Ei gulo shudhu chhobi te jay, save hoy na.</p>
+        <p style="font-size:12px;color:var(--muted);margin:0">Tap Courier, Order type and Payment on the invoice. These only go on the picture, they are not saved.</p>
       </div>
       <div class="ogi-wrap" id="ogiwrap"><div class="ogi-scale" id="ogiscale">${html}</div></div>
-      <p class="og-desk" style="font-size:12px;color:var(--muted);margin:10px 2px 0">Courier, zone, time, note ar tick gulo ekhane bodlano jay (shudhu invoice chhobi te, save hoy na).</p></div>
+      <p class="og-desk" style="font-size:12px;color:var(--muted);margin:10px 2px 0">Courier, zone, time, note and ticks can be changed here (only on the invoice picture, not saved).</p></div>
     <div class="modal-foot" style="flex-wrap:wrap">
       <button class="btn btn-ghost" data-act="modal-close">Close</button>
       <button class="btn btn-ghost" data-act="sale-edit" data-inv="${esc(sale.InvoiceNo)}" data-from="${state.view==='sales'?'recent':''}">✎ Edit</button>
-      <button class="btn btn-ghost" data-act="inv-jpeg" data-no="${esc(sale.InvoiceNo)}">⭳ JPG</button>
-      <button class="btn btn-ghost" data-act="inv-pdf" data-no="${esc(sale.InvoiceNo)}">⭳ PDF</button>
+      <button class="btn btn-ghost" data-act="inv-jpeg" data-no="${esc(sale.InvoiceNo)}">⬇ JPG</button>
+      <button class="btn btn-ghost" data-act="inv-pdf" data-no="${esc(sale.InvoiceNo)}">⬇ PDF</button>
       <button class="btn btn-ghost" data-act="inv-wa" data-no="${esc(sale.InvoiceNo)}" data-pay="${payable}">WhatsApp chat</button>
       <button class="btn btn-gold" data-act="inv-share" data-no="${esc(sale.InvoiceNo)}">➤ Share (Messenger / WhatsApp)</button></div>`);
   $('#modal').classList.add('wide');
@@ -3610,19 +3610,19 @@ async function shareInvoice(no){
       return;
     }
     saveBlob(f.blob, f.name);
-    toast('Ei browser e share nei — JPG download holo, Messenger/WhatsApp e attach korun','ok');
+    toast('No share on this browser — JPG downloaded, attach it in Messenger/WhatsApp','ok');
   }catch(e){
     if(e && e.name==='AbortError') return;
-    if(e && e.name==='NotAllowedError'){ toast('Chhobi ready — Share e abar ekbar tap korun','ok'); return; }
+    if(e && e.name==='NotAllowedError'){ toast('Picture ready — tap Share once more','ok'); return; }
     toast('Could not share','err');
   }
 }
 function whatsappChat(no, payable){
   const nd=document.getElementById('og-phone'); const n=waNumber(nd?nd.value:'');
-  if(!n){ toast('Customer er mobile number nei','err'); return; }
+  if(!n){ toast('Customer has no mobile number','err'); return; }
   const msg="আসসালামু আলাইকুম! OMME'S GALLERY থেকে আপনার Invoice "+no+" পাঠানো হলো। Total: Tk "+Math.round(num(payable))+"। ধন্যবাদ ✦";
   window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'_blank');
-  toast('WhatsApp chat khulche — invoice chhobi ta Share diye pathan','ok');
+  toast('Opening WhatsApp chat — send the invoice picture with Share','ok');
 }
 async function downloadInvoiceJPEG(no){
   try{
@@ -3723,9 +3723,9 @@ function renderReports(d){
       <div class="tile magenta"><span class="glyph">▤</span><div class="tk">Stock value (buy price)</div><div class="tv" data-count="${d.stock.cost}">৳0</div><div class="tm">${d.stock.qty} pcs in stock · sale value ${tk(d.stock.sale)}</div></div>
     </div>
     <div class="rep-tiles three">
-      <div class="tile indigo"><span class="glyph">👗</span><div class="tk">Dress sold · This month</div><div class="tv" data-count="${d.dress.month}" data-plain="1">0</div><div class="tm">${MONTHS[new Date().getMonth()]} ${new Date().getFullYear()} · returns bad diye</div></div>
-      <div class="tile emerald"><span class="glyph">👗</span><div class="tk">Dress sold · This year</div><div class="tv" data-count="${d.dress.year}" data-plain="1">0</div><div class="tm">${new Date().getFullYear()} · returns bad diye</div></div>
-      <div class="tile gold"><span class="glyph">👗</span><div class="tk">Dress sold · Selected dates</div><div class="tv" data-count="${d.dress.range}" data-plain="1">0</div><div class="tm">${r.from?fdate(r.from):'shuru'} → ${r.to?fdate(r.to):'aj'}</div></div>
+      <div class="tile indigo"><span class="glyph">👗</span><div class="tk">Dress sold · This month</div><div class="tv" data-count="${d.dress.month}" data-plain="1">0</div><div class="tm">${MONTHS[new Date().getMonth()]} ${new Date().getFullYear()} · after returns</div></div>
+      <div class="tile emerald"><span class="glyph">👗</span><div class="tk">Dress sold · This year</div><div class="tv" data-count="${d.dress.year}" data-plain="1">0</div><div class="tm">${new Date().getFullYear()} · after returns</div></div>
+      <div class="tile gold"><span class="glyph">👗</span><div class="tk">Dress sold · Selected dates</div><div class="tv" data-count="${d.dress.range}" data-plain="1">0</div><div class="tm">${r.from?fdate(r.from):'start'} → ${r.to?fdate(r.to):'today'}</div></div>
     </div>
 
     <div class="card panel" style="margin-bottom:16px">
@@ -3837,10 +3837,10 @@ function monthSummary(mk){
   const d=L_monthSummary(mk);
   openModal(`<div class="modal-head"><h3>Monthly Report</h3><button class="x" data-act="modal-close">×</button></div>
     <div class="modal-body" style="padding:12px">
-      <div class="field" style="max-width:220px"><label>Mash</label><input id="ms-month" type="month" value="${mk}"></div>
+      <div class="field" style="max-width:220px"><label>Month</label><input id="ms-month" type="month" value="${mk}"></div>
       <div id="mswrap" style="overflow:hidden; border-radius:6px; max-width:100%"><div id="msscale" style="width:760px; transform-origin:0 0">${monthSumHTML(d)}</div></div></div>
     <div class="modal-foot" style="flex-wrap:wrap"><button class="btn btn-ghost" data-act="modal-close">Close</button>
-      <button class="btn btn-ghost" data-act="ms-jpg" data-m="${mk}">⭳ JPG</button>
+      <button class="btn btn-ghost" data-act="ms-jpg" data-m="${mk}">⬇ JPG</button>
       <button class="btn btn-gold" data-act="ms-share" data-m="${mk}">➤ Share</button></div>`);
   $('#modal').classList.add('wide');
   const mi=$('#ms-month'); if(mi) mi.onchange=()=>{ if(mi.value) monthSummary(mi.value); };
@@ -3865,7 +3865,7 @@ async function msShare(mk, onlySave){
     if(!onlySave){ const file=new File([f.blob], f.name, {type:'image/jpeg'});
       if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"OMME'S GALLERY — "+mk}); return; } }
     saveBlob(f.blob, f.name); toast('JPG downloaded ✦','ok');
-  }catch(e){ if(e&&e.name==='AbortError') return; if(e&&e.name==='NotAllowedError'){ toast('Chhobi ready — abar Share e tap korun','ok'); return; } toast('Chhobi banano gelo na','err'); }
+  }catch(e){ if(e&&e.name==='AbortError') return; if(e&&e.name==='NotAllowedError'){ toast('Picture ready — tap Share again','ok'); return; } toast('Could not make the picture','err'); }
 }
 function chartCols(){
   const cs=getComputedStyle(document.documentElement), g=function(n,d){ return (cs.getPropertyValue(n)||'').trim()||d; };
@@ -4304,34 +4304,34 @@ function viewSettings(){
       <div class="field"><label>Address</label><input id="set-addr" value="${esc(cfg.shopAddress||'')}"></div>
       <div class="field"><label>Invoice footer note</label><input id="set-note" value="${esc(cfg.invoiceNote||'Thank you for shopping with us. ✦ Buy your happiness.')}"></div>
       <button class="btn btn-gold" data-act="set-save">Save shop info</button></div>
-    <div class="card panel" style="margin-bottom:16px"><h3>🔒 Nirapotta <span class="count">ei phone/laptop</span></h3>
-      ${(()=>{ const p=pinGet(); return `<p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.55">${p?'App lock <strong style="color:var(--pos)">chalu</strong> — app khulte ar '+p.mins+' minute kichu na korle PIN chaibe.':'App lock <strong>bondho</strong>. PIN dile app khulte PIN lagbe — onno keu phone hate pele hisab dekhte parbe na.'} PIN shudhu ei device e thake; apnar stri tar phone e nijer PIN deben.</p>
+    <div class="card panel" style="margin-bottom:16px"><h3>🔒 Security <span class="count">this phone/laptop</span></h3>
+      ${(()=>{ const p=pinGet(); return `<p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.55">${p?'App lock is <strong style="color:var(--pos)">on</strong> — PIN is asked when opening the app and after '+p.mins+' minute(s) idle.':'App lock is <strong>off</strong>. With a PIN, nobody who picks up the phone can see the accounts.'} The PIN stays on this device only; each person sets their own on their own phone.</p>
       <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
-        <button class="btn btn-gold btn-sm" data-act="pin-set">${p?'PIN bodlan':'PIN set korun'}</button>
-        ${p?`<button class="btn btn-ghost btn-sm" data-act="pin-off">PIN bondho</button>
-        <label style="font-size:13px;color:var(--muted)">Lock hobe</label><select id="pin-mins" style="padding:7px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--input-bg);color:var(--ink);font:inherit;font-size:13px">${[1,5,15,30].map(m=>`<option value="${m}" ${p.mins===m?'selected':''}>${m} min por</option>`).join('')}</select>`:''}
+        <button class="btn btn-gold btn-sm" data-act="pin-set">${p?'Change PIN':'Set PIN'}</button>
+        ${p?`<button class="btn btn-ghost btn-sm" data-act="pin-off">Turn off PIN</button>
+        <label style="font-size:13px;color:var(--muted)">Lock after</label><select id="pin-mins" style="padding:7px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--input-bg);color:var(--ink);font:inherit;font-size:13px">${[1,5,15,30].map(m=>`<option value="${m}" ${p.mins===m?'selected':''}>${m} min</option>`).join('')}</select>`:''}
         <button class="btn btn-ghost btn-sm" data-act="show-logs">📜 Activity log</button></div>`; })()}
     </div>
     <div class="card panel adm-only" style="margin-bottom:16px"><h3>Links (website, Facebook, Instagram…)</h3>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Ekhane deya link gulo Dashboard er upore button hoye thakbe — ek chape khulbe. Faka link dekhabe na.</p>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">These links show as buttons on top of the Dashboard — one tap opens them. Empty links are hidden.</p>
       <div id="ln-box">${linksEditor()}</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px">
-        <button class="btn btn-ghost btn-sm" data-act="ln-add">＋ Notun link</button>
+        <button class="btn btn-ghost btn-sm" data-act="ln-add">＋ New link</button>
         <button class="btn btn-gold btn-sm" data-act="ln-save">Save links</button></div></div>
     <div id="legacy-box"></div>
     <div class="card panel adm-only" style="margin-bottom:16px"><h3>Data export (Excel)</h3>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.55">Shob data ek file e: Sales, Sale items, Customers, Products, Expenses, Purchases, Dues, Returns — alada alada sheet e. Google Drive e rakhle Google Sheets e khule analysis korte parben.</p>
-      <button class="btn btn-gold" data-act="export-xlsx">⭳ Sob data Excel e naman</button></div>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.55">All data in one file: Sales, Sale items, Customers, Products, Expenses, Purchases, Dues, Returns, Gift cards — each on its own sheet. Keep it on Google Drive and open it in Google Sheets for analysis.</p>
+      <button class="btn btn-gold" data-act="export-xlsx">⬇ Download all data (Excel)</button></div>
     <div class="card panel adm-only" style="margin-bottom:16px"><h3>Backup &amp; restore</h3>
       <p style="font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.55">Your data is saved in Firebase and shows on every signed-in device. A backup file is still a good safety copy: export one now and then and keep it on Google Drive. Importing a backup adds its records to the cloud data (same ids are overwritten).</p>
       <div style="display:flex; gap:10px; flex-wrap:wrap">
-        <button class="btn btn-gold" data-act="backup-export">⭳ Export backup</button>
-        <button class="btn btn-ghost" data-act="backup-import">⭱ Import backup</button>
+        <button class="btn btn-gold" data-act="backup-export">⬇ Export backup</button>
+        <button class="btn btn-ghost" data-act="backup-import">⬆ Import backup</button>
       </div>
       <input id="backup-file" type="file" accept="application/json,.json" style="display:none"></div>
     <div class="card panel"><h3>Account &amp; app</h3>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Signed in as <strong>${esc((fauth&&fauth.currentUser&&fauth.currentUser.email)||'')}</strong> · ${isAdmin()?'<span style="color:var(--pos);font-weight:800">Admin</span>':'<span style="font-weight:800">Staff</span> — delete, export, backup, shop info ar link shudhu admin bodlate paren'}</p>
-      <div class="field" style="max-width:420px"><label>Apnar nam (sale ar activity log e dekhabe)</label>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Signed in as <strong>${esc((fauth&&fauth.currentUser&&fauth.currentUser.email)||'')}</strong> · ${isAdmin()?'<span style="color:var(--pos);font-weight:800">Admin</span>':'<span style="font-weight:800">Staff</span> — only the admin can delete, export, back up, or change shop info and links'}</p>
+      <div class="field" style="max-width:420px"><label>Your name (shown on sales and in the activity log)</label>
         <div style="display:flex;gap:8px"><input id="set-myname" value="${esc(userName(meEmail()))}" style="flex:1"><button class="btn btn-ghost btn-sm" data-act="set-myname">Save</button></div></div>
       <div style="display:flex; gap:10px; flex-wrap:wrap">
         <button class="btn btn-ghost" data-act="signout">⎋ Sign out</button>
@@ -4342,7 +4342,7 @@ function viewSettings(){
   if(deferredPrompt) showInstall(true);
   const bf=$('#backup-file'); if(bf) bf.onchange=()=>doImportBackup(bf);
   const ff=$('#set-font'); if(ff) ff.onchange=()=>applyFont(ff.value);
-  const pm=$('#pin-mins'); if(pm) pm.onchange=()=>{ const p=pinGet(); if(p){ p.mins=Number(pm.value); pinPut(p); toast('Lock '+p.mins+' minute por','ok'); viewSettings(); } };
+  const pm=$('#pin-mins'); if(pm) pm.onchange=()=>{ const p=pinGet(); if(p){ p.mins=Number(pm.value); pinPut(p); toast('Lock after '+p.mins+' min','ok'); viewSettings(); } };
 }
 function saveShopInfo(){
   if(!isAdmin()) return;
@@ -4357,8 +4357,8 @@ function backupBanner(){
   const lb=getCfg().lastBackup, days=lb?Math.floor((Date.now()-new Date(lb).getTime())/86400000):null;
   let snooze=0; try{ snooze=Number(localStorage.getItem('omme_bk_snooze')||0); }catch(e){}
   if((days!=null && days<30) || Date.now()<snooze) return '';
-  return `<div class="bk-warn">💾 ${days==null?'Ekhono kono backup neya hoyni':days+' din backup neya hoyni'} — Settings theke backup / Excel naman
-    <span style="flex:1"></span><button class="btn btn-gold btn-sm" data-nav="settings">Backup nin</button><button class="btn btn-ghost btn-sm" data-act="bk-snooze">Pore</button></div>`;
+  return `<div class="bk-warn">💾 ${days==null?'No backup taken yet':'No backup for '+days+' days'} — download a backup / Excel from Settings
+    <span style="flex:1"></span><button class="btn btn-gold btn-sm" data-nav="settings">Back up now</button><button class="btn btn-ghost btn-sm" data-act="bk-snooze">Later</button></div>`;
 }
 function doExportBackup(){
   try{
@@ -4395,7 +4395,7 @@ document.addEventListener('click', function(e){
   const nav=e.target.closest('[data-nav]'); if(nav){ closeModal(); setNav(nav.dataset.nav); return; }
   const el=e.target.closest('[data-act]'); if(!el) return;
   const act=el.dataset.act, id=el.dataset.id;
-  if(ADMIN_ACTS.indexOf(act)>-1 && !isAdmin()){ toast('Eta shudhu admin korte paren','err'); return; }
+  if(ADMIN_ACTS.indexOf(act)>-1 && !isAdmin()){ toast('Only the admin can do this','err'); return; }
   switch(act){
     case 'install': doInstall(); break;
     case 'modal-close': closeModal(); if(window._attrDirty){ window._attrDirty=false; if(state.view==='inventory') renderInventory($('#inv-search')?$('#inv-search').value:''); } break;
@@ -4413,7 +4413,7 @@ document.addEventListener('click', function(e){
     case 'cart-add': addToCart(id); break;
     case 'photo-view': showPhoto(id); e.stopPropagation(); break;
     case 'photo-pick': { const f=$('#f-photo-file'); if(f) f.click(); break; }
-    case 'photo-clear': window._pPhoto=''; photoBox('', 'Save product chaplei chhobi soriye jabe'); break;
+    case 'photo-clear': window._pPhoto=''; photoBox('', 'The photo is removed when you tap Save product'); break;
     case 'attr-manage': attrManager(); break;
     case 'attr-tab': attrManager(el.dataset.f); break;
     case 'attr-add': attrAdd(); break;
@@ -4454,13 +4454,13 @@ document.addEventListener('click', function(e){
       const L=document.querySelectorAll('[data-f="name"]'); if(L.length) L[L.length-1].focus(); break; }
     case 'sh-dup': { const S=shipLoad(), i=Number(el.dataset.i); S.rows.splice(i+1,0,Object.assign({},S.rows[i])); shipSave(); renderShipment(); break; }
     case 'sh-del': { const S=shipLoad(), i=Number(el.dataset.i); S.rows.splice(i,1); if(!S.rows.length) S.rows.push(shipBlank()); shipSave(); renderShipment(); break; }
-    case 'sh-clear': if(confirm('Ei chalan er sob lekha muche dibo?')){ state.ship=null; try{ localStorage.removeItem('omme_ship_draft'); }catch(x){} renderShipment(); } break;
+    case 'sh-clear': if(confirm('Clear everything on this chalan?')){ state.ship=null; try{ localStorage.removeItem('omme_ship_draft'); }catch(x){} renderShipment(); } break;
     case 'sh-save': shipCommit(); break;
     case 'sh-photo': { window._shPhotoRow=Number(el.dataset.i); const f=$('#sh-file'); if(f) f.click(); break; }
     case 'sh-photo-del': { const S=shipLoad(); const r=S.rows[Number(el.dataset.i)]; if(r){ r.photo=''; shipSave(); renderShipment(); } break; }
     case 'f-wapply': { const c=shipCalc({web:$('#f-web').value,w:$('#f-wg').value}, $('#f-rate').value, $('#f-oth').value); if(c.cost){ $('#f-buy').value=Math.round(c.cost); toast('Buy price '+tk(Math.round(c.cost)),'ok'); } break; }
     case 'ln-add': { const L=linksRead(); L.push({i:'🔗',n:'',u:''}); $('#ln-box').innerHTML=linksEditor(L); const ins=document.querySelectorAll('.ln-n'); if(ins.length) ins[ins.length-1].focus(); break; }
-    case 'ln-del': { const L=linksRead(); L.splice(Number(el.dataset.i),1); linksSave(L); $('#ln-box').innerHTML=linksEditor(); toast('Link muche gelo','ok'); break; }
+    case 'ln-del': { const L=linksRead(); L.splice(Number(el.dataset.i),1); linksSave(L); $('#ln-box').innerHTML=linksEditor(); toast('Link removed','ok'); break; }
     case 'ln-save': { const L=linksRead().filter(x=>x.n||x.u); linksSave(L); $('#ln-box').innerHTML=linksEditor(); toast('Links saved ✦','ok'); break; }
     case 'cus-tier': { const m=Number(el.dataset.min); state.cusTier = state.cusTier===m ? 0 : m; renderCustomers($('#cus-search')?$('#cus-search').value:''); break; }
     case 'cus-filter-clear': state.cusTier=0; state.cusGroup=''; renderCustomers($('#cus-search')?$('#cus-search').value:''); break;
@@ -4470,18 +4470,18 @@ document.addEventListener('click', function(e){
     case 'gf-save': giftSave(); break;
     case 'gift-view': giftView(el.dataset.code); break;
     case 'gift-filter': state.giftF=el.dataset.f; renderGift(); break;
-    case 'gift-cancel': if(confirm('Ei gift card ('+el.dataset.code+') batil korben? Customer ar babohar korte parben na.')) api('cancelGift',{code:el.dataset.code}).then(r=>{ if(r&&r.error){ toast(r.error,'err'); return; } toast('Batil kora holo','ok'); renderGift(); }).catch(e=>toast(e.message,'err')); break;
+    case 'gift-del': if(confirm('Delete gift card '+el.dataset.code+'?\n\nIt is removed completely (orders that used it keep their discount).')) api('deleteGift',{code:el.dataset.code}).then(r=>{ if(r&&r.error){ toast(r.error,'err'); return; } toast('Gift card deleted','ok'); renderGift(); }).catch(e=>toast(e.message,'err')); break;
     case 'gc-dl': gcShare(el.dataset.code, true); break;
     case 'gc-share': gcShare(el.dataset.code, false); break;
     case 'gc-copy': { const g=giftFind(el.dataset.code); if(!g) break; const t=giftMsg(g);
-      (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Message copy holo ✦','ok')).catch(()=>{ prompt('Copy korun:', t); }); break; }
+      (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Message copied ✦','ok')).catch(()=>{ prompt('Copy:', t); }); break; }
     case 'gc-wa': { const g=giftFind(el.dataset.code); if(g) window.open('https://wa.me/'+waNumber(g.Phone)+'?text='+encodeURIComponent(giftMsg(g)),'_blank'); break; }
     case 'gift-apply': giftApply(); break;
-    case 'gift-remove': giftRemove(); toast('Gift code soriye deya holo','ok'); break;
+    case 'gift-remove': giftRemove(); toast('Gift code removed','ok'); break;
     case 'pin-set': { const go=()=>lockShow('set', function(){}); if(pinGet()) lockShow('verify', go); else go(); break; }
-    case 'pin-off': lockShow('verify', function(){ pinPut(null); try{ localStorage.setItem('omme_pin_skip_'+meEmail(),'1'); }catch(x){} toast('App lock bondho','ok'); viewSettings(); }); break;
+    case 'pin-off': lockShow('verify', function(){ pinPut(null); try{ localStorage.setItem('omme_pin_skip_'+meEmail(),'1'); }catch(x){} toast('App lock off','ok'); viewSettings(); }); break;
     case 'show-logs': showLogs(); break;
-    case 'set-myname': { const v=$('#set-myname').value.trim(); const c=Object.assign({}, getCfg()); c.userNames=Object.assign({}, c.userNames||{}); c.userNames[meEmail()]=v; setCfg(c); toast('Nam saved','ok'); break; }
+    case 'set-myname': { const v=$('#set-myname').value.trim(); const c=Object.assign({}, getCfg()); c.userNames=Object.assign({}, c.userNames||{}); c.userNames[meEmail()]=v; setCfg(c); toast('Name saved','ok'); break; }
     case 'bk-snooze': try{ localStorage.setItem('omme_bk_snooze', String(Date.now()+3*86400000)); }catch(x){} const bw=document.querySelector('.bk-warn'); if(bw) bw.remove(); break;
     case 'pay-mode': setPayMode(el.getAttribute('data-m')); break;
     case 'cart-inc': cartQty(id,1); break;
