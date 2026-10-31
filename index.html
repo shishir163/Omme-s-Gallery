@@ -470,6 +470,12 @@
   .msum td.n{color:var(--m-gold); font-weight:900; width:20px}
   .msum .mstrip{display:flex; flex-wrap:wrap; gap:8px 22px; padding:12px 28px; margin:12px 28px 0; background:#F8F2E2; border-radius:10px; font-size:12px; font-weight:700; color:var(--m-plum)}
   .msum .mstrip b{color:var(--m-garnet); font-weight:900}
+  .msum .mgift{margin:12px 28px 0; padding:12px 16px; border-radius:10px; background:linear-gradient(135deg,#fde7f0,#fff1dc); border:1px solid #f3c6d8}
+  .msum .mgift h4{margin-bottom:8px}
+  .msum .mgift .g{display:flex; flex-wrap:wrap; gap:6px 10px}
+  .msum .mgift .g span{background:#fff; border:1px solid #f3c6d8; border-radius:999px; padding:4px 11px; font-size:12px; font-weight:700; color:var(--m-ink)}
+  .msum .mgift .g b{color:#c2185b; font-weight:900}
+  .msum .mgift .g i{font-style:normal; color:var(--m-muted); font-weight:700}
   .msum .mfoot{padding:14px 28px 18px; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--m-muted); text-align:center}
   .pill.ret{background:#c62828; color:#fff; white-space:nowrap}
   .se-add{display:flex; gap:8px; align-items:center; margin:-4px 0 12px; flex-wrap:wrap}
@@ -3791,9 +3797,9 @@ function L_monthSummary(mk){
   const q=mk.split('-'), y=+q[0], m=+q[1]-1, pk=ym(new Date(y,m-1,1));
   const calc=function(key){
     const S=DB.Sales.filter(s=>s.Date&&ym(s.Date)===key), inv={}; S.forEach(s=>{ inv[String(s.InvoiceNo)]=s; });
-    let sales=0, profit=0, pre=0; S.forEach(s=>{ sales+=saleNet(s); profit+=num(s.Profit); if(s.Preorder) pre++; });
+    let sales=0, profit=0, pre=0; S.forEach(s=>{ sales+=saleNet(s); profit+=num(s.Profit); });
     let dresses=0; const pAgg={};
-    DB.SaleItems.forEach(it=>{ if(!inv[String(it.InvoiceNo)]) return; const qn=num(it.Qty); dresses+=qn;
+    DB.SaleItems.forEach(it=>{ if(!inv[String(it.InvoiceNo)]) return; const qn=num(it.Qty); dresses+=qn; if(inv[String(it.InvoiceNo)].Preorder) pre+=qn;
       const k=it.ProductName||'—'; (pAgg[k]=pAgg[k]||{name:k,qty:0,rev:0}); pAgg[k].qty+=qn; pAgg[k].rev+=num(it.LineTotal); });
     const retNo={}; DB.Returns.forEach(r=>{ if(r.Date&&ym(r.Date)===key){ sales-=num(r.Amount); profit-=num(r.ProfitReversed); retNo[String(r.ReturnNo)]=1; } });
     DB.ReturnItems.forEach(it=>{ if(retNo[String(it.ReturnNo)]) dresses-=num(it.Qty); });
@@ -3805,14 +3811,16 @@ function L_monthSummary(mk){
   let nNew=0, nRep=0; Object.keys(cAgg).forEach(k=>{ const c=DB.Customers.find(x=>String(x.ID)===k)||{};
     if(ym(first[k])===mk && !(num(c.PrevDresses)>0)) nNew++; else nRep++; });
   const pay={}; a.S.forEach(s=>{ const k=s.Payment||'Cash'; pay[k]=(pay[k]||0)+saleNet(s); });
-  return { label:MONTHS[m]+' '+y, prevLabel:MONTHS[(m+11)%12], cur:a, prev:b,
-    top:Object.keys(a.pAgg).map(k=>a.pAgg[k]).sort((x,z)=>z.qty-x.qty||z.rev-x.rev).slice(0,5),
-    topCust:Object.keys(cAgg).map(k=>cAgg[k]).sort((x,z)=>z.spent-x.spent).slice(0,3),
+  const gifts=(DB.GiftCards||[]).filter(g=>g.CreatedAt&&ym(g.CreatedAt)===mk).sort((x,z)=>String(x.CreatedAt).localeCompare(String(z.CreatedAt)));
+  const giftUsed=a.S.filter(s=>s.GiftCode).length;
+  return { label:MONTHS[m]+' '+y, prevLabel:MONTHS[(m+11)%12], cur:a, prev:b, gifts:gifts, giftUsed:giftUsed,
+    top:Object.keys(a.pAgg).map(k=>a.pAgg[k]).sort((x,z)=>z.qty-x.qty||z.rev-x.rev).slice(0,10),
+    topCust:Object.keys(cAgg).map(k=>cAgg[k]).sort((x,z)=>z.spent-x.spent).slice(0,10),
     nNew:nNew, nRep:nRep, walkin:a.S.filter(s=>!s.CustomerID).length, pay:pay };
 }
 function monthSumHTML(d){
   const c=d.cur, p=d.prev;
-  const delta=(x,y)=>{ if(!y) return 'gotomas: —'; const ch=Math.round((x-y)/Math.abs(y)*100); return (ch>=0?'▲ ':'▼ ')+Math.abs(ch)+'% vs '+d.prevLabel; };
+  const delta=(x,y)=>{ if(!y) return d.prevLabel+': —'; const ch=Math.round((x-y)/Math.abs(y)*100); return (ch>=0?'▲ ':'▼ ')+Math.abs(ch)+'% vs '+d.prevLabel; };
   const tile=(bg,k,v,dl)=>`<div class="t" style="background:${bg}"><div class="k">${k}</div><div class="v">${v}</div><div class="d">${dl}</div></div>`;
   const top=d.top.map((x,i)=>`<tr><td class="n">${i+1}</td><td>${esc(x.name)}</td><td class="r">${x.qty} pcs</td></tr>`).join('')||'<tr><td>—</td></tr>';
   const tc=d.topCust.map((x,i)=>`<tr><td class="n">${i+1}</td><td>${esc(x.name)}</td><td class="r">${tk(x.spent)}</td></tr>`).join('')||'<tr><td>—</td></tr>';
@@ -3826,8 +3834,9 @@ function monthSumHTML(d){
       ${tile('linear-gradient(150deg,#7d7bff,#5127c4)','Dress sold',c.dresses+' pcs',delta(c.dresses,p.dresses))}
       ${tile('linear-gradient(150deg,#ff5c9b,#b12a8f)','Orders',String(c.orders),'avg '+tk(c.orders?c.sales/c.orders:0))}
     </div>
-    <div class="mrow"><div><h4>Top 5 dress</h4><table>${top}</table></div><div><h4>Top 3 customer</h4><table>${tc}</table></div></div>
-    <div class="mstrip"><span>New customer <b>${d.nNew}</b></span><span>Repeat customer <b>${d.nRep}</b></span>${d.walkin?`<span>Walk-in <b>${d.walkin}</b></span>`:''}<span>Pre-order <b>${c.pre}</b></span>${pays}</div>
+    <div class="mrow"><div><h4>Top 10 dresses</h4><table>${top}</table></div><div><h4>Top 10 customers</h4><table>${tc}</table></div></div>
+    <div class="mstrip"><span>New customer <b>${d.nNew}</b></span><span>Repeat customer <b>${d.nRep}</b></span>${d.walkin?`<span>Walk-in <b>${d.walkin}</b></span>`:''}<span>Pre-order dress <b>${c.pre}</b></span>${pays}</div>
+    ${d.gifts.length?`<div class="mgift"><h4>🎁 Gift cards given · ${d.gifts.length}${d.giftUsed?' · used in '+d.giftUsed+' order(s) this month':''}</h4><div class="g">${d.gifts.map(g=>`<span>${esc(g.CustomerName||'')} <b>${num(g.Pct)}%</b> <i>· ${giftState(g)==='used'?'used':giftState(g)==='expired'?'expired':'active'}</i></span>`).join('')}</div></div>`:''}
     <div class="mfoot">Buy your happiness ✦ ommesgallery.xyz</div>
   </div>`;
 }
