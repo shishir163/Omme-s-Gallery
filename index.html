@@ -458,6 +458,12 @@
   .adr .v .sub{font-size:12px; color:var(--muted); font-weight:600}
   .adr .m{font-size:12.5px; color:var(--muted)} .adr .t{font-size:13px; font-weight:700; margin-top:3px}
   .adr .t.g{color:var(--pos)} .adr .t.y{color:#b97800} .adr .t.r{color:var(--neg)}
+  .rng{margin-top:8px; padding:8px 11px; border-radius:9px; background:var(--hover); font-size:12px}
+  .rng .rh{color:var(--muted-2); font-size:11px; margin-bottom:3px}
+  .rng .l{display:flex; align-items:baseline; gap:8px; padding:2px 0; color:var(--muted)}
+  .rng .l .dot{width:8px; height:8px; flex:none; align-self:center}
+  .rng .l .rg{min-width:112px; flex:none; font-variant-numeric:tabular-nums}
+  .rng .l.on{color:var(--ink); font-weight:800}
   .adm-h{display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 14px; margin:20px 2px 8px; padding-bottom:6px; border-bottom:1px solid var(--line-2)}
   .adm-h b{font-size:15px} .adm-h span{font-size:12.5px; color:var(--muted)}
   .adc{cursor:pointer; margin-bottom:10px; padding:14px 16px}
@@ -467,6 +473,7 @@
   .adc-m .am span{display:block; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
   .adc-m .am b{display:flex; align-items:center; gap:6px; font-size:15px; font-variant-numeric:tabular-nums}
   .adc-m .am .dot{width:8px; height:8px}
+  .adc-m .am .sub{font-size:11.5px; color:var(--muted); font-weight:600; white-space:nowrap}
   @media (max-width:640px){ .adc-m{grid-template-columns:repeat(3,1fr)} .adr{grid-template-columns:1fr} }
   .wa-next{display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:14px; border:none; border-radius:12px;
     background:#25D366; color:#fff; font-weight:900; font-size:15px; margin:4px 0 14px}
@@ -2648,11 +2655,11 @@ async function exportAllExcel(){
     const d=new Date();
     add('Gift cards',['Code','Customer','Mobile','%','From','Until','Status','Used invoice','Used date','Created'],
       (DB.GiftCards||[]).map(g=>[g.Code, g.CustomerName||'', g.Phone||'', num(g.Pct), g.From||'', g.Until||'', giftState(g), g.UsedInvoice||'', g.UsedDate?dstr(g.UsedDate):'', g.CreatedAt?dstr(g.CreatedAt):'']));
-    add('Ads',['Name','Start','End','Days','Spend $','Rate','Spend ৳','Impressions','Reach','Clicks','Messages','Orders','Dresses','Sales','Profit','Real profit','CPM','CTR %','CPC','Frequency','CPR','Conversion %','CPA','ROAS','Break-even ROAS','ROI','Note'],
+    add('Ads',['Name','Start','End','Days','Spend $','Rate','Spend ৳','Impressions','Reach','Clicks','Messages','Orders','Dresses','Sales','Profit','Real profit','CPM','CTR %','CPC','Frequency','CPR','Conversion %','CPA','Cost per dress','ROAS','Break-even ROAS','ROI','Note'],
       (DB.Ads||[]).slice().sort((a,b)=>String(a.Start).localeCompare(String(b.Start))).map(a=>{ const t=adStats(a), r=v=>v==null?'':Math.round(v*100)/100;
         return [a.Name||'', String(a.Start||'').slice(0,10), a.End?String(a.End).slice(0,10):'running', t.days, num(a.SpendUSD), num(a.Rate), Math.round(t.spend),
           t.impr, t.reach, t.clicks, t.msgs, t.orders, t.dresses, Math.round(t.sales), Math.round(t.profit), Math.round(t.real),
-          r(t.cpm), r(t.ctr), r(t.cpc), r(t.freq), r(t.cpr), r(t.conv), r(t.cpa), r(t.roas), r(t.be), r(t.roi), a.Note||'']; }));
+          r(t.cpm), r(t.ctr), r(t.cpc), r(t.freq), r(t.cpr), r(t.conv), r(t.cpa), r(t.cpd), r(t.roas), r(t.be), r(t.roi), a.Note||'']; }));
     X.writeFile(wb, 'ommes-gallery-data-'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'.xlsx');
     toast('Excel downloaded ✦ — you can keep it on Google Drive','ok'); markBackup();
   }catch(e){ toast('Could not make the Excel file: '+e.message,'err'); }
@@ -2685,7 +2692,7 @@ function adStats(a){
     impr:impr, reach:reach, clicks:clicks, msgs:msgs,
     cpm:dv(spend*1000,impr), ctr:dv(clicks*100,impr), cpc:dv(spend,clicks), freq:dv(impr,reach), cpr:dv(spend,msgs),
     conv:dv(orders*100,msgs), cpa:dv(spend,orders), roas:dv(sales,spend), be:dv(sales,profit), roi:dv(real,spend), share:dv(spend*100,sales),
-    avgProfit:dv(profit,orders) };
+    avgProfit:dv(profit,orders), dresses:dresses, cpd:dv(spend,dresses), avgProfitD:dv(profit,dresses) };
 }
 function adLevel(k, v, st){
   if(v==null) return 'n';
@@ -2694,6 +2701,7 @@ function adLevel(k, v, st){
     case 'ctr': case 'conv': return v>=AD_T[k][0] ? 'g' : v>=AD_T[k][1] ? 'y' : 'r';
     case 'freq': return v<AD_T.freq[0] ? 'g' : v<=AD_T.freq[1] ? 'y' : 'r';
     case 'cpa': return st.avgProfit==null ? 'n' : v<=st.avgProfit*0.5 ? 'g' : v<=st.avgProfit ? 'y' : 'r';
+    case 'cpd': return st.avgProfitD==null ? 'n' : v<=st.avgProfitD*0.5 ? 'g' : v<=st.avgProfitD ? 'y' : 'r';
     case 'roas': return st.be==null ? 'n' : v>=st.be*1.3 ? 'g' : v>=st.be ? 'y' : 'r';
     case 'real': return v>0 ? 'g' : 'r';
   }
@@ -2707,6 +2715,7 @@ const AD_SAY = {
   freq:{ g:'ঠিক আছে।', y:'একটু বেশি। একই মানুষ বারবার দেখছে।', r:'অনেক বেশি। মানুষ বিরক্ত হচ্ছে। ছবি বা audience বদলান।' },
   conv:{ g:'ভালো। মেসেজ দেওয়া মানুষদের অনেকেই কিনেছে।', y:'মোটামুটি।', r:'কম। মেসেজ আসছে কিন্তু order হচ্ছে না। দাম, ছবি বা উত্তর দেওয়ার গতি দেখুন।' },
   cpa:{ g:'ভালো। একটা order এর বিজ্ঞাপন খরচ লাভের অর্ধেকের বেশি নয়।', y:'সাবধান। একটা order এর লাভের বড় অংশ বিজ্ঞাপনে যাচ্ছে।', r:'লোকসান। একটা order এ যত লাভ হয়, বিজ্ঞাপনে তার চেয়ে বেশি খরচ হচ্ছে।' },
+  cpd:{ g:'ভালো। একটা ড্রেস বিক্রিতে বিজ্ঞাপন খরচ ড্রেসের লাভের অর্ধেকের বেশি নয়।', y:'সাবধান। ড্রেসের লাভের বড় অংশ বিজ্ঞাপনে যাচ্ছে।', r:'লোকসান। একটা ড্রেসে যত লাভ হয়, বিজ্ঞাপনে তার চেয়ে বেশি খরচ হচ্ছে।' },
   roas:{ g:'ভালো। break-even এর অনেক উপরে।', y:'লাভ হচ্ছে, কিন্তু কম। break-even এর কাছাকাছি।', r:'লোকসান। break-even এর নিচে।' },
   real:{ g:'বিজ্ঞাপন খরচ বাদ দিয়েও লাভ থেকেছে।', r:'বিজ্ঞাপন খরচ বাদ দিলে লাভ থাকেনি।' }
 };
@@ -2724,10 +2733,37 @@ function adVerdict(a, st){
   if(st.be && st.roas>=st.be*1.3) return { lv:'g', t:'Worked well', d:'বিজ্ঞাপনে খরচের চেয়ে অনেক বেশি লাভ এসেছে।'+tail };
   return { lv:'y', t:'Profit, but thin', d:'বিজ্ঞাপন খরচ বাদ দিয়েও লাভ হয়েছে, তবে লাভের পরিমাণ কম।'+tail };
 }
+const AD_RNG = {
+  cpr:{ g:'কম খরচে মেসেজ আসছে', y:'খরচ বাড়ছে, নজর রাখুন', r:'অনেক খরচ। ছবি, লেখা বা audience বদলান' },
+  cpm:{ g:'সস্তায় বেশি মানুষের কাছে পৌঁছাচ্ছে', y:'মোটামুটি', r:'দেখানোর খরচ চড়া। audience বদলে দেখুন' },
+  cpc:{ g:'click সস্তা', y:'মোটামুটি', r:'click দামি। ছবি বা লেখা বদলান' },
+  ctr:{ g:'ছবি আর লেখা মানুষের পছন্দ হচ্ছে', y:'মোটামুটি', r:'মানুষ দেখেও চাপ দিচ্ছে না। ছবি বা লেখা বদলান' },
+  freq:{ g:'নতুন নতুন মানুষের কাছে যাচ্ছে', y:'একই মানুষ বারবার দেখছে', r:'মানুষ বিরক্ত হচ্ছে। ছবি বা audience বদলান' },
+  conv:{ g:'মেসেজ দেওয়া অনেকেই কিনছে', y:'মোটামুটি', r:'মেসেজ আসছে কিন্তু কেউ কিনছে না। দাম, ছবি বা উত্তর দেওয়ার গতি দেখুন' },
+  cpa:{ g:'অল্প খরচে ক্রেতা আসছে', y:'order এর লাভের বড় অংশ বিজ্ঞাপনে যাচ্ছে', r:'order এ যত লাভ, বিজ্ঞাপনে তার চেয়ে বেশি খরচ' },
+  cpd:{ g:'অল্প খরচে ড্রেস বিক্রি হচ্ছে', y:'ড্রেসের লাভের বড় অংশ বিজ্ঞাপনে যাচ্ছে', r:'ড্রেসে যত লাভ, বিজ্ঞাপনে তার চেয়ে বেশি খরচ' },
+  roas:{ g:'খরচের অনেক গুণ বিক্রি আসছে', y:'লাভ আছে, কিন্তু কম', r:'বিজ্ঞাপনে লোকসান' },
+  real:{ g:'বিজ্ঞাপন খরচ বাদ দিয়েও লাভ', r:'বিজ্ঞাপন খরচ বাদ দিলে লোকসান' }
+};
+function adRange(k, st, cur){
+  const S=AD_RNG[k]; if(!S) return '';
+  let g, y, r, h='কত হলে কী বোঝায়';
+  if(k==='cpr'||k==='cpm'||k==='cpc'){ const a=adM(AD_T[k][0]), b=adM(AD_T[k][1]); g=a+' বা কম'; y=a+' – '+b; r=b+' এর বেশি'; }
+  else if(k==='ctr'||k==='conv'){ const a=adP(AD_T[k][0]), b=adP(AD_T[k][1]); g=a+' বা বেশি'; y=b+' – '+a; r=b+' এর কম'; }
+  else if(k==='freq'){ const a=AD_T.freq[0], b=AD_T.freq[1]; g=a+' এর কম'; y=a+' – '+b; r=b+' এর বেশি'; }
+  else if(k==='cpa'||k==='cpd'){ const av=k==='cpa'?st.avgProfit:st.avgProfitD; if(av==null) return '';
+    g=adM(av/2)+' বা কম'; y=adM(av/2)+' – '+adM(av); r=adM(av)+' এর বেশি';
+    h+=' (গড় লাভ প্রতি '+(k==='cpa'?'order':'ড্রেসে')+' '+adM(av)+' ধরে)'; }
+  else if(k==='roas'){ if(st.be==null) return ''; g=adX(st.be*1.3)+' বা বেশি'; y=adX(st.be)+' – '+adX(st.be*1.3); r=adX(st.be)+' এর কম'; h+=' (break-even '+adX(st.be)+')'; }
+  else if(k==='real'){ g='৳0 এর বেশি'; r='৳0 বা কম'; }
+  const rows=[['g',g],['y',y],['r',r]].filter(function(x){ return x[1] && S[x[0]]; });
+  return '<div class="rng"><div class="rh">'+h+'</div>'+rows.map(function(x){
+    return '<div class="l'+(cur===x[0]?' on':'')+'"><i class="dot '+x[0]+'"></i><span class="rg">'+x[1]+'</span><span>'+S[x[0]]+'</span></div>'; }).join('')+'</div>';
+}
 function adRowsHtml(a, st){
-  const row=function(k, v, lv, mean, say){
+  const row=function(k, v, lv, mean, say, key){
     return '<div class="adr"><div><div class="k">'+k+'</div><div class="v">'+(lv?'<span class="dot '+lv+'"></span>':'')+v+'</div></div>'
-      +'<div><div class="m">'+mean+'</div>'+(say?'<div class="t '+lv+'">'+say+'</div>':'')+'</div></div>';
+      +'<div><div class="m">'+mean+'</div>'+(say?'<div class="t '+lv+'">'+say+'</div>':'')+(key&&lv?adRange(key, st, lv):'')+'</div></div>';
   };
   const lv=function(k){ return adLevel(k, st[k], st); };
   const sy=function(k){ const l=lv(k); return AD_SAY[k] && AD_SAY[k][l] ? AD_SAY[k][l] : ''; };
@@ -2737,25 +2773,26 @@ function adRowsHtml(a, st){
     grp('১. কতজন দেখেছে', [
       row('Reach', adI(st.reach), '', 'কতজন আলাদা মানুষ বিজ্ঞাপনটা দেখেছে।', ''),
       row('Impressions', adI(st.impr), '', 'বিজ্ঞাপনটা মোট কতবার দেখানো হয়েছে। একজন দুবার দেখলে দুবার গোনা হয়।', ''),
-      row('Frequency', adX(st.freq), st.freq==null?'':lv('freq'), 'একজন মানুষ গড়ে কতবার বিজ্ঞাপনটা দেখেছে। (Impressions ÷ Reach)', st.freq==null?'':sy('freq')),
-      row('CPM', adM(st.cpm), st.cpm==null?'':lv('cpm'), '১০০০ বার বিজ্ঞাপন দেখানোর খরচ। (Spend ÷ Impressions × 1000)', st.cpm==null?'':sy('cpm'))]),
+      row('Frequency', adX(st.freq), st.freq==null?'':lv('freq'), 'একজন মানুষ গড়ে কতবার বিজ্ঞাপনটা দেখেছে। (Impressions ÷ Reach)', st.freq==null?'':sy('freq'), 'freq'),
+      row('CPM', adM(st.cpm), st.cpm==null?'':lv('cpm'), '১০০০ বার বিজ্ঞাপন দেখানোর খরচ। (Spend ÷ Impressions × 1000)', st.cpm==null?'':sy('cpm'), 'cpm')]),
     grp('২. কতজন আগ্রহ দেখিয়েছে', [
       row('Clicks', adI(st.clicks), '', 'কতবার মানুষ বিজ্ঞাপনে চাপ দিয়েছে।', ''),
-      row('CTR', adP(st.ctr), st.ctr==null?'':lv('ctr'), 'যতবার দেখানো হয়েছে তার কত ভাগে মানুষ চাপ দিয়েছে। (Clicks ÷ Impressions)', st.ctr==null?'':sy('ctr')),
-      row('CPC', adM(st.cpc), st.cpc==null?'':lv('cpc'), 'একটা click পেতে কত টাকা গেছে। (Spend ÷ Clicks)', st.cpc==null?'':sy('cpc'))]),
+      row('CTR', adP(st.ctr), st.ctr==null?'':lv('ctr'), 'যতবার দেখানো হয়েছে তার কত ভাগে মানুষ চাপ দিয়েছে। (Clicks ÷ Impressions)', st.ctr==null?'':sy('ctr'), 'ctr'),
+      row('CPC', adM(st.cpc), st.cpc==null?'':lv('cpc'), 'একটা click পেতে কত টাকা গেছে। (Spend ÷ Clicks)', st.cpc==null?'':sy('cpc'), 'cpc')]),
     grp('৩. কতজন মেসেজ দিয়েছে', [
       row('Messages', adI(st.msgs), '', 'কতজন মেসেজ পাঠিয়েছে। এটাই এই বিজ্ঞাপনের Result।', ''),
-      row('CPR', adM(st.cpr), st.cpr==null?'':lv('cpr'), 'একটা মেসেজ (Result) পেতে কত টাকা গেছে। (Spend ÷ Messages)', st.cpr==null?'':sy('cpr'))]),
+      row('CPR', adM(st.cpr), st.cpr==null?'':lv('cpr'), 'একটা মেসেজ (Result) পেতে কত টাকা গেছে। (Spend ÷ Messages)', st.cpr==null?'':sy('cpr'), 'cpr')]),
     grp('৪. কতজন কিনেছে', [
       row('Orders', String(st.orders)+(st.dresses?' <span class="sub">· '+st.dresses+' dress</span>':''), '', 'বিজ্ঞাপন থেকে এসে যারা কিনেছে। New sale এ "From ad" টিক দেওয়া order গুলো।', ''),
-      row('Conversion', adP(st.conv), st.conv==null?'':lv('conv'), 'মেসেজ দেওয়া মানুষদের কত ভাগ শেষে কিনেছে। (Orders ÷ Messages)', st.conv==null?'':sy('conv')),
-      row('CPA', adM(st.cpa), st.cpa==null?'':lv('cpa'), 'একটা order পেতে বিজ্ঞাপনে কত টাকা গেছে। (Spend ÷ Orders)', st.cpa==null?'':sy('cpa'))]),
+      row('Conversion', adP(st.conv), st.conv==null?'':lv('conv'), 'মেসেজ দেওয়া মানুষদের কত ভাগ শেষে কিনেছে। (Orders ÷ Messages)', st.conv==null?'':sy('conv'), 'conv'),
+      row('CPA', adM(st.cpa), st.cpa==null?'':lv('cpa'), 'একটা order পেতে বিজ্ঞাপনে কত টাকা গেছে। (Spend ÷ Orders)', st.cpa==null?'':sy('cpa'), 'cpa'),
+      row('Cost per dress', adM(st.cpd), st.cpd==null?'':lv('cpd'), 'একটা ড্রেস বিক্রিতে বিজ্ঞাপনে কত টাকা গেছে। (Spend ÷ Dresses)', st.cpd==null?'':sy('cpd'), 'cpd')]),
     grp('৫. টাকার হিসাব', [
       row('Sales', tk(st.sales), '', 'বিজ্ঞাপন থেকে আসা order গুলোর মোট বিক্রি।', ''),
       row('Profit', tk(st.profit), '', 'ওই order গুলোর লাভ, বিজ্ঞাপন খরচ ধরার আগে।', ''),
       row('Ad spend', tk(st.spend), '', 'বিজ্ঞাপনে মোট খরচ। ($'+adNum(num(a.SpendUSD),2)+' × ৳'+adNum(num(a.Rate),2)+')', ''),
-      row('Real profit', tk(st.real), st.hasSpend?realLv:'', 'লাভ থেকে বিজ্ঞাপন খরচ বাদ দিলে যা থাকে।', st.hasSpend?AD_SAY.real[realLv]:''),
-      row('ROAS', adX(st.roas), st.roas==null?'':roasLv, '১ টাকা বিজ্ঞাপনে কত টাকা বিক্রি এসেছে। (Sales ÷ Spend)', st.roas==null?'':sy('roas')),
+      row('Real profit', tk(st.real), st.hasSpend?realLv:'', 'লাভ থেকে বিজ্ঞাপন খরচ বাদ দিলে যা থাকে।', st.hasSpend?AD_SAY.real[realLv]:'', 'real'),
+      row('ROAS', adX(st.roas), st.roas==null?'':roasLv, '১ টাকা বিজ্ঞাপনে কত টাকা বিক্রি এসেছে। (Sales ÷ Spend)', st.roas==null?'':sy('roas'), 'roas'),
       row('Break-even ROAS', adX(st.be), '', 'ROAS এর এই সংখ্যার নিচে নামলে বিজ্ঞাপনে লোকসান। (Sales ÷ Profit)', ''),
       row('ROI', adX(st.roi), '', 'বিজ্ঞাপনে ১ টাকা খরচ করে আসল লাভ কত টাকা এসেছে। (Real profit ÷ Spend)', ''),
       row('Ad share of sales', adP(st.share), '', 'বিক্রির কত ভাগ বিজ্ঞাপনে খরচ হয়েছে। (Spend ÷ Sales)', '')])
@@ -2835,9 +2872,18 @@ async function adSave(id){
 }
 function viewAds(){
   const L=(DB.Ads||[]).slice().sort(function(x,y){ return String(y.Start).localeCompare(String(x.Start)) || String(y.CreatedAt).localeCompare(String(x.CreatedAt)); });
-  const mk=thisMonthKey(); let sp=0, sa=0, pr=0, n=0;
-  L.forEach(function(a){ if(String(a.Start).slice(0,7)!==mk) return; n++; const st=adStats(a); sp+=st.spend; sa+=st.sales; pr+=st.profit; });
-  const roas=sp>0?sa/sp:null;
+  const mk=thisMonthKey();
+  const sum=function(filter){ const o={n:0,run:0,spend:0,sales:0,profit:0,orders:0,dresses:0};
+    L.forEach(function(a){ if(filter && !filter(a)) return; const st=adStats(a); if(!st.hasSpend){ if(adRunning(a)) o.run++; return; }
+      o.n++; o.spend+=st.spend; o.sales+=st.sales; o.profit+=st.profit; o.orders+=st.orders; o.dresses+=st.dresses; }); return o; };
+  const cards=function(o, nlabel){ const roas=o.spend>0?o.sales/o.spend:null, real=o.profit-o.spend;
+    return `<div class="stat-grid">
+      <div class="card stat"><div class="k">Ad spend</div><div class="v tnum">${tk(o.spend)}</div><div class="m">${o.n} ad${o.n===1?'':'s'}${o.run?' · '+o.run+' running':''}</div></div>
+      <div class="card stat"><div class="k">Sales from ads</div><div class="v tnum">${tk(o.sales)}</div><div class="m">${o.orders} order${o.orders===1?'':'s'} · ${o.dresses} dress</div></div>
+      <div class="card stat"><div class="k">ROAS</div><div class="v tnum">${adX(roas)}</div><div class="m">৳1 on ads → ${roas==null?'—':'৳'+adNum(roas,1)} sales</div></div>
+      <div class="card stat ${o.spend>0&&real>0?'green':''}"><div class="k">Real profit</div><div class="v tnum">${o.spend>0?tk(real):'—'}</div><div class="m">${o.dresses>0&&o.spend>0?'ad cost per dress '+tk(o.spend/o.dresses):'after ad spend'}</div></div>
+    </div>`; };
+  const tAll=sum(), tMon=sum(function(a){ return String(a.Start).slice(0,7)===mk; });
   const byM={}, order=[];
   L.forEach(function(a){ const k=String(a.Start).slice(0,7); if(!byM[k]){ byM[k]=[]; order.push(k); } byM[k].push(a); });
   const card=function(a){
@@ -2847,25 +2893,23 @@ function viewAds(){
       <div class="adc-h"><div><strong>${esc(a.Name)}</strong>
         <div style="font-size:12px;color:var(--muted)">${fdate(st.from)} → ${run?'running':fdate(st.to)} · ${st.days} day${st.days>1?'s':''}</div></div>
         <div>${run?'<span class="pill amber">Running</span>':'<span class="pill '+(v.lv==='g'?'pos':v.lv==='r'?'warn':'brand')+'">'+esc(v.t)+'</span>'}</div></div>
-      <div class="adc-m">${m('Spend',st.hasSpend?tk(st.spend):'—')}${m('Messages',adI(st.msgs))}${m('Orders',String(st.orders))}${m('Sales',tk(st.sales))}
+      <div class="adc-m">${m('Spend',st.hasSpend?tk(st.spend):'—')}${m('Messages',adI(st.msgs))}${m('Orders',String(st.orders)+(st.dresses?' <span class="sub">· '+st.dresses+' dress</span>':''))}${m('Sales',tk(st.sales))}
         ${m('ROAS',adX(st.roas),st.roas==null?'':adLevel('roas',st.roas,st))}${m('Real profit',st.hasSpend?tk(st.real):'—',st.hasSpend?adLevel('real',st.real,st):'')}</div>
       ${run?`<div style="margin-top:10px"><button class="btn btn-gold btn-sm" data-act="ad-finish" data-id="${esc(a.ID)}">✔ Finish &amp; add results</button></div>`:''}
     </div>`;
   };
   const groups=order.map(function(k){
-    const arr=byM[k]; let s1=0, s2=0, p1=0; arr.forEach(function(a){ const st=adStats(a); s1+=st.spend; s2+=st.sales; p1+=st.profit; });
+    const arr=byM[k]; let s1=0, s2=0, p1=0, d1=0; arr.forEach(function(a){ const st=adStats(a); if(!st.hasSpend) return; s1+=st.spend; s2+=st.sales; p1+=st.profit; d1+=st.dresses; });
     const y=+k.slice(0,4), mo=+k.slice(5,7)-1;
-    return `<div class="adm-h"><b>${MONTHS[mo]||''} ${y}</b><span>${arr.length} ad${arr.length>1?'s':''}${s1>0?' · spent '+tk(s1)+' · sales '+tk(s2)+' · ROAS '+adX(s1>0?s2/s1:null)+' · real profit '+tk(p1-s1):''}</span></div>`+arr.map(card).join('');
+    return `<div class="adm-h"><b>${MONTHS[mo]||''} ${y}</b><span>${arr.length} ad${arr.length>1?'s':''}${s1>0?' · spent '+tk(s1)+' · sales '+tk(s2)+' ('+d1+' dress) · ROAS '+adX(s1>0?s2/s1:null)+' · real profit '+tk(p1-s1):''}</span></div>`+arr.map(card).join('');
   }).join('') || '<div class="card panel empty"><div class="big">No ads yet</div>Tap “New ad” when you start a Facebook ad. When it ends, open it and add the results.</div>';
   $('#view').innerHTML=`
     <div class="view-head"><div><div class="eyebrow">Facebook ads</div><h2>Ads</h2></div>
       <button class="btn btn-gold" data-act="ad-new">＋ New ad</button></div>
-    <div class="stat-grid">
-      <div class="card stat"><div class="k">Ad spend · this month</div><div class="v tnum">${tk(sp)}</div><div class="m">${n} ad${n===1?'':'s'} started</div></div>
-      <div class="card stat"><div class="k">Sales from ads</div><div class="v tnum">${tk(sa)}</div></div>
-      <div class="card stat"><div class="k">ROAS</div><div class="v tnum">${adX(roas)}</div><div class="m">৳1 on ads → ${roas==null?'—':'৳'+adNum(roas,1)} sales</div></div>
-      <div class="card stat ${sp>0&&pr-sp>0?'green':''}"><div class="k">Real profit</div><div class="v tnum">${sp>0?tk(pr-sp):'—'}</div><div class="m">after ad spend</div></div>
-    </div>
+    <div class="adm-h" style="margin-top:0"><b>All ads · total</b><span>finished ads with spend entered</span></div>
+    ${cards(tAll)}
+    <div class="adm-h" style="margin-top:4px"><b>This month · ${MONTHS[new Date().getMonth()]} ${new Date().getFullYear()}</b><span>ads that started this month</span></div>
+    ${cards(tMon)}
     <p style="font-size:12.5px;color:var(--muted);margin:-6px 0 16px">On <strong>New sale</strong>, tick “📣 Came from a Facebook ad” for orders that came from an ad. Only those orders are counted here.</p>
     ${groups}`;
 }
@@ -4074,9 +4118,9 @@ function L_monthSummary(mk){
   const pay={}; a.S.forEach(s=>{ const k=s.Payment||'Cash'; pay[k]=(pay[k]||0)+saleNet(s); });
   const gifts=(DB.GiftCards||[]).filter(g=>g.CreatedAt&&ym(g.CreatedAt)===mk).sort((x,z)=>String(x.CreatedAt).localeCompare(String(z.CreatedAt)));
   const giftUsed=a.S.filter(s=>s.GiftCode).length;
-  const adsM=(DB.Ads||[]).filter(x=>x.Start&&String(x.Start).slice(0,7)===mk); let aSp=0, aSa=0, aPr=0;
-  adsM.forEach(x=>{ const st=adStats(x); aSp+=st.spend; aSa+=st.sales; aPr+=st.profit; });
-  const adsInfo=adsM.length?{ n:adsM.length, spend:aSp, sales:aSa, roas:aSp>0?aSa/aSp:null, real:aPr-aSp }:null;
+  const adsM=(DB.Ads||[]).filter(x=>x.Start&&String(x.Start).slice(0,7)===mk); let aSp=0, aSa=0, aPr=0, aDr=0, aOr=0;
+  adsM.forEach(x=>{ const st=adStats(x); if(!st.hasSpend) return; aSp+=st.spend; aSa+=st.sales; aPr+=st.profit; aDr+=st.dresses; aOr+=st.orders; });
+  const adsInfo=adsM.length?{ n:adsM.length, spend:aSp, sales:aSa, dresses:aDr, orders:aOr, roas:aSp>0?aSa/aSp:null, real:aPr-aSp }:null;
   return { label:MONTHS[m]+' '+y, prevLabel:MONTHS[(m+11)%12], cur:a, prev:b, gifts:gifts, giftUsed:giftUsed, ads:adsInfo,
     top:Object.keys(a.pAgg).map(k=>a.pAgg[k]).sort((x,z)=>z.qty-x.qty||z.rev-x.rev).slice(0,10),
     topCust:Object.keys(cAgg).map(k=>cAgg[k]).sort((x,z)=>z.spent-x.spent).slice(0,10),
@@ -4101,7 +4145,7 @@ function monthSumHTML(d){
     <div class="mrow"><div><h4>Top 10 dresses</h4><table>${top}</table></div><div><h4>Top 10 customers</h4><table>${tc}</table></div></div>
     <div class="mstrip"><span>New customer <b>${d.nNew}</b></span><span>Repeat customer <b>${d.nRep}</b></span>${d.walkin?`<span>Walk-in <b>${d.walkin}</b></span>`:''}<span>Pre-order dress <b>${c.pre}</b></span>${pays}</div>
     ${d.gifts.length?`<div class="mgift"><h4>🎁 Gift cards given · ${d.gifts.length}${d.giftUsed?' · used in '+d.giftUsed+' order(s) this month':''}</h4><div class="g">${d.gifts.map(g=>`<span>${esc(g.CustomerName||'')} <b>${num(g.Pct)}%</b> <i>· ${giftState(g)==='used'?'used':giftState(g)==='expired'?'expired':'active'}</i></span>`).join('')}</div></div>`:''}
-    ${d.ads?`<div class="mads"><h4>📣 Facebook ads · ${d.ads.n}</h4><div class="g">${d.ads.spend>0?`<span>Spent <b>${tk(d.ads.spend)}</b></span><span>Sales from ads <b>${tk(d.ads.sales)}</b></span><span>ROAS <b>${adX(d.ads.roas)}</b></span><span>Real profit <b>${tk(d.ads.real)}</b></span>`:'<span>Results not entered yet</span>'}</div></div>`:''}
+    ${d.ads?`<div class="mads"><h4>📣 Facebook ads · ${d.ads.n}</h4><div class="g">${d.ads.spend>0?`<span>Spent <b>${tk(d.ads.spend)}</b></span><span>Sales from ads <b>${tk(d.ads.sales)}</b></span><span>Orders <b>${d.ads.orders}</b></span><span>Dresses <b>${d.ads.dresses}</b></span><span>ROAS <b>${adX(d.ads.roas)}</b></span><span>Real profit <b>${tk(d.ads.real)}</b></span>`:'<span>Results not entered yet</span>'}</div></div>`:''}
     <div class="mfoot">Buy your happiness ✦ ommesgallery.xyz</div>
   </div>`;
 }
